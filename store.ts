@@ -10,6 +10,41 @@ import React, { useState, useEffect, useCallback, createContext, useContext, Rea
 import { Student, Transaction, GamificationStats, Achievement, AppSettings, Theme, StudentFormData, TransactionFormData, PaymentStatus, AchievementId, DataContextType } from './types';
 import { TUTOR_RANK_LEVELS, INITIAL_GAMIFICATION_STATS, ACHIEVEMENTS_DEFINITIONS, DEFAULT_CURRENCY_SYMBOL, DEFAULT_USER_NAME, POINTS_ALLOCATION } from './constants';
 
+// Placeholder for encryption functions
+const encryptData = (data: any): string => {
+  try {
+    const stringifiedData = JSON.stringify(data);
+    return btoa(unescape(encodeURIComponent(stringifiedData))); // Handles UTF-8 characters before Base64 encoding
+  } catch (error) {
+    console.error("Error encrypting data:", error);
+    return ""; // Return empty string or handle error as appropriate
+  }
+};
+
+const decryptData = (encryptedData: string | null, initialValue: any): any => {
+  if (encryptedData === null) return initialValue;
+  try {
+    const decodedData = decodeURIComponent(escape(atob(encryptedData))); // Handles UTF-8 characters after Base64 decoding
+    return JSON.parse(decodedData);
+  } catch (error) {
+    console.warn("Error decrypting data (might be unencrypted or corrupted):", error);
+    // Attempt to parse as plaintext JSON (for migration)
+    try {
+      return JSON.parse(encryptedData);
+    } catch (jsonError) {
+      console.error("Error parsing data as plaintext JSON:", jsonError);
+      return initialValue; // Fallback to initial value if all attempts fail
+    }
+  }
+};
+
+// Placeholder for sanitization function
+const sanitizeString = (str: string | undefined): string => {
+  if (str === undefined) return '';
+  return str.replace(/<[^>]*>/g, '');
+};
+
+
 /**
  * Custom hook `useLocalStorage` to synchronize state with the browser's localStorage.
  * It attempts to retrieve the stored value on initialization and updates localStorage
@@ -26,11 +61,12 @@ const useLocalStorage = <T>(key: string, initialValue: T): [T, React.Dispatch<Re
     try {
       // Get from local storage by key
       const item = window.localStorage.getItem(key);
-      // Parse stored json or if none return initialValue
-      return item ? JSON.parse(item) : initialValue;
+      // Decrypt data or return initialValue
+      return decryptData(item, initialValue);
     } catch (error) {
       // If error also return initialValue
-      console.error(`Error reading localStorage key "${key}":`, error);
+      // DecryptData already logs errors, so this might be redundant or for other errors.
+      console.error(`Error initializing localStorage key "${key}":`, error);
       return initialValue;
     }
   });
@@ -43,8 +79,9 @@ const useLocalStorage = <T>(key: string, initialValue: T): [T, React.Dispatch<Re
       const valueToStore = value instanceof Function ? value(storedValue) : value;
       // Save state
       setStoredValue(valueToStore);
-      // Save to local storage
-      window.localStorage.setItem(key, JSON.stringify(valueToStore));
+      // Encrypt and save to local storage
+      const encryptedValue = encryptData(valueToStore);
+      window.localStorage.setItem(key, encryptedValue);
     } catch (error) {
       // A more advanced implementation would handle the error case
       console.error(`Error setting localStorage key "${key}":`, error);
@@ -180,8 +217,29 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    * @returns {Student} The newly created student object.
    */
   const addStudent = (studentData: StudentFormData): Student => {
-    const newStudent: Student = {
+    const sanitizedStudentData: StudentFormData = {
       ...studentData,
+      firstName: sanitizeString(studentData.firstName),
+      lastName: sanitizeString(studentData.lastName),
+      parent: {
+        ...studentData.parent,
+        name: sanitizeString(studentData.parent?.name),
+      },
+      contact: {
+        ...studentData.contact,
+        email: sanitizeString(studentData.contact?.email),
+        studentPhone: sanitizeString(studentData.contact?.studentPhone),
+        parentPhone1: sanitizeString(studentData.contact?.parentPhone1),
+        parentPhone2: sanitizeString(studentData.contact?.parentPhone2),
+      },
+      notes: sanitizeString(studentData.notes),
+      tuition: {
+        ...studentData.tuition,
+        subjects: studentData.tuition.subjects.map(subject => sanitizeString(subject)),
+      }
+    };
+    const newStudent: Student = {
+      ...sanitizedStudentData,
       id: crypto.randomUUID(), // Generate a unique ID
       createdAt: new Date().toISOString(), // Timestamp creation
     };
@@ -198,10 +256,37 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    */
   const updateStudent = (studentId: string, studentData: Partial<StudentFormData>): Student | undefined => {
     let updatedStudent: Student | undefined;
+
+    // Sanitize fields if they are present in studentData
+    const sanitizedStudentData: Partial<StudentFormData> = { ...studentData };
+    if (studentData.firstName !== undefined) sanitizedStudentData.firstName = sanitizeString(studentData.firstName);
+    if (studentData.lastName !== undefined) sanitizedStudentData.lastName = sanitizeString(studentData.lastName);
+    if (studentData.parent?.name !== undefined) {
+      sanitizedStudentData.parent = { ...studentData.parent, name: sanitizeString(studentData.parent.name) };
+    } else if (studentData.parent && studentData.parent.name === undefined && 'name' in studentData.parent) {
+      // handles case where parent object exists but name is explicitly set to undefined (though unlikely for sanitize)
+      sanitizedStudentData.parent = { ...studentData.parent, name: '' };
+    }
+
+    if (studentData.contact) {
+      sanitizedStudentData.contact = { ...studentData.contact };
+      if (studentData.contact.email !== undefined) sanitizedStudentData.contact.email = sanitizeString(studentData.contact.email);
+      if (studentData.contact.studentPhone !== undefined) sanitizedStudentData.contact.studentPhone = sanitizeString(studentData.contact.studentPhone);
+      if (studentData.contact.parentPhone1 !== undefined) sanitizedStudentData.contact.parentPhone1 = sanitizeString(studentData.contact.parentPhone1);
+      if (studentData.contact.parentPhone2 !== undefined) sanitizedStudentData.contact.parentPhone2 = sanitizeString(studentData.contact.parentPhone2);
+    }
+    if (studentData.notes !== undefined) sanitizedStudentData.notes = sanitizeString(studentData.notes);
+    if (studentData.tuition?.subjects !== undefined) {
+      sanitizedStudentData.tuition = {
+        ...studentData.tuition,
+        subjects: studentData.tuition.subjects.map(subject => sanitizeString(subject))
+      };
+    }
+
     setStudents(prev =>
       prev.map(s => {
         if (s.id === studentId) {
-          updatedStudent = { ...s, ...studentData };
+          updatedStudent = { ...s, ...sanitizedStudentData };
           return updatedStudent;
         }
         return s;
@@ -237,18 +322,24 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    * @returns {Transaction} The newly created transaction object.
    */
   const addTransaction = (transactionData: TransactionFormData): Transaction => {
+    const sanitizedTransactionData: TransactionFormData = {
+      ...transactionData,
+      paymentMethod: sanitizeString(transactionData.paymentMethod),
+      notes: sanitizeString(transactionData.notes),
+    };
+
     let status: PaymentStatus;
     // Determine payment status based on amount paid vs lesson fee
-    if (transactionData.amountPaid >= transactionData.lessonFee) {
-      status = transactionData.amountPaid > transactionData.lessonFee ? PaymentStatus.Overpaid : PaymentStatus.Paid;
-    } else if (transactionData.amountPaid > 0 && transactionData.amountPaid < transactionData.lessonFee) {
+    if (sanitizedTransactionData.amountPaid >= sanitizedTransactionData.lessonFee) {
+      status = sanitizedTransactionData.amountPaid > sanitizedTransactionData.lessonFee ? PaymentStatus.Overpaid : PaymentStatus.Paid;
+    } else if (sanitizedTransactionData.amountPaid > 0 && sanitizedTransactionData.amountPaid < sanitizedTransactionData.lessonFee) {
       status = PaymentStatus.PartiallyPaid;
     } else {
       status = PaymentStatus.Due;
     }
 
     const newTransaction: Transaction = {
-      ...transactionData,
+      ...sanitizedTransactionData,
       id: crypto.randomUUID(),
       status,
       createdAt: new Date().toISOString(),
@@ -288,16 +379,25 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    */
   const updateTransaction = (transactionId: string, transactionData: Partial<TransactionFormData>): Transaction | undefined => {
      let updatedTransaction : Transaction | undefined;
+
+     const sanitizedTransactionData: Partial<TransactionFormData> = { ...transactionData };
+     if (transactionData.paymentMethod !== undefined) {
+        sanitizedTransactionData.paymentMethod = sanitizeString(transactionData.paymentMethod);
+     }
+     if (transactionData.notes !== undefined) {
+        sanitizedTransactionData.notes = sanitizeString(transactionData.notes);
+     }
+
      setTransactions(prev => prev.map(t => {
         if (t.id === transactionId) {
             const originalStatus = t.status;
-            const potentiallyUpdated = { ...t, ...transactionData };
+            const potentiallyUpdated = { ...t, ...sanitizedTransactionData };
             let newStatus = t.status; // Keep original status unless payment amounts change
 
             // Re-evaluate status if amountPaid or lessonFee was part of the update
-            if (transactionData.amountPaid !== undefined || transactionData.lessonFee !== undefined) {
-                const fee = transactionData.lessonFee !== undefined ? transactionData.lessonFee : t.lessonFee;
-                const paid = transactionData.amountPaid !== undefined ? transactionData.amountPaid : t.amountPaid;
+            if (sanitizedTransactionData.amountPaid !== undefined || sanitizedTransactionData.lessonFee !== undefined) {
+                const fee = sanitizedTransactionData.lessonFee !== undefined ? sanitizedTransactionData.lessonFee : t.lessonFee;
+                const paid = sanitizedTransactionData.amountPaid !== undefined ? sanitizedTransactionData.amountPaid : t.amountPaid;
                 if (paid >= fee) {
                     newStatus = paid > fee ? PaymentStatus.Overpaid : PaymentStatus.Paid;
                 } else if (paid > 0 && paid < fee) {
