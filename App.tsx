@@ -9,7 +9,7 @@ import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { useStore, setGlobalMasterKey } from './store'; // Zustand hook
 import { generateSalt, deriveKey } from './src/crypto';
-import { NavbarLink, Icon, Button, ToastContainer, FAB, LegalModals } from './components/ui'; // Reusable UI components
+import { NavbarLink, Icon, Button, ToastContainer, FAB, LegalModals, Modal } from './components/ui'; // Reusable UI components
 import { DashboardPage } from './pages/DashboardPage';
 import { StudentsPage } from './pages/StudentsPage';
 import { TransactionsPage } from './pages/TransactionsPage';
@@ -17,8 +17,9 @@ import { SettingsPage } from './pages/SettingsPage';
 import { AchievementsPage } from './pages/AchievementsPage';
 import { WelcomePage } from './pages/WelcomePage';
 import { ProfilePage } from './pages/ProfilePage';
+import { TutorAdvicePage } from './pages/TutorAdvicePage';
 import { Theme } from './types'; // Theme enum
-import { DEFAULT_USER_NAME } from './constants';
+import { DEFAULT_USER_NAME, TUTOR_RANK_LEVELS } from './constants';
 
 /**
  * Defines the main visual structure of the application, including a responsive sidebar
@@ -38,6 +39,7 @@ const AppLayout: React.FC = () => {
   const [aboutOpen, setAboutOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
+  const [rankModalOpen, setRankModalOpen] = useState(false);
 
   // Calculate the number of achieved achievements to display a badge in the navbar
   const achievedCount = achievements.filter(a => a.achieved).length;
@@ -112,10 +114,14 @@ const AppLayout: React.FC = () => {
             {achievedCount > 0 && <span className="ml-auto inline-block py-0.5 px-2 leading-none text-xs font-bold bg-accent text-primary-dark rounded-full">{achievedCount}</span>}
           </NavbarLink>
           <NavbarLink to="/profile" iconName="user-circle" onClick={handleNavLinkClick}>Profile & Settings</NavbarLink>
+          <NavbarLink to="/tutor-advice" iconName="book-open" onClick={handleNavLinkClick}>Tutor Advice</NavbarLink>
         </nav>
 
         {/* Sidebar Footer: Gamification Stats */}
-        <div className="p-6 m-4 mt-auto bg-gray-50 dark:bg-primary-light rounded-3xl border border-gray-100 dark:border-white/5">
+        <div 
+          className="p-6 m-4 mt-auto bg-gray-50 dark:bg-primary-light rounded-3xl border border-gray-100 dark:border-white/5 cursor-pointer hover:border-accent/30 transition-colors"
+          onClick={() => setRankModalOpen(true)}
+        >
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
                 <Icon iconName="star" className="w-5 h-5 text-accent" />
@@ -203,6 +209,7 @@ const AppLayout: React.FC = () => {
             <Route path="/transactions" element={<TransactionsPage />} />
             <Route path="/achievements" element={<AchievementsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/tutor-advice" element={<TutorAdvicePage />} />
             <Route path="/settings" element={<SettingsPage />} />
             {/* Fallback route: navigates to dashboard for any unmatched paths */}
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
@@ -210,6 +217,41 @@ const AppLayout: React.FC = () => {
           <FAB />
         </main>
       </div>
+
+      {/* Target points modal */}
+      <Modal isOpen={rankModalOpen} onClose={() => setRankModalOpen(false)} title="Your Tutor Journey">
+         <div className="space-y-4">
+            {TUTOR_RANK_LEVELS.map((rank, index) => {
+                const isCurrent = gamification.level === index + 1;
+                const isPassed = gamification.level > index + 1;
+                const nextRankPts = TUTOR_RANK_LEVELS[index+1]?.points;
+                return (
+                   <div key={rank.name} className={`p-4 rounded-2xl flex items-center justify-between border ${isCurrent ? 'border-accent bg-accent/5' : isPassed ? 'border-success/30 bg-success/5' : 'border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-primary/50 opacity-60'}`}>
+                      <div className="flex items-center gap-4">
+                         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isCurrent ? 'bg-accent/20 text-accent' : isPassed ? 'bg-success/20 text-success' : 'bg-gray-200 dark:bg-white/10 text-gray-400'}`}>
+                             {isPassed ? <Icon iconName="check-circle" className="w-5 h-5" /> : (isCurrent ? <Icon iconName="star" className="w-5 h-5" /> : <Icon iconName="lock-closed" className="w-5 h-5" />)}
+                         </div>
+                         <div>
+                            <h4 className={`font-bold ${isCurrent ? 'text-accent' : isPassed ? 'text-success' : 'text-gray-500'}`}>Level {index + 1}: {rank.name}</h4>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{rank.points} points needed</p>
+                         </div>
+                      </div>
+                      {isCurrent && nextRankPts && (
+                          <div className="text-right">
+                              <p className="text-xs font-semibold text-accent mb-1">{gamification.points} / {nextRankPts}</p>
+                              <div className="w-24 h-2 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
+                                  <div className="h-full bg-accent" style={{width: `${Math.max(0, Math.min(100, ((gamification.points - rank.points) / (nextRankPts - rank.points)) * 100))}%`}}></div>
+                              </div>
+                          </div>
+                      )}
+                      {isCurrent && !nextRankPts && (
+                          <span className="text-xs font-bold text-accent uppercase tracking-wider">Max Level</span>
+                      )}
+                   </div>
+                )
+            })}
+         </div>
+      </Modal>
 
       {/* Legal Modals */}
       <LegalModals 

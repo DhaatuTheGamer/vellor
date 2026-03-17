@@ -35,7 +35,10 @@ export const WelcomePage: React.FC = () => {
         setFormData(prev => ({
             ...prev,
             country: countryName,
-            phone: { ...(prev.phone as PhoneNumber), countryCode: newCountryCode },
+            phone: { 
+                countryCode: newCountryCode, 
+                number: prev.phone?.number || ''
+            },
         }));
     };
 

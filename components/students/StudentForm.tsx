@@ -52,7 +52,7 @@ interface StudentFormProps {
  * validated with react-hook-form and zod.
  */
 export const StudentForm: React.FC<StudentFormProps> = ({ student, onSave, onClose }) => {
-  const { register, handleSubmit, control, formState: { errors } } = useForm<StudentFormValues>({
+  const { register, handleSubmit, control, setValue, getValues, formState: { errors } } = useForm<StudentFormValues>({
     resolver: zodResolver(studentSchema) as any,
     defaultValues: student ? {
       firstName: student.firstName,
@@ -92,6 +92,8 @@ export const StudentForm: React.FC<StudentFormProps> = ({ student, onSave, onClo
     onSave(studentToSave);
   };
 
+  const [subjectsInput, setSubjectsInput] = React.useState((student?.tuition.subjects || []).join(', '));
+
   const countryOptions = COUNTRIES.map(c => ({ value: c.name, label: c.name }));
 
   return (
@@ -117,7 +119,20 @@ export const StudentForm: React.FC<StudentFormProps> = ({ student, onSave, onClo
           </div>
           <Select 
             label="Country" 
-            {...register('country')} 
+            {...register('country', {
+              onChange: (e) => {
+                const countryName = e.target.value;
+                const selectedCountry = COUNTRIES.find(c => c.name === countryName);
+                if (selectedCountry) {
+                  const sPhone = getValues('contact.studentPhone');
+                  setValue('contact.studentPhone', { ...sPhone, countryCode: selectedCountry.code, number: sPhone?.number || '' });
+                  const pPhone1 = getValues('contact.parentPhone1');
+                  setValue('contact.parentPhone1', { ...pPhone1, countryCode: selectedCountry.code, number: pPhone1?.number || '' });
+                  const pPhone2 = getValues('contact.parentPhone2');
+                  setValue('contact.parentPhone2', { ...pPhone2, countryCode: selectedCountry.code, number: pPhone2?.number || '' });
+                }
+              }
+            })} 
             options={countryOptions} 
             error={errors.country?.message}
           />
@@ -209,17 +224,14 @@ export const StudentForm: React.FC<StudentFormProps> = ({ student, onSave, onClo
             Tuition Details
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Controller
-              name="tuition.subjects"
-              control={control}
-              render={({ field }) => (
-                <Input 
-                  label="Subject(s)" 
-                  helperText="For more than one use comma" 
-                  value={(field.value || []).join(', ')} 
-                  onChange={(e) => field.onChange(e.target.value.split(',').map(s => s.trim()).filter(s => s))}
-                />
-              )}
+            <Input 
+              label="Subject(s)" 
+              helperText="For more than one use comma" 
+              value={subjectsInput}
+              onChange={(e) => {
+                setSubjectsInput(e.target.value);
+                setValue('tuition.subjects', e.target.value.split(',').map(s => s.trim()).filter(Boolean), { shouldValidate: true });
+              }}
             />
             <Input 
               label="Default Rate" 

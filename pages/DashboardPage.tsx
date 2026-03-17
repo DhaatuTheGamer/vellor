@@ -39,6 +39,15 @@ export const DashboardPage: React.FC = () => {
   const monthlyIncomeGoal = settings.monthlyGoal || 500; 
   const moneyTreeProgress = Math.min(100, (totalPaidThisMonth / monthlyIncomeGoal) * 100);
 
+  const [isEditingGoal, setIsEditingGoal] = React.useState(false);
+  const [goalInput, setGoalInput] = React.useState(monthlyIncomeGoal.toString());
+  const updateSettings = useStore(s => s.updateSettings);
+
+  const handleGoalSave = () => {
+    updateSettings({ monthlyGoal: parseFloat(goalInput) || 500 });
+    setIsEditingGoal(false);
+  };
+
   const [activeChart, setActiveChart] = React.useState<'income' | 'students'>('income');
 
   const chartData = useMemo(() => {
@@ -142,7 +151,8 @@ export const DashboardPage: React.FC = () => {
                 iconName="calendar" 
                 iconColorClass="text-accent"
                 iconBgClass="bg-accent/10"
-                className="rounded-3xl border border-white/20 dark:border-white/5 shadow-xl shadow-black/5 bg-white/60 dark:bg-primary-light/60 backdrop-blur-xl"
+                onClick={() => navigate('/transactions', { state: { filter: 'paid' } })}
+                className="rounded-3xl border border-white/20 dark:border-white/5 shadow-xl shadow-black/5 bg-white/60 dark:bg-primary-light/60 backdrop-blur-xl cursor-pointer hover:border-accent/30 transition-colors"
             />
           </div>
         </motion.div>
@@ -211,7 +221,29 @@ export const DashboardPage: React.FC = () => {
               </div>
               <div className="mb-2 flex justify-between items-end">
                 <span className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(totalPaidThisMonth, settings.currencySymbol)}</span>
-                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">/ {formatCurrency(monthlyIncomeGoal, settings.currencySymbol)}</span>
+                {isEditingGoal ? (
+                    <div className="flex items-center gap-2">
+                        <span className="text-gray-500">/</span>
+                        <input 
+                            type="number" 
+                            className="w-20 px-2 py-1 bg-white/50 dark:bg-primary-dark/50 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-gray-900 dark:text-white outline-none" 
+                            value={goalInput} 
+                            onChange={e => setGoalInput(e.target.value)} 
+                            onBlur={handleGoalSave} 
+                            onKeyDown={e => e.key === 'Enter' && handleGoalSave()} 
+                            autoFocus 
+                        />
+                    </div>
+                ) : (
+                    <span 
+                        className="text-sm font-medium text-gray-500 dark:text-gray-400 cursor-pointer hover:text-accent transition-colors"
+                        onClick={() => setIsEditingGoal(true)}
+                        title="Click to edit goal"
+                    >
+                        / {formatCurrency(monthlyIncomeGoal, settings.currencySymbol)}
+                        <Icon iconName="pencil" className="w-3 h-3 inline-block ml-1 opacity-50" />
+                    </span>
+                )}
               </div>
               <div className="w-full h-3 bg-gray-100 dark:bg-primary/50 rounded-full overflow-hidden shadow-inner border border-gray-200 dark:border-white/5">
                 <motion.div 
@@ -229,8 +261,8 @@ export const DashboardPage: React.FC = () => {
         </motion.div>
 
         {/* Active Students */}
-        <motion.div variants={itemVariants} className="col-span-1 lg:col-span-1">
-          <Card className="h-full rounded-3xl border border-white/20 dark:border-white/5 shadow-xl shadow-black/5 bg-white/60 dark:bg-primary-light/60 backdrop-blur-xl flex flex-col items-center justify-center text-center relative overflow-hidden">
+        <motion.div variants={itemVariants} className="col-span-1 lg:col-span-1 cursor-pointer" onClick={() => navigate('/students')}>
+          <Card className="h-full rounded-3xl border border-white/20 dark:border-white/5 shadow-xl shadow-black/5 bg-white/60 dark:bg-primary-light/60 backdrop-blur-xl flex flex-col items-center justify-center text-center relative overflow-hidden hover:border-accent/30 transition-colors">
             <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl"></div>
             <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-4 relative z-10">
               <Icon iconName="users" className="w-8 h-8 text-blue-500" />
