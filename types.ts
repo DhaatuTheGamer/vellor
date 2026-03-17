@@ -1,4 +1,10 @@
 /**
+ * @file types.ts
+ * This file contains the core TypeScript types and interfaces used throughout the TutorFlow application.
+ * It defines the shape of data for students, transactions, gamification, settings, and more.
+ */
+
+/**
  * Represents the available UI themes.
  * @enum {string}
  */
@@ -7,6 +13,21 @@ export enum Theme {
   Light = 'light',
   /** The dark theme. */
   Dark = 'dark',
+}
+
+/**
+ * Defines the names of all available icons.
+ */
+export type IconName = 'user' | 'users' | 'user-plus' | 'currency-dollar' | 'calendar' | 'cog' | 'plus' | 'pencil' | 'trash' | 'moon' | 'sun' | 'x-mark' | 'academic-cap' | 'chart-bar' | 'document-text' | 'arrow-left' | 'arrow-right' | 'identification' | 'warning' | 'bars' | 'banknotes' | 'star' | 'bolt' | 'trophy' | 'sparkles' | 'search' | 'check-circle' | 'x-circle' | 'information-circle' | 'user-circle' | 'share' | 'envelope' | 'phone' | 'globe' | 'arrow-right-on-rectangle' | 'book-open' | 'credit-card' | 'clock' | 'lock-closed' | 'chevron-right';
+
+
+/**
+ * Represents a phone number with a country code.
+ * @interface
+ */
+export interface PhoneNumber {
+  countryCode: string;
+  number: string;
 }
 
 /**
@@ -26,11 +47,11 @@ export interface Parent {
  */
 export interface ContactInfo {
   /** The student's personal phone number. */
-  studentPhone?: string;
+  studentPhone?: PhoneNumber;
   /** The primary parent's or guardian's phone number. */
-  parentPhone1?: string;
+  parentPhone1?: PhoneNumber;
   /** A secondary contact phone number. */
-  parentPhone2?: string;
+  parentPhone2?: PhoneNumber;
   /** The primary email address for communication. */
   email?: string;
 }
@@ -64,6 +85,8 @@ export interface Student {
   firstName: string;
   /** The student's last name. */
   lastName: string;
+  /** The student's country. */
+  country?: string;
   /** Information about the student's parent or guardian. */
   parent?: Parent;
   /** The student's contact information. */
@@ -130,6 +153,10 @@ export interface GamificationStats {
   level: number;
   /** The name of the user's current rank or level (e.g., "Novice Tutor"). */
   levelName: string;
+  /** The user's current login streak in days. */
+  streak: number;
+  /** The ISO date string of the user's last activity. */
+  lastActiveDate: string | null;
 }
 
 /**
@@ -140,8 +167,16 @@ export enum AchievementId {
   // Financial Achievements
   /** Unlocked when the first payment is logged. */
   FirstPaymentLogged = 'FIRST_PAYMENT_LOGGED',
+  /** Unlocked when total earnings reach 10 payments. */
+  TenPaymentsLogged = 'TEN_PAYMENTS_LOGGED',
+  /** Unlocked when total earnings reach 50 payments. */
+  FiftyPaymentsLogged = 'FIFTY_PAYMENTS_LOGGED',
   /** Unlocked when total earnings reach $100 (or equivalent). */
   First100Earned = 'FIRST_100_EARNED',
+  /** Unlocked when total earnings reach $1000 (or equivalent). */
+  First1000Earned = 'FIRST_1000_EARNED',
+  /** Unlocked when total earnings reach $5000 (or equivalent). */
+  First5000Earned = 'FIRST_5000_EARNED',
   /** Unlocked when all outstanding debts are cleared. */
   DebtDemolisher = 'DEBT_DEMOLISHER',
   // Organizational Achievements
@@ -149,9 +184,32 @@ export enum AchievementId {
   FirstStudentAdded = 'FIRST_STUDENT_ADDED',
   /** Unlocked when the user is managing at least 5 students. */
   StudentRosterStarter = 'STUDENT_ROSTER_STARTER',
-  // Consistency Achievements (Example)
-  /** Unlocked for using the app multiple days in a row. */
-  DailyTracker = 'DAILY_TRACKER',
+  /** Unlocked when the user is managing at least 10 students. */
+  TenStudentsEnrolled = 'TEN_STUDENTS_ENROLLED',
+  /** Unlocked when the user is managing at least 25 students. */
+  TwentyFiveStudentsEnrolled = 'TWENTY_FIVE_STUDENTS_ENROLLED',
+  /** Unlocked when the user is managing at least 50 students. */
+  FiftyStudentsEnrolled = 'FIFTY_STUDENTS_ENROLLED',
+  // Engagement Achievements
+  /** Unlocked when the user logs in for 7 consecutive days. */
+  SevenDayStreak = 'SEVEN_DAY_STREAK',
+  /** Unlocked when the user logs in for 30 consecutive days. */
+  ThirtyDayStreak = 'THIRTY_DAY_STREAK',
+  /** Unlocked when the user logs in for 100 consecutive days. */
+  HundredDayStreak = 'HUNDRED_DAY_STREAK',
+  /** Unlocked when the user completes their profile. */
+  ProfileCompleted = 'PROFILE_COMPLETED',
+  // New Achievements
+  FirstGoalMet = 'FIRST_GOAL_MET',
+  MarathonSession = 'MARATHON_SESSION',
+  BonusEarned = 'BONUS_EARNED',
+  BusyBee = 'BUSY_BEE',
+  SubjectMaster = 'SUBJECT_MASTER',
+  LoyalScholar = 'LOYAL_SCHOLAR',
+  HighTicket = 'HIGH_TICKET',
+  LevelFive = 'LEVEL_FIVE',
+  CenturyClub = 'CENTURY_CLUB',
+  RateDiversifier = 'RATE_DIVERSIFIER',
 }
 
 /**
@@ -184,6 +242,25 @@ export interface AppSettings {
   currencySymbol: string;
   /** The name of the tutor, used for personalization. */
   userName: string;
+  /** The tutor's country. */
+  country?: string;
+  /** The tutor's phone number. */
+  phone?: PhoneNumber;
+  /** The tutor's email address. */
+  email?: string;
+  /** The tutor's monthly income goal. */
+  monthlyGoal?: number;
+}
+
+/**
+ * Represents a single activity log entry for the dashboard feed.
+ * @interface
+ */
+export interface Activity {
+  id: string;
+  message: string;
+  icon: IconName;
+  timestamp: string;
 }
 
 /**
@@ -199,6 +276,16 @@ export type StudentFormData = Omit<Student, 'id' | 'createdAt'>;
  * @typedef {Omit<Transaction, 'id' | 'status' | 'createdAt'>}
  */
 export type TransactionFormData = Omit<Transaction, 'id' | 'status' | 'createdAt'>;
+
+/**
+ * Represents the structure of a toast notification message.
+ * @interface
+ */
+export interface ToastMessage {
+  id: string;
+  message: string;
+  type: 'success' | 'error' | 'info';
+}
 
 /**
  * Defines the complete shape of the data and actions provided by the `DataContext`.
@@ -217,6 +304,10 @@ export interface DataContextType {
   achievements: Achievement[];
   /** The current application settings. */
   settings: AppSettings;
+  /** The array of active toast notification messages. */
+  toasts: ToastMessage[];
+  /** The array of recent activities for the dashboard feed. */
+  activityLog: Activity[];
 
   // --- Actions ---
   /** Adds a new student to the application. */
@@ -246,6 +337,24 @@ export interface DataContextType {
   updateSettings: (newSettings: Partial<AppSettings>) => void;
   /** Toggles the application theme between light and dark mode. */
   toggleTheme: () => void;
+  
+  /** Displays a toast notification message. */
+  addToast: (message: string, type?: ToastMessage['type']) => void;
+
+  /** Logs a new activity to the feed. */
+  logActivity: (message: string, icon: IconName) => void;
+  /** Deletes an activity from the feed. */
+  deleteActivity: (id: string) => void;
+  /** Clears all activities from the feed. */
+  clearActivityLog: () => void;
+  /** Exports all user data to a JSON file. */
+  exportData: () => void;
+  /** Imports user data from a JSON file. */
+  importData: (file: File) => Promise<void>;
+  /** Resets all application data to its initial state. */
+  resetData: () => void;
+  /** Logs the user out by resetting their name and email. */
+  logout: () => void;
 
   // --- Derived Statistics ---
   /** The total calculated unpaid amount across all students. */

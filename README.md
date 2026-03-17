@@ -1,104 +1,309 @@
+<div align="center">
 
-# TutorFlow - Student Remuneration & Gamification App
+# TutorFlow 🎓
 
-TutorFlow is a React-based web application designed for teachers and tutors to manage student information, track payments and lessons, and view financial summaries. It incorporates gamification features like points, levels, and achievements to enhance user engagement. All data is stored locally in the browser's localStorage.
+**Manage your tutoring business like a pro.**
 
-## Features
+[![CI](https://github.com/DhaatuTheGamer/TutorFlow/actions/workflows/ci.yml/badge.svg)](https://github.com/DhaatuTheGamer/TutorFlow/actions/workflows/ci.yml)
+[![Version](https://img.shields.io/badge/version-2.0.0-8b5cf6)](https://github.com/DhaatuTheGamer/TutorFlow)
+[![License: MIT](https://img.shields.io/badge/License-MIT-10b981.svg)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)](https://react.dev/)
 
-*   **Student Management:**
-    *   Add, edit, and delete student profiles.
-    *   Store student details including contact information, parent/guardian details, and tuition specifics (subjects, rates, lesson duration).
-    *   View a detailed profile for each student with their transaction history.
-*   **Transaction Logging:**
-    *   Log lessons/sessions with details like date, duration, lesson fee, and amount paid.
-    *   Record payment methods and add notes to transactions.
-    *   Automatic calculation of payment status (Paid, Partially Paid, Due, Overpaid).
-*   **Financial Overview (Dashboard):**
-    *   View total unpaid amounts across all students.
-    *   Track total income received for the current month.
-    *   See the number of active students.
-    *   Identify overdue payments at a glance.
-*   **Gamification System:**
-    *   Earn points for various actions (e.g., adding students, logging payments).
-    *   Advance through tutor ranks/levels based on accumulated points.
-    *   Unlock achievements for milestones (e.g., first student added, first payment logged).
-*   **Customizable Settings:**
-    *   Personalize the application with the tutor's name.
-    *   Select a preferred currency symbol.
-    *   Toggle between Light and Dark themes.
-*   **User Interface & Experience:**
-    *   Responsive design for use on various screen sizes.
-    *   Clean and intuitive interface.
-    *   Interactive elements like modals, cards, and badges.
-*   **Data Persistence:**
-    *   All data (students, transactions, settings, gamification progress) is saved locally in the browser's localStorage, allowing users to retain their information between sessions.
+TutorFlow is a modern, open-source web application built for private teachers and tutors. It provides a single, beautiful interface to manage students, track lessons and payments, and stay motivated through built-in gamification — all while keeping your data 100% private on your own device.
 
-## Tech Stack
+[Getting Started](#-getting-started) · [Features](#-features) · [Tech Stack](#-tech-stack) · [Contributing](#-contributing)
 
-*   **React 19**: Core JavaScript library for building the user interface.
-*   **TypeScript**: Superset of JavaScript adding static typing.
-*   **React Router DOM**: For client-side routing within the application.
-*   **Tailwind CSS**: Utility-first CSS framework for styling (loaded via CDN).
-*   **ES Modules & Import Maps**: Used in `index.html` for direct browser module loading without a build step for basic execution.
+</div>
 
-## Project Structure
+---
 
-The project follows a typical React application structure:
+## 📑 Table of Contents
+
+- [Why TutorFlow?](#-why-tutorflow)
+- [Features](#-features)
+- [Getting Started](#-getting-started)
+- [Usage](#-usage)
+- [Tech Stack](#-tech-stack)
+- [Project Structure](#-project-structure)
+- [Available Scripts](#-available-scripts)
+- [CI/CD Pipeline](#-cicd-pipeline)
+- [Contributing](#-contributing)
+- [Roadmap](#-roadmap)
+- [License](#-license)
+
+---
+
+## 💡 Why TutorFlow?
+
+Most tutoring management tools are either too complex, too expensive, or require handing over your data to a third-party service. TutorFlow was built to solve this:
+
+- **Free & open-source** — no subscriptions, no hidden fees.
+- **Privacy-first** — all data lives in your browser's `localStorage`. Nothing leaves your device.
+- **Gamified** — earn points, level up, and unlock achievements to stay motivated.
+- **Lightweight** — runs instantly in any modern browser with zero setup overhead.
+
+---
+
+## ✨ Features
+
+### 🍎 Student Management
+- **Organized Profiles** — Store contact info, parent details, rates, and subjects in one place.
+- **Instant Search** — Filter your roster by name in real time.
+- **Detailed History** — View the complete lesson and payment record for each student.
+
+### 💸 Financial Tracking
+- **Quick Lesson Logging** — Record a lesson and payment in seconds via the floating action button.
+- **Payment Statuses** — Automatically categorized as `Paid`, `Due`, `Partially Paid`, or `Overpaid`.
+- **Dashboard Overview** — At-a-glance cards showing monthly income, unpaid fees, active students, and overdue alerts.
+- **Income Charts** — 6-month interactive area chart for income and student growth trends.
+
+### 🎮 Gamification
+- **Points System** — Earn points for adding students, logging payments, and clearing debts.
+- **Ranks & Levels** — Progress from *Novice Tutor* to *Scholarly Sensei* across multiple tiers.
+- **25+ Achievements** — Unlock badges for milestones like your first $100 earned, a 30-day login streak, or managing 50 students.
+- **Monthly Goal Tracker** — Set an income target and watch your progress bar fill up in real time.
+- **Confetti Celebrations** — Achievement unlocks are accompanied by confetti animations 🎉
+
+### 🔒 Privacy & Data Control
+- **100% Offline** — No server, no database, no tracking. All data is stored locally in your browser.
+- **Export & Import** — Back up your data to a JSON file and restore it anytime.
+- **Secure Reset** — Wipe all application data with one click.
+- **Encrypted Storage** — Data is encrypted before being saved to `localStorage`.
+
+### 🎨 Design & UX
+- **Dark / Light Mode** — Toggle between themes with smooth transitions.
+- **Responsive Layout** — Fully usable on desktop, tablet, and mobile.
+- **Smooth Animations** — Page transitions and micro-interactions powered by Framer Motion.
+- **Multi-Currency Support** — Configure your preferred currency symbol in settings.
+- **International Phone Input** — Country code selection with flag indicators.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+| Tool | Version | Purpose |
+|------|---------|---------|
+| [Node.js](https://nodejs.org/) | `≥ 18.x` (LTS recommended) | JavaScript runtime |
+| npm | `≥ 9.x` (bundled with Node.js) | Package manager |
+
+### Installation
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/DhaatuTheGamer/TutorFlow.git
+
+# 2. Navigate into the project
+cd TutorFlow
+
+# 3. Install dependencies
+npm install
+
+# 4. Start the development server
+npm run dev
+```
+
+The app will launch at **`http://localhost:5173`** (default Vite port). Open it in your browser and you're ready to go!
+
+---
+
+## 📖 Usage
+
+### First Launch
+
+1. **Welcome Screen** — Enter your name to personalize the app, then click **Get Started**.
+2. **Dashboard** — Your home base. View stats, charts, recent activity, and overdue alerts.
+3. **Add a Student** — Click **+ Add Student** and fill in their details: name, country, contact, parent info, subjects, and rate.
+4. **Log a Lesson** — Click **+ Log Lesson** (or the floating ⚡ button) to quickly record a lesson duration and payment.
+
+### Key Workflows
 
 ```
-/TutorFlow-App/
-├── index.html            # Main HTML entry point, includes Tailwind CDN and import maps
-├── metadata.json         # Application metadata (not directly used by the running app but for project info)
-├── README.md             # This file: Project overview and documentation
-├── index.tsx             # Main React entry point, renders the App component
-├── App.tsx               # Root application component, sets up routing and layout
+Dashboard → Add Student → Log Lesson → Track Payments → Unlock Achievements
+```
+
+| Action | How |
+|--------|-----|
+| **Add a student** | Navigate to *Students* → click *Add Student* → fill the form |
+| **Log a lesson** | Click the ⚡ floating button → select student → enter duration & amount |
+| **View payment history** | *Students* → click a student card → scroll to *Transactions* |
+| **Export data** | *Profile* → scroll to *Data Management* → click *Export Data* |
+| **Change theme** | Click the 🌙/☀️ icon in the navigation bar |
+
+---
+
+## 🛠️ Tech Stack
+
+| Technology | Role | Why |
+|-----------|------|-----|
+| [**React 19**](https://react.dev/) | UI framework | Component-based architecture with hooks |
+| [**TypeScript 5.7**](https://www.typescriptlang.org/) | Language | Compile-time type safety and better DX |
+| [**Vite 6**](https://vitejs.dev/) | Build tool | Lightning-fast HMR and optimized production builds |
+| [**Tailwind CSS**](https://tailwindcss.com/) | Styling | Utility-first CSS with CDN integration |
+| [**React Router 7**](https://reactrouter.com/) | Navigation | Client-side routing with URL-based navigation |
+| [**Framer Motion**](https://www.framer.com/motion/) | Animations | Declarative animations and page transitions |
+| [**Recharts**](https://recharts.org/) | Charts | Composable, responsive charting for dashboards |
+| [**Lucide React**](https://lucide.dev/) | Icons | Beautiful, consistent open-source icon set |
+| [**canvas-confetti**](https://www.npmjs.com/package/canvas-confetti) | Effects | Confetti animations for achievements |
+
+---
+
+## 📂 Project Structure
+
+```
+TutorFlow/
+├── .github/
+│   └── workflows/
+│       └── ci.yml              # CI pipeline (lint + build)
 ├── components/
-│   └── UI.tsx            # Collection of reusable UI components (Button, Card, Modal, etc.)
-├── pages/
-│   └── Pages.tsx         # Contains all page components (Dashboard, Students, Transactions, etc.)
-├── store.ts              # Global state management using React Context and localStorage hook
-├── types.ts              # TypeScript type definitions and interfaces
-└── constants.ts          # Application-wide constants (currency options, gamification rules, etc.)
+│   ├── ui/                     # Reusable UI primitives
+│   │   ├── Button.tsx          #   Buttons with variants & icons
+│   │   ├── Card.tsx            #   Container cards
+│   │   ├── Modal.tsx           #   Dialog modals
+│   │   ├── Input.tsx           #   Form inputs
+│   │   ├── Select.tsx          #   Dropdown selects
+│   │   ├── Icon.tsx            #   Icon wrapper (Lucide)
+│   │   ├── FAB.tsx             #   Floating action button
+│   │   ├── Toast.tsx           #   Toast notifications
+│   │   ├── PhoneInput.tsx      #   International phone input
+│   │   └── index.ts            #   Barrel export
+│   ├── students/               # Student-specific components
+│   │   ├── StudentForm.tsx
+│   │   ├── StudentListItem.tsx
+│   │   └── StudentDetailView.tsx
+│   └── transactions/           # Transaction-specific components
+│       ├── TransactionForm.tsx
+│       ├── TransactionListItem.tsx
+│       └── QuickLogModal.tsx
+├── pages/                      # Route-level page components
+│   ├── DashboardPage.tsx       #   Main dashboard with stats & charts
+│   ├── StudentsPage.tsx        #   Student roster & management
+│   ├── TransactionsPage.tsx    #   Transaction list & filters
+│   ├── AchievementsPage.tsx    #   Gamification badges & progress
+│   ├── ProfilePage.tsx         #   User profile & data management
+│   ├── SettingsPage.tsx        #   App settings redirect
+│   └── WelcomePage.tsx         #   First-time onboarding
+├── App.tsx                     # Root component, layout & routing
+├── store.ts                    # Context-based state management
+├── types.ts                    # TypeScript type definitions
+├── constants.ts                # App constants & achievement defs
+├── helpers.ts                  # Utility functions (formatting, etc.)
+├── index.tsx                   # Entry point
+├── index.html                  # HTML shell
+├── index.css                   # Custom scrollbar & animation styles
+├── vite.config.ts              # Vite configuration
+├── tsconfig.json               # TypeScript configuration
+└── package.json                # Dependencies & scripts
 ```
 
-*(Note: A `public/` directory for static assets like favicons or images is not present in the provided file list but would be a common addition for further development.)*
+---
 
-## Setup and Running the Application
+## 📜 Available Scripts
 
-1.  **Prerequisites:**
-    *   A modern web browser (e.g., Chrome, Firefox, Edge, Safari) that supports ES Modules and Import Maps.
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start the Vite development server with HMR |
+| `npm run build` | Type-check and create an optimized production build in `dist/` |
+| `npm run preview` | Preview the production build locally |
+| `npm run lint` | Run TypeScript type-checking (`tsc --noEmit`) |
 
-2.  **Running the App:**
-    *   Ensure all the files (`index.html`, `index.tsx`, `App.tsx`, `components/UI.tsx`, `pages/Pages.tsx`, `store.ts`, `types.ts`, `constants.ts`) are in the same directory structure as listed above.
-    *   Open the `index.html` file directly in your web browser. The application is designed to run directly from the filesystem in a browser due to its use of CDNs for Tailwind CSS and import maps for React modules.
+---
 
-    *(For a more robust development experience, including features like hot module reloading and optimized builds, you would typically integrate a development server and build tool like Vite or Create React App. However, for viewing and basic interaction with the current setup, opening `index.html` is sufficient.)*
+## 🔄 CI/CD Pipeline
 
-## Codebase Documentation
+TutorFlow uses **GitHub Actions** for continuous integration. The pipeline runs automatically on every push or pull request to the `main` branch.
 
-The entire codebase is thoroughly documented using **JSDoc**. Every function, component, type, and constant is commented to explain its purpose, parameters, and return values. This makes the code easier to understand, maintain, and contribute to.
+**Pipeline Steps:**
 
-We encourage developers to read the documentation within the source files to get a deeper understanding of the implementation details.
+```
+Checkout → Setup Node.js 20 → npm ci → Type-check (tsc) → Build (vite)
+```
 
-## Contributing
+The workflow is defined in [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
-Contributions are welcome! If you have ideas for new features, bug fixes, or improvements, please feel free to contribute.
+---
 
-### Guidelines
-*   **Code Style**: Follow the existing code style for consistency.
-*   **Documentation**: All new code should be fully documented using JSDoc. Please ensure that every new function, component, or type has a clear and descriptive comment.
-*   **Commit Messages**: Write clear and descriptive commit messages.
-*   **Pull Requests**: Create a pull request with a clear description of the changes you have made.
+## 🤝 Contributing
 
-## Further Development Ideas
+Contributions are welcome and appreciated! Whether it's a bug fix, a new feature, or a documentation improvement — every contribution makes TutorFlow better.
 
-*   **Data Export/Import:** Allow users to export their data (e.g., to CSV or JSON) for backup or use in other tools, and import data.
-*   **Cloud Synchronization:** Option to sync data with a cloud backend (e.g., Firebase, Supabase) for access across multiple devices.
-*   **Reporting & Analytics:** More detailed financial reports, charts visualizing income trends, student payment histories, etc.
-*   **Calendar Integration:** Visual calendar view for scheduled lessons and payment due dates.
-*   **Notifications/Reminders:** In-app or browser notifications for overdue payments or upcoming lessons.
-*   **Advanced Gamification:** More complex achievements, leaderboards (if a multi-user context is considered), customizable reward points.
-*   **User Authentication:** If moving to a multi-user or cloud-synced model, user accounts and authentication would be necessary.
-*   **Testing:** Implementation of unit tests (e.g., with Jest/React Testing Library) and end-to-end tests (e.g., with Cypress/Playwright) to ensure code quality and reliability.
-*   **Accessibility (A11y) Audit:** Conduct a thorough accessibility audit and implement improvements based on WCAG guidelines.
-*   **Progressive Web App (PWA) Features:** Add a service worker and manifest file to enable offline capabilities and "install to homescreen" functionality.
+### How to Contribute
+
+1. **Fork** the repository
+2. **Create** a feature branch
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+3. **Make** your changes and ensure they pass lint:
+   ```bash
+   npm run lint
+   ```
+4. **Commit** with a descriptive message
+   ```bash
+   git commit -m "feat: add your feature description"
+   ```
+5. **Push** your branch
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+6. **Open** a Pull Request on GitHub
+
+### Contribution Guidelines
+
+- Follow the existing code style and TypeScript conventions.
+- Ensure `npm run lint` passes with zero errors before submitting.
+- Keep pull requests focused — one feature or fix per PR.
+- Write clear commit messages following [Conventional Commits](https://www.conventionalcommits.org/).
+
+---
+
+## 🧪 Testing
+
+Run the TypeScript type-checker to verify code correctness:
+
+```bash
+npm run lint
+```
+
+This runs `tsc --noEmit`, which performs a full compile-time type-check across all `.ts` and `.tsx` files without emitting output. It catches type errors, missing imports, and interface mismatches.
+
+To verify the production build:
+
+```bash
+npm run build
+```
+
+> **Note:** Unit and integration tests are planned for a future release. Contributions to add a testing framework (e.g., Vitest + React Testing Library) are welcome!
+
+---
+
+## 🔮 Roadmap
+
+Planned features for future releases:
+
+- [ ] **Cloud Sync** — Sync data across devices via Firebase or Supabase
+- [ ] **Calendar View** — Visual scheduling for lessons and due dates
+- [ ] **PDF Invoices** — Generate professional invoices for parents
+- [ ] **Advanced Analytics** — Trend analysis, student retention metrics, and forecasting
+- [ ] **Unit Tests** — Vitest + React Testing Library coverage
+- [ ] **PWA Support** — Install TutorFlow as a native-like app on mobile
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** — you are free to use, modify, and distribute this software.
+
+See the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+**Built with ❤️ for educators everywhere.**
+
+[⬆ Back to Top](#tutorflow-)
+
+</div>

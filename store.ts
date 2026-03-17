@@ -6,8 +6,9 @@
  * including students, transactions, gamification data, and settings.
  */
 
-import React, { useState, useEffect, useCallback, createContext, useContext, ReactNode } from 'react';
-import { Student, Transaction, GamificationStats, Achievement, AppSettings, Theme, StudentFormData, TransactionFormData, PaymentStatus, AchievementId, DataContextType } from './types';
+import React, { useState, useEffect, useCallback, createContext, useContext, ReactNode, useMemo } from 'react';
+import confetti from 'canvas-confetti';
+import { Student, Transaction, GamificationStats, Achievement, AppSettings, Theme, StudentFormData, TransactionFormData, PaymentStatus, AchievementId, DataContextType, ToastMessage, Activity, IconName } from './types';
 import { TUTOR_RANK_LEVELS, INITIAL_GAMIFICATION_STATS, ACHIEVEMENTS_DEFINITIONS, DEFAULT_CURRENCY_SYMBOL, DEFAULT_USER_NAME, POINTS_ALLOCATION } from './constants';
 
 /**
@@ -94,20 +95,22 @@ const useLocalStorage = <T>(key: string, initialValue: T): [T, React.Dispatch<Re
 
   // Return a wrapped version of useState's setter function that ...
   // ... persists the new value to localStorage.
-  const setValue: React.Dispatch<React.SetStateAction<T>> = (value) => {
+  const setValue: React.Dispatch<React.SetStateAction<T>> = useCallback((value) => {
     try {
-      // Allow value to be a function so we have same API as useState
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
-      // Save state
-      setStoredValue(valueToStore);
-      // Encrypt and save to local storage
-      const encryptedValue = encryptData(valueToStore);
-      window.localStorage.setItem(key, encryptedValue);
+      setStoredValue((prevValue) => {
+        // Allow value to be a function so we have same API as useState
+        const valueToStore = value instanceof Function ? value(prevValue) : value;
+        // Encrypt and save to local storage
+        const encryptedValue = encryptData(valueToStore);
+        window.localStorage.setItem(key, encryptedValue);
+        return valueToStore;
+      });
     } catch (error) {
       // A more advanced implementation would handle the error case
       console.error(`Error setting localStorage key "${key}":`, error);
     }
-  };
+  }, [key]);
+
   return [storedValue, setValue];
 };
 
@@ -133,10 +136,33 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Ensure achievements are initialized with 'achieved: false' by mapping over definitions.
   const [achievements, setAchievements] = useLocalStorage<Achievement[]>('achievements', ACHIEVEMENTS_DEFINITIONS.map(a => ({...a, achieved: false })));
   const [settings, setSettings] = useLocalStorage<AppSettings>('settings', {
-    theme: Theme.Light, // Default theme
+    theme: Theme.Dark, // Default theme
     currencySymbol: DEFAULT_CURRENCY_SYMBOL,
     userName: DEFAULT_USER_NAME,
+    country: 'United States',
+    phone: { countryCode: '+1', number: '' },
+    email: '',
+    monthlyGoal: 500,
   });
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [activityLog, setActivityLog] = useLocalStorage<Activity[]>('activityLog', []);
+
+  // Ensure any newly added achievements in the code are merged into the user's stored achievements
+  useEffect(() => {
+    setAchievements(prevAchievements => {
+      const existingIds = new Set(prevAchievements.map(a => a.id));
+      const newAchievements = ACHIEVEMENTS_DEFINITIONS
+        .filter(a => !existingIds.has(a.id))
+        .map(a => ({ ...a, achieved: false }));
+      
+      console.log("Merging achievements:", { prevCount: prevAchievements.length, newCount: newAchievements.length });
+      
+      if (newAchievements.length > 0) {
+        return [...prevAchievements, ...newAchievements];
+      }
+      return prevAchievements;
+    });
+  }, [setAchievements]);
 
   // Effect to apply the current theme (light/dark) to the HTML root element.
   useEffect(() => {
@@ -147,6 +173,46 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       root.classList.remove('dark');
     }
   }, [settings.theme]);
+
+  /**
+   * Displays a toast notification message to the user.
+   * The toast automatically disappears after a few seconds.
+   *
+   * @param {string} message - The message to display in the toast.
+   * @param {'success' | 'error' | 'info'} [type='info'] - The type of toast, which affects its color and icon.
+   */
+  const addToast = useCallback((message: string, type: ToastMessage['type'] = 'info') => {
+    const id = crypto.randomUUID();
+    setToasts(prevToasts => [...prevToasts, { id, message, type }]);
+    // Set a timer to remove the toast
+    setTimeout(() => {
+        setToasts(prevToasts => prevToasts.filter(toast => toast.id !== id));
+    }, 4000); // 4 seconds duration
+  }, []);
+
+   /**
+   * Logs a new activity to the activity feed.
+   *
+   * @param {string} message - The message describing the activity.
+   * @param {IconName} icon - The name of the icon to associate with the activity.
+   */
+  const logActivity = useCallback((message: string, icon: IconName) => {
+    const newActivity: Activity = {
+        id: crypto.randomUUID(),
+        message,
+        icon,
+        timestamp: new Date().toISOString(),
+    };
+    setActivityLog(prev => [newActivity, ...prev.slice(0, 19)]); // Keep latest 20 activities
+  }, [setActivityLog]);
+
+  const deleteActivity = useCallback((id: string) => {
+    setActivityLog(prev => prev.filter(activity => activity.id !== id));
+  }, [setActivityLog]);
+
+  const clearActivityLog = useCallback(() => {
+    setActivityLog([]);
+  }, [setActivityLog]);
 
   /**
    * Adds a specified number of points to the user's gamification stats and updates
@@ -169,11 +235,50 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           break;
         }
       }
-      // Placeholder for a toast notification for points gained
-      // if (reason) console.log(`+${pointsToAdd} points: ${reason}`); // Removed console.log
-      return { points: newPoints, level: newLevel, levelName: newLevelName };
+      
+      if (reason) {
+        addToast(`+${pointsToAdd} points: ${reason}`, 'success');
+      }
+
+      return { points: newPoints, level: newLevel, levelName: newLevelName, streak: prevStats.streak, lastActiveDate: prevStats.lastActiveDate };
     });
-  }, [setGamification]); // `setGamification` is stable from `useLocalStorage`
+  }, [setGamification, addToast]); 
+
+  // Effect to check and update the login streak on mount
+  useEffect(() => {
+    setGamification(prev => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayStr = today.toISOString();
+
+      if (!prev.lastActiveDate) {
+        // First time logging in
+        return { ...prev, streak: 1, lastActiveDate: todayStr };
+      }
+
+      const lastActive = new Date(prev.lastActiveDate);
+      lastActive.setHours(0, 0, 0, 0);
+
+      const diffTime = Math.abs(today.getTime() - lastActive.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 0) {
+        // Already logged in today
+        return prev;
+      } else if (diffDays === 1) {
+        // Logged in yesterday, increment streak
+        const newStreak = prev.streak + 1;
+        if (newStreak % 7 === 0) {
+           // Bonus points for a 7-day streak
+           setTimeout(() => addPoints(50, `7-Day Streak Bonus!`), 1000);
+        }
+        return { ...prev, streak: newStreak, lastActiveDate: todayStr };
+      } else {
+        // Missed a day, reset streak
+        return { ...prev, streak: 1, lastActiveDate: todayStr };
+      }
+    });
+  }, [setGamification, addPoints]);
 
   /**
    * Checks if any achievements' conditions have been met based on the current
@@ -191,35 +296,135 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 case AchievementId.FirstStudentAdded:
                     if (students.length > 0) justAchieved = true;
                     break;
-                case AchievementId.FirstPaymentLogged:
-                    if (transactions.length > 0) justAchieved = true;
-                    break;
                 case AchievementId.StudentRosterStarter:
                     if (students.length >= 5) justAchieved = true;
                     break;
+                case AchievementId.TenStudentsEnrolled:
+                    if (students.length >= 10) justAchieved = true;
+                    break;
+                case AchievementId.TwentyFiveStudentsEnrolled:
+                    if (students.length >= 25) justAchieved = true;
+                    break;
+                case AchievementId.FiftyStudentsEnrolled:
+                    if (students.length >= 50) justAchieved = true;
+                    break;
+                case AchievementId.FirstPaymentLogged:
+                    if (transactions.length > 0) justAchieved = true;
+                    break;
+                case AchievementId.TenPaymentsLogged:
+                    if (transactions.length >= 10) justAchieved = true;
+                    break;
+                case AchievementId.FiftyPaymentsLogged:
+                    if (transactions.length >= 50) justAchieved = true;
+                    break;
                 case AchievementId.First100Earned:
+                case AchievementId.First1000Earned:
+                case AchievementId.First5000Earned:
                     // Calculate total earnings from paid or partially paid transactions
                     const totalEarnedOverall = transactions
                         .filter(t => t.status === PaymentStatus.Paid || t.status === PaymentStatus.Overpaid || t.status === PaymentStatus.PartiallyPaid)
-                        .reduce((sum, t) => sum + t.amountPaid, 0);
-                    if (totalEarnedOverall >= 100) justAchieved = true;
+                        .reduce((sum, t) => sum + (t.amountPaid || 0), 0);
+                    if (ach.id === AchievementId.First100Earned && totalEarnedOverall >= 100) justAchieved = true;
+                    if (ach.id === AchievementId.First1000Earned && totalEarnedOverall >= 1000) justAchieved = true;
+                    if (ach.id === AchievementId.First5000Earned && totalEarnedOverall >= 5000) justAchieved = true;
                     break;
                 case AchievementId.DebtDemolisher:
                      // Check for any currently overdue payments (simplified: due and older than 1 day)
                     const currentOverdue = transactions.filter(t => {
-                        const isDue = t.status === PaymentStatus.Due || (t.status === PaymentStatus.PartiallyPaid && t.amountPaid < t.lessonFee);
-                        return isDue && (new Date().getTime() - new Date(t.date).getTime()) > 24 * 60 * 60 * 1000;
+                        const isDue = t.status === PaymentStatus.Due || (t.status === PaymentStatus.PartiallyPaid && (t.amountPaid || 0) < (t.lessonFee || 0));
+                        try {
+                            return isDue && (new Date().getTime() - new Date(t.date).getTime()) > 24 * 60 * 60 * 1000;
+                        } catch (e) { return false; }
                     });
                     // Award if no overdue payments AND there was at least one payment to begin with
                     if (currentOverdue.length === 0 && transactions.some(t => t.status === PaymentStatus.Paid)) justAchieved = true;
                     break;
+                case AchievementId.SevenDayStreak:
+                    if (gamification.streak >= 7) justAchieved = true;
+                    break;
+                case AchievementId.ThirtyDayStreak:
+                    if (gamification.streak >= 30) justAchieved = true;
+                    break;
+                case AchievementId.HundredDayStreak:
+                    if (gamification.streak >= 100) justAchieved = true;
+                    break;
+                case AchievementId.ProfileCompleted:
+                    if (settings?.userName !== DEFAULT_USER_NAME && settings?.email && settings?.phone?.number) justAchieved = true;
+                    break;
+                case AchievementId.FirstGoalMet:
+                    const currentMonth = new Date().getMonth();
+                    const currentYear = new Date().getFullYear();
+                    const paidThisMonth = transactions
+                        .filter(t => {
+                            try {
+                                const d = new Date(t.date);
+                                return d.getMonth() === currentMonth && d.getFullYear() === currentYear && (t.status === PaymentStatus.Paid || t.status === PaymentStatus.PartiallyPaid || t.status === PaymentStatus.Overpaid);
+                            } catch (e) { return false; }
+                        })
+                        .reduce((sum, t) => sum + (t.amountPaid || 0), 0);
+                    if (paidThisMonth >= (settings?.monthlyGoal || 500) && (settings?.monthlyGoal || 500) > 0) justAchieved = true;
+                    break;
+                case AchievementId.MarathonSession:
+                    if (transactions.some(t => (t.lessonDuration || 0) >= 180)) justAchieved = true;
+                    break;
+                case AchievementId.BonusEarned:
+                    if (transactions.some(t => t.status === PaymentStatus.Overpaid)) justAchieved = true;
+                    break;
+                case AchievementId.BusyBee:
+                    const dateCounts = transactions.reduce((acc, t) => {
+                        try {
+                            const dateStr = new Date(t.date).toISOString().split('T')[0];
+                            acc[dateStr] = (acc[dateStr] || 0) + 1;
+                        } catch (e) { /* ignore invalid dates */ }
+                        return acc;
+                    }, {} as Record<string, number>);
+                    if (Object.values(dateCounts).some(count => count >= 3)) justAchieved = true;
+                    break;
+                case AchievementId.SubjectMaster:
+                    const uniqueSubjects = new Set<string>();
+                    students.forEach(s => {
+                        if (s.tuition && Array.isArray(s.tuition.subjects)) {
+                            s.tuition.subjects.forEach(sub => {
+                                if (typeof sub === 'string') uniqueSubjects.add(sub.toLowerCase().trim());
+                            });
+                        }
+                    });
+                    if (uniqueSubjects.size >= 3) justAchieved = true;
+                    break;
+                case AchievementId.LoyalScholar:
+                    const studentTxCounts = transactions.reduce((acc, t) => {
+                        if (t.studentId) {
+                            acc[t.studentId] = (acc[t.studentId] || 0) + 1;
+                        }
+                        return acc;
+                    }, {} as Record<string, number>);
+                    if (Object.values(studentTxCounts).some(count => count >= 10)) justAchieved = true;
+                    break;
+                case AchievementId.HighTicket:
+                    if (transactions.some(t => (t.amountPaid || 0) >= 150)) justAchieved = true;
+                    break;
+                case AchievementId.LevelFive:
+                    if ((gamification?.level || 1) >= 5) justAchieved = true;
+                    break;
+                case AchievementId.CenturyClub:
+                    if (transactions.length >= 100) justAchieved = true;
+                    break;
+                case AchievementId.RateDiversifier:
+                    const rateTypes = new Set(students.map(s => s.tuition?.rateType).filter(Boolean));
+                    if (rateTypes.has('hourly') && rateTypes.has('per_lesson') && rateTypes.has('monthly')) justAchieved = true;
+                    break;
             }
 
             if (justAchieved) {
-                // console.log(`Achievement Unlocked: ${ach.name}!`); // Placeholder for toast/notification - Removed console.log
+                confetti({
+                  particleCount: 100,
+                  spread: 70,
+                  origin: { y: 0.6 },
+                  colors: ['#8b5cf6', '#10b981', '#f59e0b', '#ef4444']
+                });
+                addToast(`Achievement Unlocked: ${ach.name}!`, 'success');
+                logActivity(`Unlocked: ${ach.name}`, 'trophy');
                 changed = true;
-                // Potentially add points for unlocking an achievement
-                // addPoints(POINTS_ALLOCATION.UNLOCK_ACHIEVEMENT, `Unlocked: ${ach.name}`);
                 return { ...ach, achieved: true, dateAchieved: new Date().toISOString() };
             }
             return ach; // Return unchanged achievement
@@ -227,15 +432,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // Only return new array if something actually changed
         return changed ? updatedAchievements : prevAchievements;
     });
-  }, [students, transactions, setAchievements]); // Dependencies for re-evaluating achievements
+  }, [students, transactions, gamification.streak, gamification.level, setAchievements, addToast, logActivity, settings]); 
 
   // Effect to check for achievements whenever students or transactions lists change.
   useEffect(() => {
     checkAndAwardAchievements();
-  }, [students, transactions, checkAndAwardAchievements]);
+  }, [students, transactions, gamification.streak, gamification.level, settings, checkAndAwardAchievements]);
 
 
   // --- Student Operations ---
+
+  const getStudentById = useCallback((studentId: string): Student | undefined => {
+    return students.find(s => s.id === studentId);
+  }, [students]);
 
   /**
    * Adds a new student to the application state after sanitizing input data.
@@ -244,21 +453,23 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    * @param {StudentFormData} studentData - The data for the new student from the form.
    * @returns {Student} The newly created student object, including its generated ID and timestamp.
    */
-  const addStudent = (studentData: StudentFormData): Student => {
+  const addStudent = useCallback((studentData: StudentFormData): Student => {
     const sanitizedStudentData: StudentFormData = {
       ...studentData,
       firstName: sanitizeString(studentData.firstName),
       lastName: sanitizeString(studentData.lastName),
+      country: sanitizeString(studentData.country),
       parent: {
         ...studentData.parent,
         name: sanitizeString(studentData.parent?.name),
+        relationship: studentData.parent?.relationship ?? 'Parent',
       },
       contact: {
         ...studentData.contact,
         email: sanitizeString(studentData.contact?.email),
-        studentPhone: sanitizeString(studentData.contact?.studentPhone),
-        parentPhone1: sanitizeString(studentData.contact?.parentPhone1),
-        parentPhone2: sanitizeString(studentData.contact?.parentPhone2),
+        studentPhone: studentData.contact?.studentPhone ? { ...studentData.contact.studentPhone, number: sanitizeString(studentData.contact.studentPhone.number) } : undefined,
+        parentPhone1: studentData.contact?.parentPhone1 ? { ...studentData.contact.parentPhone1, number: sanitizeString(studentData.contact.parentPhone1.number) } : undefined,
+        parentPhone2: studentData.contact?.parentPhone2 ? { ...studentData.contact.parentPhone2, number: sanitizeString(studentData.contact.parentPhone2.number) } : undefined,
       },
       notes: sanitizeString(studentData.notes),
       tuition: {
@@ -273,8 +484,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
     setStudents(prev => [...prev, newStudent]);
     addPoints(POINTS_ALLOCATION.ADD_STUDENT, `Added new student: ${newStudent.firstName}`);
+    addToast(`Student "${newStudent.firstName} ${newStudent.lastName}" added successfully.`, 'success');
+    logActivity(`Added student: ${newStudent.firstName} ${newStudent.lastName}`, 'user');
     return newStudent;
-  };
+  }, [setStudents, addPoints, addToast, logActivity]);
 
   /**
    * Updates an existing student's details in the application state. It correctly merges nested objects
@@ -284,7 +497,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    * @param {Partial<StudentFormData>} studentData - An object containing the student fields to update.
    * @returns {Student | undefined} The updated student object, or undefined if the student was not found.
    */
-  const updateStudent = (studentId: string, studentData: Partial<StudentFormData>): Student | undefined => {
+  const updateStudent = useCallback((studentId: string, studentData: Partial<StudentFormData>): Student | undefined => {
     let updatedStudent: Student | undefined;
 
     setStudents(prev =>
@@ -299,6 +512,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           if (studentData.firstName !== undefined) studentToUpdate.firstName = sanitizeString(studentData.firstName);
           if (studentData.lastName !== undefined) studentToUpdate.lastName = sanitizeString(studentData.lastName);
           if (studentData.notes !== undefined) studentToUpdate.notes = sanitizeString(studentData.notes);
+          if (studentData.country !== undefined) studentToUpdate.country = sanitizeString(studentData.country);
 
           // Nested 'parent' object: merge and sanitize
           if (studentData.parent) {
@@ -315,9 +529,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           if (studentData.contact) {
             const updatedContactData = { ...studentToUpdate.contact, ...studentData.contact };
             if (studentData.contact.email !== undefined) updatedContactData.email = sanitizeString(studentData.contact.email);
-            if (studentData.contact.studentPhone !== undefined) updatedContactData.studentPhone = sanitizeString(studentData.contact.studentPhone);
-            if (studentData.contact.parentPhone1 !== undefined) updatedContactData.parentPhone1 = sanitizeString(studentData.contact.parentPhone1);
-            if (studentData.contact.parentPhone2 !== undefined) updatedContactData.parentPhone2 = sanitizeString(studentData.contact.parentPhone2);
+            
+            // Sanitize the number part of any phone objects that were updated
+            if (studentData.contact.studentPhone && updatedContactData.studentPhone) {
+                updatedContactData.studentPhone.number = sanitizeString(updatedContactData.studentPhone.number);
+            }
+            if (studentData.contact.parentPhone1 && updatedContactData.parentPhone1) {
+                updatedContactData.parentPhone1.number = sanitizeString(updatedContactData.parentPhone1.number);
+            }
+            if (studentData.contact.parentPhone2 && updatedContactData.parentPhone2) {
+                updatedContactData.parentPhone2.number = sanitizeString(updatedContactData.parentPhone2.number);
+            }
+            
             studentToUpdate.contact = updatedContactData;
           }
 
@@ -336,29 +559,26 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return s;
       })
     );
+    if (updatedStudent) {
+        addToast(`Student "${updatedStudent.firstName}" updated.`, 'success');
+    }
     return updatedStudent; // Return the updated student for potential immediate use
-  };
+  }, [setStudents, addToast]);
   
   /**
    * Deletes a student and all of their associated transactions from the application state.
    *
    * @param {string} studentId - The ID of the student to delete.
    */
-  const deleteStudent = (studentId: string) => {
+  const deleteStudent = useCallback((studentId: string) => {
+    const studentToDelete = getStudentById(studentId);
     setStudents(prev => prev.filter(s => s.id !== studentId));
     // Also remove transactions associated with this student
     setTransactions(prev => prev.filter(t => t.studentId !== studentId));
-  };
-
-  /**
-   * Retrieves a single student by their unique ID.
-   *
-   * @param {string} studentId - The ID of the student to find.
-   * @returns {Student | undefined} The student object if found, otherwise undefined.
-   */
-  const getStudentById = (studentId: string): Student | undefined => {
-    return students.find(s => s.id === studentId);
-  };
+    if (studentToDelete) {
+        addToast(`Student "${studentToDelete.firstName}" and their transactions have been deleted.`, 'info');
+    }
+  }, [setStudents, setTransactions, getStudentById, addToast]);
 
   // --- Transaction Operations ---
 
@@ -368,7 +588,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    * @param {TransactionFormData} transactionData - The data for the new transaction from the form.
    * @returns {Transaction} The newly created transaction object.
    */
-  const addTransaction = (transactionData: TransactionFormData): Transaction => {
+  const addTransaction = useCallback((transactionData: TransactionFormData): Transaction => {
     const sanitizedTransactionData: TransactionFormData = {
       ...transactionData,
       paymentMethod: sanitizeString(transactionData.paymentMethod),
@@ -392,14 +612,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       createdAt: new Date().toISOString(),
     };
     setTransactions(prev => [...prev, newTransaction]);
+    addToast('Transaction logged successfully.', 'success');
+    const studentName = getStudentById(newTransaction.studentId)?.firstName || 'a student';
+    logActivity(`Logged transaction for ${studentName}`, 'banknotes');
+
     // Award points if the payment was logged as fully or overpaid
     if (status === PaymentStatus.Paid || status === PaymentStatus.Overpaid) {
-        addPoints(POINTS_ALLOCATION.LOG_PAYMENT_ON_TIME, `Logged payment for student ID ${newTransaction.studentId}`);
+        addPoints(POINTS_ALLOCATION.LOG_PAYMENT_ON_TIME, `Logged payment for ${studentName}`);
     }
     // Award points if an overdue payment was cleared (simplified: if payment made for a "Due" item)
-    // This might need more complex logic if updating existing due items.
-    // For now, assume new log of payment might clear previous "Due" impression.
-    // A more robust way would be to check specific transaction being paid if it was previously due.
     const student = getStudentById(newTransaction.studentId);
     if(student && (status === PaymentStatus.Paid || status === PaymentStatus.Overpaid)){
         const studentTransactions = transactions.filter(t => t.studentId === newTransaction.studentId && t.id !== newTransaction.id);
@@ -416,7 +637,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     }
     return newTransaction;
-  };
+  }, [setTransactions, addToast, addPoints, getStudentById, transactions, logActivity]);
 
   /**
    * Updates an existing transaction's details and re-calculates its payment status.
@@ -425,7 +646,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    * @param {Partial<TransactionFormData>} transactionData - An object with the transaction fields to update.
    * @returns {Transaction | undefined} The updated transaction object, or undefined if not found.
    */
-  const updateTransaction = (transactionId: string, transactionData: Partial<TransactionFormData>): Transaction | undefined => {
+  const updateTransaction = useCallback((transactionId: string, transactionData: Partial<TransactionFormData>): Transaction | undefined => {
      let updatedTransaction : Transaction | undefined;
 
      const sanitizedTransactionData: Partial<TransactionFormData> = { ...transactionData };
@@ -463,8 +684,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             // If an existing "Due" or "Partially Paid" transaction is now "Paid" or "Overpaid"
             const student = getStudentById(updatedTransaction.studentId);
             if(student && (originalStatus === PaymentStatus.Due || originalStatus === PaymentStatus.PartiallyPaid) && (newStatus === PaymentStatus.Paid || newStatus === PaymentStatus.Overpaid)){
-                // Check if this specific payment clears an overdue item or part of it.
-                // More complex logic might be needed if this action clears all of student's debt.
                  addPoints(POINTS_ALLOCATION.CLEAR_OVERDUE, `Cleared overdue status for transaction ${updatedTransaction.id}`);
             }
 
@@ -472,17 +691,22 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
         return t;
      }));
+
+     if (updatedTransaction) {
+        addToast(`Transaction updated successfully.`, 'success');
+     }
      return updatedTransaction;
-  };
+  }, [setTransactions, addToast, addPoints, getStudentById]);
   
   /**
    * Deletes a transaction from the application state.
    *
    * @param {string} transactionId - The ID of the transaction to delete.
    */
-  const deleteTransaction = (transactionId: string) => {
+  const deleteTransaction = useCallback((transactionId: string) => {
     setTransactions(prev => prev.filter(t => t.id !== transactionId));
-  };
+    addToast('Transaction deleted.', 'info');
+  }, [setTransactions, addToast]);
 
   /**
    * Retrieves all transactions for a specific student, sorted by date with the newest first.
@@ -490,9 +714,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    * @param {string} studentId - The ID of the student whose transactions are to be retrieved.
    * @returns {Transaction[]} An array of the student's transactions.
    */
-  const getTransactionsByStudent = (studentId: string): Transaction[] => {
+  const getTransactionsByStudent = useCallback((studentId: string): Transaction[] => {
     return transactions.filter(t => t.studentId === studentId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  };
+  }, [transactions]);
 
   // --- Settings Operations ---
 
@@ -501,39 +725,124 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    *
    * @param {Partial<AppSettings>} newSettings - An object containing the settings to update.
    */
-  const updateSettings = (newSettings: Partial<AppSettings>) => {
+  const updateSettings = useCallback((newSettings: Partial<AppSettings>) => {
+    // Check if the user is setting their name for the first time
+    if (settings.userName === DEFAULT_USER_NAME && newSettings.userName && newSettings.userName !== DEFAULT_USER_NAME) {
+        addPoints(POINTS_ALLOCATION.COMPLETE_PROFILE, "Completed profile setup!");
+        logActivity('Completed profile setup', 'check-circle');
+    }
+    // Sanitize phone number if it exists in the update
+    if (newSettings.phone) {
+        newSettings.phone.number = sanitizeString(newSettings.phone.number);
+    }
+    if (newSettings.country) {
+        newSettings.country = sanitizeString(newSettings.country);
+    }
     setSettings(prev => ({ ...prev, ...newSettings }));
-  };
+    addToast('Settings saved successfully.', 'success');
+  }, [setSettings, settings.userName, addPoints, addToast, logActivity]);
 
   /**
    * Toggles the application theme between 'light' and 'dark' modes.
    */
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
+    setSettings(prev => {
+      const newTheme = prev.theme === Theme.Light ? Theme.Dark : Theme.Light;
+      logActivity(`Switched to ${newTheme} mode`, newTheme === Theme.Dark ? 'moon' : 'sun');
+      return { ...prev, theme: newTheme };
+    });
+  }, [setSettings, logActivity]);
+
+  // --- Data Management ---
+
+  const exportData = useCallback(() => {
+    try {
+        const dataToExport = { students, transactions, gamification, achievements, settings, activityLog };
+        const jsonString = JSON.stringify(dataToExport, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `tutorflow_backup_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        addToast('Data exported successfully!', 'success');
+    } catch (error) {
+        console.error("Failed to export data:", error);
+        addToast('Failed to export data.', 'error');
+    }
+  }, [students, transactions, gamification, achievements, settings, activityLog, addToast]);
+
+  const importData = useCallback(async (file: File) => {
+    if (!file) { addToast('No file selected for import.', 'error'); return; }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        try {
+            const result = event.target?.result;
+            if (typeof result !== 'string') { throw new Error('File could not be read.'); }
+            const data = JSON.parse(result);
+            if (
+                data &&
+                typeof data === 'object' &&
+                Array.isArray(data.students) &&
+                Array.isArray(data.transactions) &&
+                data.settings &&
+                typeof data.settings === 'object'
+            ) {
+                setStudents(data.students); setTransactions(data.transactions); setSettings(data.settings);
+                if (data.gamification) setGamification(data.gamification);
+                if (data.achievements) setAchievements(data.achievements);
+                if (data.activityLog) setActivityLog(data.activityLog);
+                addToast('Data imported successfully! The app will reload.', 'success');
+                setTimeout(() => window.location.reload(), 2000);
+            } else { throw new Error('Invalid data structure in JSON file.'); }
+        } catch (error) {
+            console.error("Failed to import data:", error);
+            addToast(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+        }
+    };
+    reader.onerror = () => { addToast('Error reading file.', 'error'); };
+    reader.readAsText(file);
+  }, [setStudents, setTransactions, setSettings, setGamification, setAchievements, setActivityLog, addToast]);
+
+  const resetData = useCallback(() => {
+    setStudents([]);
+    setTransactions([]);
+    setGamification(INITIAL_GAMIFICATION_STATS);
+    setAchievements(ACHIEVEMENTS_DEFINITIONS.map(a => ({...a, achieved: false })));
+    setSettings({
+        theme: Theme.Dark, currencySymbol: DEFAULT_CURRENCY_SYMBOL, userName: DEFAULT_USER_NAME,
+        country: 'United States',
+        phone: { countryCode: '+1', number: '' }, email: '',
+        monthlyGoal: 500,
+    });
+    setActivityLog([]);
+    addToast('All application data has been reset.', 'info');
+    setTimeout(() => window.location.reload(), 1500);
+  }, [setStudents, setTransactions, setGamification, setAchievements, setSettings, setActivityLog, addToast]);
+
+  const logout = useCallback(() => {
     setSettings(prev => ({
       ...prev,
-      theme: prev.theme === Theme.Light ? Theme.Dark : Theme.Light,
+      userName: DEFAULT_USER_NAME,
+      email: '',
     }));
-  };
+    addToast('Logged out successfully.', 'info');
+  }, [setSettings, addToast]);
 
-  // --- Derived Statistics (Calculated on-the-fly, could be memoized if performance issues arise) ---
+  // --- Derived Statistics (Memoized for performance) ---
 
-  /**
-   * Calculates the total unpaid amount across all transactions.
-   * This includes due amounts and the remaining balance of partially paid transactions.
-   */
-  const totalUnpaid = transactions.reduce((acc, t) => {
+  const totalUnpaid = useMemo(() => transactions.reduce((acc, t) => {
     if (t.status === PaymentStatus.Due) return acc + t.lessonFee;
     if (t.status === PaymentStatus.PartiallyPaid) return acc + (t.lessonFee - t.amountPaid);
     return acc;
-  }, 0);
+  }, 0), [transactions]);
 
-  /**
-   * Calculates the total amount paid in the current calendar month.
-   */
-  const totalPaidThisMonth = transactions.reduce((acc, t) => {
+  const totalPaidThisMonth = useMemo(() => transactions.reduce((acc, t) => {
     const transactionDate = new Date(t.date);
     const today = new Date();
-    // Check if the transaction is within the current month and year
     if (
       transactionDate.getFullYear() === today.getFullYear() &&
       transactionDate.getMonth() === today.getMonth() &&
@@ -542,36 +851,36 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return acc + t.amountPaid;
     }
     return acc;
-  }, 0);
+  }, 0), [transactions]);
 
-  /**
-   * Counts the number of active students (currently, all students are considered active).
-   */
-  const activeStudentsCount = students.length;
+  const activeStudentsCount = useMemo(() => students.length, [students]);
 
-  /**
-   * Filters and sorts transactions that are overdue.
-   * An overdue transaction is one that is 'Due' or 'PartiallyPaid' and its date is in the past.
-   * Sorted by date, oldest first.
-   */
-  const overduePayments = transactions.filter(t => {
+  const overduePayments = useMemo(() => transactions.filter(t => {
     const isOverdueStatus = t.status === PaymentStatus.Due || (t.status === PaymentStatus.PartiallyPaid && t.amountPaid < t.lessonFee);
-    // Basic overdue check: status indicates money owed and transaction date is before today.
-    // Consider a transaction overdue if its date is strictly before today's date (ignoring time).
     const today = new Date();
-    today.setHours(0,0,0,0); // Set to start of today
+    today.setHours(0,0,0,0); 
     return isOverdueStatus && new Date(t.date) < today;
-  }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()), [transactions]);
 
 
-  // Consolidate all state and actions into the context value.
-  const contextValue: DataContextType = {
+  // Consolidate all state and actions into the context value. Memoized to prevent unnecessary re-renders.
+  const contextValue: DataContextType = useMemo(() => ({
     students, addStudent, updateStudent, deleteStudent, getStudentById,
     transactions, addTransaction, updateTransaction, deleteTransaction, getTransactionsByStudent,
     gamification, achievements, addPoints, checkAndAwardAchievements,
     settings, updateSettings, toggleTheme,
+    toasts, addToast,
+    activityLog, logActivity, deleteActivity, clearActivityLog, exportData, importData, resetData, logout,
     totalUnpaid, totalPaidThisMonth, activeStudentsCount, overduePayments
-  };
+  }), [
+      students, addStudent, updateStudent, deleteStudent, getStudentById,
+      transactions, addTransaction, updateTransaction, deleteTransaction, getTransactionsByStudent,
+      gamification, achievements, addPoints, checkAndAwardAchievements,
+      settings, updateSettings, toggleTheme,
+      toasts, addToast,
+      activityLog, logActivity, deleteActivity, clearActivityLog, exportData, importData, resetData, logout,
+      totalUnpaid, totalPaidThisMonth, activeStudentsCount, overduePayments
+  ]);
 
   // Provide the context value to children components.
   return React.createElement(DataContext.Provider, { value: contextValue }, children);
