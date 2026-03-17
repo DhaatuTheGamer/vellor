@@ -136,7 +136,7 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
             return;
         }
 
-        const header = ['Date', 'Student Name', 'Lesson Duration (mins)', 'Lesson Fee', 'Amount Paid', 'Status', 'Payment Method', 'Notes'];
+        const header = ['Date', 'Student', 'Duration', 'Fee', 'Amount Paid', 'Status', 'Payment Method', 'Notes'];
         
         const rows = transactions.map(t => {
             const student = students.find(s => s.id === t.studentId);
