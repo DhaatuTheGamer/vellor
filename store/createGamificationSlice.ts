@@ -81,13 +81,20 @@ export const createGamificationSlice: StateCreator<AppState, [], [], Gamificatio
                 if (ach.id === AchievementId.First5000Earned && totalEarnedOverall >= 5000) justAchieved = true;
                 break;
             case AchievementId.DebtDemolisher:
-                const currentOverdue = transactions.filter(t => {
+                const now = Date.now();
+                const hasOverdue = transactions.some(t => {
                     const isDue = t.status === PaymentStatus.Due || (t.status === PaymentStatus.PartiallyPaid && (t.amountPaid || 0) < (t.lessonFee || 0));
+                    if (!isDue) return false;
                     try {
-                        return isDue && (new Date().getTime() - new Date(t.date).getTime()) > 24 * 60 * 60 * 1000;
+                        const txDateMs = typeof t.date === 'string' ? Date.parse(t.date) : new Date(t.date).getTime();
+                        if (isNaN(txDateMs)) return false;
+                        return (now - txDateMs) > 24 * 60 * 60 * 1000;
                     } catch (e) { return false; }
                 });
-                if (currentOverdue.length === 0 && transactions.some(t => t.status === PaymentStatus.Paid)) justAchieved = true;
+
+                if (!hasOverdue && transactions.some(t => t.status === PaymentStatus.Paid)) {
+                    justAchieved = true;
+                }
                 break;
             case AchievementId.SevenDayStreak:
                 if (gamification.streak >= 7) justAchieved = true;
