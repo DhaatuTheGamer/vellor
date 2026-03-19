@@ -1,47 +1,47 @@
-import { describe, it, expect } from 'vitest';
-import { exportKeyToBase64 } from './crypto';
+import { describe, it, expect, beforeAll } from 'vitest';
+import { importKeyFromBase64 } from './crypto';
 
-describe('crypto utilities', () => {
-  describe('exportKeyToBase64', () => {
-    it('should export a CryptoKey to a base64 string', async () => {
-      // 1. Create a raw key buffer (32 bytes for AES-256)
-      const rawKey = new Uint8Array(32);
-      for (let i = 0; i < 32; i++) {
-        rawKey[i] = i;
-      }
+// Polyfill for crypto.subtle in jsdom environment if needed, but vitest globals=true with jsdom usually provides it, or we can use Node's crypto
+import { webcrypto } from 'crypto';
 
-      // 2. Import the raw buffer into a CryptoKey object
-      // We must use 'extractable: true' so that exportKeyToBase64 can export it.
-      const key = await crypto.subtle.importKey(
-        "raw",
-        rawKey,
-        { name: "AES-GCM", length: 256 },
-        true,
-        ["encrypt", "decrypt"]
-      );
+describe('importKeyFromBase64', () => {
+  beforeAll(() => {
+    // Ensure crypto is available in the test environment (jsdom might not have it fully implemented)
+    if (typeof globalThis.crypto === 'undefined' || !globalThis.crypto.subtle) {
+      Object.defineProperty(globalThis, 'crypto', {
+        value: webcrypto,
+      });
+    }
+  });
 
-      // 3. Export the key using the function under test
-      const base64Str = await exportKeyToBase64(key);
+  it('successfully imports a valid base64 key', async () => {
+    // A pre-generated 256-bit AES-GCM key exported to raw, then base64 encoded
+    const validBase64Key = '0RGoNs9kNzJa3LLq+i/hoUbA39sfrGJs5YpYj7vRYa4=';
 
-      // 4. Verify the output is the expected base64 encoding of our known rawKey
-      // Our known rawKey has bytes 0, 1, 2, ..., 31.
-      // We previously verified that base64 encoding of this buffer is AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=
-      expect(base64Str).toBe("AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=");
-    });
+    const key = await importKeyFromBase64(validBase64Key);
 
-    it('should throw an error if the key is not extractable', async () => {
-      const rawKey = new Uint8Array(32);
+    expect(key).toBeDefined();
+    expect(key.type).toBe('secret');
+    expect(key.algorithm.name).toBe('AES-GCM');
 
-      const unextractableKey = await crypto.subtle.importKey(
-        "raw",
-        rawKey,
-        { name: "AES-GCM", length: 256 },
-        false, // NOT extractable
-        ["encrypt", "decrypt"]
-      );
+    // Check usages
+    expect(key.usages).toContain('encrypt');
+    expect(key.usages).toContain('decrypt');
+  });
 
-      // Depending on the environment, exporting an unextractable key throws a DOMException or Error.
-      await expect(exportKeyToBase64(unextractableKey)).rejects.toThrow();
-    });
+  it('throws an error for invalid base64 string', async () => {
+    // This is not valid base64
+    const invalidBase64 = 'invalid-base64-string!@#';
+
+    // atob should throw DOMException
+    await expect(importKeyFromBase64(invalidBase64)).rejects.toThrow();
+  });
+
+  it('throws an error for incorrect key length', async () => {
+    // Valid base64, but not 256 bits (32 bytes). This is just 4 bytes "test".
+    const shortBase64 = btoa('test');
+
+    // importKey should throw when expecting a 256-bit AES key but given different length
+    await expect(importKeyFromBase64(shortBase64)).rejects.toThrow();
   });
 });
