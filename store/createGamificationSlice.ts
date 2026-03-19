@@ -121,14 +121,19 @@ export const createGamificationSlice: StateCreator<AppState, [], [], Gamificatio
                 if (transactions.some(t => t.status === PaymentStatus.Overpaid)) justAchieved = true;
                 break;
             case AchievementId.BusyBee:
-                const dateCounts = transactions.reduce((acc, t) => {
+                const dateCounts: Record<string, number> = {};
+                for (let i = 0; i < transactions.length; i++) {
                     try {
+                        const t = transactions[i];
                         const dateStr = new Date(t.date).toISOString().split('T')[0];
-                        acc[dateStr] = (acc[dateStr] || 0) + 1;
+                        const count = (dateCounts[dateStr] || 0) + 1;
+                        dateCounts[dateStr] = count;
+                        if (count >= 3) {
+                            justAchieved = true;
+                            break;
+                        }
                     } catch (e) { }
-                    return acc;
-                }, {} as Record<string, number>);
-                if (Object.values(dateCounts).some(count => count >= 3)) justAchieved = true;
+                }
                 break;
             case AchievementId.SubjectMaster:
                 const uniqueSubjects = new Set<string>();
@@ -142,11 +147,18 @@ export const createGamificationSlice: StateCreator<AppState, [], [], Gamificatio
                 if (uniqueSubjects.size >= 3) justAchieved = true;
                 break;
             case AchievementId.LoyalScholar:
-                const studentTxCounts = transactions.reduce((acc, t) => {
-                    if (t.studentId) acc[t.studentId] = (acc[t.studentId] || 0) + 1;
-                    return acc;
-                }, {} as Record<string, number>);
-                if (Object.values(studentTxCounts).some(count => count >= 10)) justAchieved = true;
+                const studentTxCounts: Record<string, number> = {};
+                for (let i = 0; i < transactions.length; i++) {
+                    const sid = transactions[i].studentId;
+                    if (sid) {
+                        const count = (studentTxCounts[sid] || 0) + 1;
+                        studentTxCounts[sid] = count;
+                        if (count >= 10) {
+                            justAchieved = true;
+                            break;
+                        }
+                    }
+                }
                 break;
             case AchievementId.HighTicket:
                 if (transactions.some(t => (t.amountPaid || 0) >= 150)) justAchieved = true;
