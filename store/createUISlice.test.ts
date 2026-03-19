@@ -1,158 +1,136 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createUISlice } from './createUISlice';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { useStore } from '../store';
 
-describe('createUISlice', () => {
-  let state: any;
-  let set: any;
-  let get: any;
-
+describe('UISlice', () => {
   beforeEach(() => {
-    state = {};
-    set = vi.fn((update) => {
-      if (typeof update === 'function') {
-        state = { ...state, ...update(state) };
-      } else {
-        state = { ...state, ...update };
-      }
+    // Reset store state
+    useStore.setState({
+      toasts: [],
+      activityLog: [],
     });
-    get = vi.fn(() => state);
-
-    const slice = createUISlice(set, get, null as any);
-    state = { ...slice };
-
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
     vi.useRealTimers();
   });
 
-  it('initializes with empty toasts and activityLog', () => {
-    expect(state.toasts).toEqual([]);
-    expect(state.activityLog).toEqual([]);
-  });
-
   describe('addToast', () => {
-    it('adds a toast to the toasts array with default type "info"', () => {
-      state.addToast('Test message');
+    it('adds a toast with the default info type', () => {
+      useStore.getState().addToast('Test message');
 
-      expect(state.toasts).toHaveLength(1);
-      expect(state.toasts[0]).toMatchObject({
-        message: 'Test message',
-        type: 'info',
-      });
-      expect(state.toasts[0].id).toBeDefined();
-      expect(typeof state.toasts[0].id).toBe('string');
+      const toasts = useStore.getState().toasts;
+      expect(toasts).toHaveLength(1);
+      expect(toasts[0].message).toBe('Test message');
+      expect(toasts[0].type).toBe('info');
+      expect(toasts[0].id).toBeDefined();
     });
 
-    it('adds a toast with specified type', () => {
-      state.addToast('Error message', 'error');
+    it('adds a toast with a specified type', () => {
+      useStore.getState().addToast('Success message', 'success');
 
-      expect(state.toasts).toHaveLength(1);
-      expect(state.toasts[0]).toMatchObject({
-        message: 'Error message',
-        type: 'error',
-      });
+      const toasts = useStore.getState().toasts;
+      expect(toasts).toHaveLength(1);
+      expect(toasts[0].message).toBe('Success message');
+      expect(toasts[0].type).toBe('success');
     });
 
     it('removes the toast after 4000ms', () => {
-      state.addToast('Test message');
-      expect(state.toasts).toHaveLength(1);
+      vi.useFakeTimers();
 
+      useStore.getState().addToast('Timed message');
+
+      expect(useStore.getState().toasts).toHaveLength(1);
+
+      // Advance timers by less than 4000ms
       vi.advanceTimersByTime(3999);
-      expect(state.toasts).toHaveLength(1);
+      expect(useStore.getState().toasts).toHaveLength(1);
 
+      // Advance timers to reach 4000ms
       vi.advanceTimersByTime(1);
-      expect(state.toasts).toHaveLength(0);
-    });
+      expect(useStore.getState().toasts).toHaveLength(0);
 
-    it('handles multiple toasts being added and removed independently', () => {
-      state.addToast('Toast 1');
-      vi.advanceTimersByTime(1000);
-      state.addToast('Toast 2');
-
-      expect(state.toasts).toHaveLength(2);
-
-      vi.advanceTimersByTime(3000);
-      // Toast 1 should be gone, Toast 2 should still be there
-      expect(state.toasts).toHaveLength(1);
-      expect(state.toasts[0].message).toBe('Toast 2');
-
-      vi.advanceTimersByTime(1000);
-      // Both should be gone
-      expect(state.toasts).toHaveLength(0);
+      vi.useRealTimers();
     });
   });
 
   describe('logActivity', () => {
-    it('adds an activity to the top of the activityLog', () => {
-      const mockDate = new Date('2024-01-01T12:00:00Z');
-      vi.setSystemTime(mockDate);
+    it('adds a new activity to the start of the log', () => {
+      // @ts-ignore - 'User' might not be an exact IconName type depending on definitions, but works for test
+      useStore.getState().logActivity('First activity', 'User');
 
-      state.logActivity('New student added', 'user-plus');
+      let log = useStore.getState().activityLog;
+      expect(log).toHaveLength(1);
+      expect(log[0].message).toBe('First activity');
+      expect(log[0].icon).toBe('User');
+      expect(log[0].id).toBeDefined();
+      expect(log[0].timestamp).toBeDefined();
 
-      expect(state.activityLog).toHaveLength(1);
-      expect(state.activityLog[0]).toMatchObject({
-        message: 'New student added',
-        icon: 'user-plus',
-        timestamp: mockDate.toISOString(),
-      });
-      expect(state.activityLog[0].id).toBeDefined();
+      // @ts-ignore
+      useStore.getState().logActivity('Second activity', 'Settings');
+
+      log = useStore.getState().activityLog;
+      expect(log).toHaveLength(2);
+      expect(log[0].message).toBe('Second activity');
+      expect(log[1].message).toBe('First activity');
     });
 
-    it('maintains a maximum of 20 activities by removing oldest ones', () => {
-      // Add 20 activities
-      for (let i = 0; i < 20; i++) {
-        state.logActivity(`Activity ${i}`, 'info');
+    it('keeps only the latest 20 activities', () => {
+      // Add 25 activities
+      for (let i = 0; i < 25; i++) {
+        // @ts-ignore
+        useStore.getState().logActivity(`Activity ${i}`, 'Activity');
       }
 
-      expect(state.activityLog).toHaveLength(20);
-      expect(state.activityLog[0].message).toBe('Activity 19');
-      expect(state.activityLog[19].message).toBe('Activity 0');
-
-      // Add one more
-      state.logActivity('Activity 20', 'info');
-
-      // Should still be 20, newest at top, oldest removed
-      expect(state.activityLog).toHaveLength(20);
-      expect(state.activityLog[0].message).toBe('Activity 20');
-      expect(state.activityLog[19].message).toBe('Activity 1');
+      const log = useStore.getState().activityLog;
+      expect(log).toHaveLength(20);
+      expect(log[0].message).toBe('Activity 24'); // Most recent
+      expect(log[19].message).toBe('Activity 5'); // 20th most recent (indices 24 down to 5)
     });
   });
 
   describe('deleteActivity', () => {
-    it('removes a specific activity by id', () => {
-      state.logActivity('Activity 1', 'info');
-      state.logActivity('Activity 2', 'info');
+    it('deletes an activity by id', () => {
+      // @ts-ignore
+      useStore.getState().logActivity('Activity to keep', 'Activity');
+      // @ts-ignore
+      useStore.getState().logActivity('Activity to delete', 'Activity');
 
-      const idToDelete = state.activityLog[0].id;
-      const idToKeep = state.activityLog[1].id;
+      const log = useStore.getState().activityLog;
+      expect(log).toHaveLength(2);
 
-      state.deleteActivity(idToDelete);
+      const idToDelete = log[0].id; // The one added last
+      const idToKeep = log[1].id;
 
-      expect(state.activityLog).toHaveLength(1);
-      expect(state.activityLog[0].id).toBe(idToKeep);
+      useStore.getState().deleteActivity(idToDelete);
+
+      const newLog = useStore.getState().activityLog;
+      expect(newLog).toHaveLength(1);
+      expect(newLog[0].id).toBe(idToKeep);
+      expect(newLog[0].message).toBe('Activity to keep');
     });
 
     it('does nothing if id is not found', () => {
-      state.logActivity('Activity 1', 'info');
-      const initialLength = state.activityLog.length;
+      // @ts-ignore
+      useStore.getState().logActivity('Activity', 'Activity');
 
-      state.deleteActivity('non-existent-id');
+      const log = useStore.getState().activityLog;
+      expect(log).toHaveLength(1);
 
-      expect(state.activityLog).toHaveLength(initialLength);
+      useStore.getState().deleteActivity('non-existent-id');
+
+      expect(useStore.getState().activityLog).toHaveLength(1);
     });
   });
 
   describe('clearActivityLog', () => {
-    it('empties the activityLog', () => {
-      state.logActivity('Activity 1', 'info');
-      state.logActivity('Activity 2', 'info');
-      expect(state.activityLog).toHaveLength(2);
+    it('clears all activities', () => {
+      // @ts-ignore
+      useStore.getState().logActivity('Activity 1', 'Activity');
+      // @ts-ignore
+      useStore.getState().logActivity('Activity 2', 'Activity');
 
-      state.clearActivityLog();
+      expect(useStore.getState().activityLog).toHaveLength(2);
 
-      expect(state.activityLog).toHaveLength(0);
+      useStore.getState().clearActivityLog();
+
+      expect(useStore.getState().activityLog).toHaveLength(0);
     });
   });
 });

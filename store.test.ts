@@ -8,7 +8,7 @@ vi.mock('canvas-confetti', () => {
 import { PaymentStatus } from './types';
 
 vi.mock('canvas-confetti', () => {
-    return { default: vi.fn() };
+   return { default: vi.fn() };
 });
 
 describe('Zustand Store - Students and Transactions', () => {
