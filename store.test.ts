@@ -1,3 +1,5 @@
+import { vi } from "vitest";
+vi.mock("canvas-confetti", () => { return { default: vi.fn() }; });
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useStore } from './store';
 import { PaymentStatus } from './types';
