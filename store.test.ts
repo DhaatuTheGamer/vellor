@@ -1,6 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useStore } from './store';
 import { PaymentStatus } from './types';
+import { vi } from 'vitest';
+
+// Mock confetti to prevent errors in Node environment
+vi.mock('canvas-confetti', () => {
+   return { default: vi.fn() };
+});
 
 describe('Zustand Store - Students and Transactions', () => {
     beforeEach(() => {

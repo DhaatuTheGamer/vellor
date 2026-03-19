@@ -3,6 +3,11 @@ import { renderHook } from '@testing-library/react';
 import { useStore, useDerivedData } from '../store';
 import { PaymentStatus, AchievementId } from '../types';
 
+// Mock confetti to prevent errors in Node environment
+vi.mock('canvas-confetti', () => {
+   return { default: vi.fn() };
+});
+
 beforeEach(() => {
   // Reset store
   useStore.setState({
@@ -81,11 +86,6 @@ describe('useDerivedData Hook', () => {
 });
 
 describe('Gamification Logic (checkAndAwardAchievements)', () => {
-    // Mock confetti to prevent errors in Node environment
-    vi.mock('canvas-confetti', () => {
-       return { default: vi.fn() };
-    });
-
     it('awards First Student Added achievement', () => {
         useStore.setState({
             students: [{ id: '1', firstName: 'John', lastName: 'Doe', country: 'US', createdAt: '' } as any]
@@ -130,5 +130,149 @@ describe('Gamification Logic (checkAndAwardAchievements)', () => {
         expect(state.achievements.find(a => a.id === AchievementId.FirstPaymentLogged)?.achieved).toBe(true);
         expect(state.achievements.find(a => a.id === AchievementId.TenPaymentsLogged)?.achieved).toBe(true);
         expect(state.achievements.find(a => a.id === AchievementId.First100Earned)?.achieved).toBe(true);
+    });
+
+    it('awards DebtDemolisher when overdue payments are cleared and there is at least one paid transaction', () => {
+        const pastDate = new Date();
+        pastDate.setDate(pastDate.getDate() - 5);
+
+        // Initial state with an overdue payment
+        useStore.setState({
+            transactions: [
+                { id: '1', studentId: 's1', date: pastDate.toISOString(), lessonDuration: 60, lessonFee: 50, amountPaid: 0, status: PaymentStatus.Due, paymentMethod: '', createdAt: '' }
+            ]
+        });
+        useStore.getState().checkAndAwardAchievements();
+        expect(useStore.getState().achievements.find(a => a.id === AchievementId.DebtDemolisher)?.achieved).toBe(false);
+
+        // Clear overdue payment and add a paid one
+        useStore.setState({
+            transactions: [
+                { id: '1', studentId: 's1', date: pastDate.toISOString(), lessonDuration: 60, lessonFee: 50, amountPaid: 50, status: PaymentStatus.Paid, paymentMethod: '', createdAt: '' }
+            ]
+        });
+        useStore.getState().checkAndAwardAchievements();
+        expect(useStore.getState().achievements.find(a => a.id === AchievementId.DebtDemolisher)?.achieved).toBe(true);
+    });
+
+    it('awards SevenDayStreak, ThirtyDayStreak, and HundredDayStreak achievements based on streak', () => {
+        // Test 7-Day
+        useStore.setState({ gamification: { ...useStore.getState().gamification, streak: 7 } });
+        useStore.getState().checkAndAwardAchievements();
+        expect(useStore.getState().achievements.find(a => a.id === AchievementId.SevenDayStreak)?.achieved).toBe(true);
+
+        // Test 30-Day
+        useStore.setState({ gamification: { ...useStore.getState().gamification, streak: 30 } });
+        useStore.getState().checkAndAwardAchievements();
+        expect(useStore.getState().achievements.find(a => a.id === AchievementId.ThirtyDayStreak)?.achieved).toBe(true);
+
+        // Test 100-Day
+        useStore.setState({ gamification: { ...useStore.getState().gamification, streak: 100 } });
+        useStore.getState().checkAndAwardAchievements();
+        expect(useStore.getState().achievements.find(a => a.id === AchievementId.HundredDayStreak)?.achieved).toBe(true);
+    });
+
+    it('awards ProfileCompleted achievement', () => {
+        useStore.setState({ settings: { userName: 'Tutor', email: '', phone: { number: '' }, theme: 'light', currencySymbol: '$' } });
+        useStore.getState().checkAndAwardAchievements();
+        expect(useStore.getState().achievements.find(a => a.id === AchievementId.ProfileCompleted)?.achieved).toBe(false);
+
+        useStore.setState({ settings: { userName: 'Jane Doe', email: 'jane@example.com', phone: { number: '1234567890' }, theme: 'light', currencySymbol: '$' } });
+        useStore.getState().checkAndAwardAchievements();
+        expect(useStore.getState().achievements.find(a => a.id === AchievementId.ProfileCompleted)?.achieved).toBe(true);
+    });
+
+    it('awards FirstGoalMet achievement', () => {
+        const today = new Date();
+        useStore.setState({
+            settings: { monthlyGoal: 500, userName: 'Tutor', theme: 'light', currencySymbol: '$' },
+            transactions: [
+                { id: '1', studentId: 's1', date: today.toISOString(), lessonDuration: 60, lessonFee: 500, amountPaid: 500, status: PaymentStatus.Paid, paymentMethod: '', createdAt: '' }
+            ]
+        });
+        useStore.getState().checkAndAwardAchievements();
+        expect(useStore.getState().achievements.find(a => a.id === AchievementId.FirstGoalMet)?.achieved).toBe(true);
+    });
+
+    it('awards MarathonSession achievement', () => {
+        useStore.setState({
+            transactions: [
+                { id: '1', studentId: 's1', date: new Date().toISOString(), lessonDuration: 180, lessonFee: 150, amountPaid: 150, status: PaymentStatus.Paid, paymentMethod: '', createdAt: '' }
+            ]
+        });
+        useStore.getState().checkAndAwardAchievements();
+        expect(useStore.getState().achievements.find(a => a.id === AchievementId.MarathonSession)?.achieved).toBe(true);
+    });
+
+    it('awards BonusEarned achievement', () => {
+        useStore.setState({
+            transactions: [
+                { id: '1', studentId: 's1', date: new Date().toISOString(), lessonDuration: 60, lessonFee: 50, amountPaid: 60, status: PaymentStatus.Overpaid, paymentMethod: '', createdAt: '' }
+            ]
+        });
+        useStore.getState().checkAndAwardAchievements();
+        expect(useStore.getState().achievements.find(a => a.id === AchievementId.BonusEarned)?.achieved).toBe(true);
+    });
+
+    it('awards BusyBee achievement for 3+ lessons in a day', () => {
+        const todayStr = new Date().toISOString().split('T')[0];
+        useStore.setState({
+            transactions: [
+                { id: '1', studentId: 's1', date: `${todayStr}T10:00:00Z`, lessonDuration: 60, lessonFee: 50, amountPaid: 50, status: PaymentStatus.Paid, paymentMethod: '', createdAt: '' },
+                { id: '2', studentId: 's2', date: `${todayStr}T12:00:00Z`, lessonDuration: 60, lessonFee: 50, amountPaid: 50, status: PaymentStatus.Paid, paymentMethod: '', createdAt: '' },
+                { id: '3', studentId: 's3', date: `${todayStr}T14:00:00Z`, lessonDuration: 60, lessonFee: 50, amountPaid: 50, status: PaymentStatus.Paid, paymentMethod: '', createdAt: '' }
+            ]
+        });
+        useStore.getState().checkAndAwardAchievements();
+        expect(useStore.getState().achievements.find(a => a.id === AchievementId.BusyBee)?.achieved).toBe(true);
+    });
+
+    it('awards SubjectMaster achievement for teaching 3+ unique subjects', () => {
+        useStore.setState({
+            students: [
+                { id: '1', firstName: 'John', lastName: 'Doe', tuition: { subjects: ['Math', 'Science'] }, createdAt: '' } as any,
+                { id: '2', firstName: 'Jane', lastName: 'Doe', tuition: { subjects: ['Math', 'History'] }, createdAt: '' } as any,
+            ]
+        });
+        useStore.getState().checkAndAwardAchievements();
+        expect(useStore.getState().achievements.find(a => a.id === AchievementId.SubjectMaster)?.achieved).toBe(true);
+    });
+
+    it('awards LoyalScholar achievement when a student has 10+ transactions', () => {
+        const tenTxs = Array.from({ length: 10 }, (_, i) => ({
+             id: String(i), studentId: 'loyal-student', date: new Date().toISOString(), lessonDuration: 60, lessonFee: 50, amountPaid: 50, status: PaymentStatus.Paid, paymentMethod: '', createdAt: ''
+        }));
+
+        useStore.setState({ transactions: tenTxs });
+        useStore.getState().checkAndAwardAchievements();
+        expect(useStore.getState().achievements.find(a => a.id === AchievementId.LoyalScholar)?.achieved).toBe(true);
+    });
+
+    it('awards HighTicket achievement', () => {
+        useStore.setState({
+            transactions: [
+                { id: '1', studentId: 's1', date: new Date().toISOString(), lessonDuration: 60, lessonFee: 200, amountPaid: 200, status: PaymentStatus.Paid, paymentMethod: '', createdAt: '' }
+            ]
+        });
+        useStore.getState().checkAndAwardAchievements();
+        expect(useStore.getState().achievements.find(a => a.id === AchievementId.HighTicket)?.achieved).toBe(true);
+    });
+
+    it('awards LevelFive achievement', () => {
+        useStore.setState({ gamification: { ...useStore.getState().gamification, level: 5 } });
+        useStore.getState().checkAndAwardAchievements();
+        expect(useStore.getState().achievements.find(a => a.id === AchievementId.LevelFive)?.achieved).toBe(true);
+    });
+
+    it('awards RateDiversifier achievement', () => {
+        useStore.setState({
+            students: [
+                { id: '1', firstName: 'John', lastName: 'Doe', tuition: { rateType: 'hourly' }, createdAt: '' } as any,
+                { id: '2', firstName: 'Jane', lastName: 'Doe', tuition: { rateType: 'per_lesson' }, createdAt: '' } as any,
+                { id: '3', firstName: 'Jack', lastName: 'Doe', tuition: { rateType: 'monthly' }, createdAt: '' } as any,
+            ]
+        });
+        useStore.getState().checkAndAwardAchievements();
+        expect(useStore.getState().achievements.find(a => a.id === AchievementId.RateDiversifier)?.achieved).toBe(true);
     });
 });
