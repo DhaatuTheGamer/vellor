@@ -84,6 +84,11 @@ describe('useDerivedData Hook', () => {
   });
 });
 
+// Mock confetti to prevent errors in Node environment
+vi.mock('canvas-confetti', () => {
+   return { default: vi.fn() };
+});
+
 describe('Gamification Logic (checkAndAwardAchievements)', () => {
     it('awards First Student Added achievement', () => {
         useStore.setState({
