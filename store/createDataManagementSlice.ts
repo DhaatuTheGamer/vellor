@@ -2,6 +2,7 @@ import { StateCreator } from 'zustand';
 import { AppState, DataManagementSlice } from './types';
 import { Theme } from '../types';
 import { DEFAULT_CURRENCY_SYMBOL, DEFAULT_USER_NAME, INITIAL_GAMIFICATION_STATS, ACHIEVEMENTS_DEFINITIONS } from '../constants';
+import { backupSchema } from './validation';
 
 export const createDataManagementSlice: StateCreator<AppState, [], [], DataManagementSlice> = (set, get) => ({
   exportData: () => {
@@ -42,31 +43,25 @@ export const createDataManagementSlice: StateCreator<AppState, [], [], DataManag
         try {
             const result = event.target?.result;
             if (typeof result !== 'string') { throw new Error('File could not be read.'); }
-            const data = JSON.parse(result, (key, value) => {
+            const rawData = JSON.parse(result, (key, value) => {
                 if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
                     return undefined;
                 }
                 return value;
             });
-            if (
-                data &&
-                typeof data === 'object' &&
-                Array.isArray(data.students) &&
-                Array.isArray(data.transactions) &&
-                data.settings &&
-                typeof data.settings === 'object'
-            ) {
-                set({
-                    students: data.students,
-                    transactions: data.transactions,
-                    settings: data.settings,
-                    ...(data.gamification && { gamification: data.gamification }),
-                    ...(data.achievements && { achievements: data.achievements }),
-                    ...(data.activityLog && { activityLog: data.activityLog })
-                });
-                get().addToast('Data imported successfully! The app will reload.', 'success');
-                setTimeout(() => window.location.reload(), 2000);
-            } else { throw new Error('Invalid data structure in JSON file.'); }
+
+            const parsedData = backupSchema.parse(rawData);
+
+            set({
+                students: parsedData.students,
+                transactions: parsedData.transactions,
+                settings: parsedData.settings,
+                ...(parsedData.gamification && { gamification: parsedData.gamification }),
+                ...(parsedData.achievements && { achievements: parsedData.achievements }),
+                ...(parsedData.activityLog && { activityLog: parsedData.activityLog })
+            });
+            get().addToast('Data imported successfully! The app will reload.', 'success');
+            setTimeout(() => window.location.reload(), 2000);
         } catch (error) {
             console.error("Failed to import data:", error);
             get().addToast(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
