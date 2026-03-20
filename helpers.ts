@@ -2,7 +2,18 @@
  * @file helpers.ts
  * This file contains helper functions for formatting data and determining display logic.
  */
+import DOMPurify from 'dompurify';
 import { PaymentStatus, PhoneNumber } from './types';
+
+/**
+ * Sanitizes a string by stripping all HTML tags using DOMPurify.
+ * @param {string | undefined} str The string to sanitize.
+ * @returns {string} The sanitized string.
+ */
+export const sanitizeString = (str: string | undefined): string => {
+  if (str === undefined) return '';
+  return DOMPurify.sanitize(str, { ALLOWED_TAGS: [] }); // Strip all HTML tags
+};
 
 /**
  * Formats a numeric amount into a currency string with a given symbol.
