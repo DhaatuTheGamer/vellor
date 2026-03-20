@@ -51,7 +51,7 @@ describe('store.ts - storageEngine', () => {
 
     it('decrypts data if globalMasterKey is set', async () => {
       setGlobalMasterKey(mockKey);
-      const testData = { foo: 'bar' };
+      const testData = { state: { foo: 'bar' } };
       const encryptedData = await encryptObject(testData, mockKey);
 
       vi.mocked(localforage.getItem).mockResolvedValueOnce(encryptedData);
