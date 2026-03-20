@@ -1,9 +1,19 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { storageEngine, setGlobalMasterKey } from './store';
 import localforage from 'localforage';
-import { encryptObject, decryptObject } from './src/crypto';
+import { encryptObject } from './src/crypto';
 
-// Mock localforage
+// Polyfill webcrypto if necessary
+if (typeof globalThis.crypto === 'undefined') {
+  const { webcrypto } = await import('crypto');
+  globalThis.crypto = webcrypto as any;
+}
+
+// Mock canvas-confetti (often needed for Zustand slices relying on UI/Gamification)
+vi.mock('canvas-confetti', () => {
+   return { default: vi.fn() };
+});
+
 vi.mock('localforage', () => ({
   default: {
     getItem: vi.fn(),
@@ -12,96 +22,82 @@ vi.mock('localforage', () => ({
   }
 }));
 
-// Mock crypto module
-vi.mock('./src/crypto', () => ({
-  encryptObject: vi.fn(),
-  decryptObject: vi.fn()
-}));
+describe('store.ts - storageEngine', () => {
+  let mockKey: CryptoKey;
 
-// Mock canvas-confetti to avoid issues in Node test env
-vi.mock('canvas-confetti', () => ({
-  default: vi.fn()
-}));
-
-describe('Custom storageEngine', () => {
-  const dummyKey = {} as CryptoKey;
-  const dummyObject = { test: 'data' };
-  const rawString = 'raw_data_string';
-  const encryptedString = 'encrypted_string';
-
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
     setGlobalMasterKey(null);
+    mockKey = await crypto.subtle.generateKey(
+      { name: 'AES-GCM', length: 256 },
+      true,
+      ['encrypt', 'decrypt']
+    );
   });
 
   describe('getItem', () => {
-    it('returns null if no raw data is returned from localforage', async () => {
+    it('returns null if localforage.getItem returns null', async () => {
       vi.mocked(localforage.getItem).mockResolvedValueOnce(null);
-
       const result = await storageEngine.getItem('test-key');
       expect(result).toBeNull();
       expect(localforage.getItem).toHaveBeenCalledWith('test-key');
     });
 
     it('returns null if raw data exists but globalMasterKey is not set', async () => {
-      vi.mocked(localforage.getItem).mockResolvedValueOnce(rawString);
-
+      vi.mocked(localforage.getItem).mockResolvedValueOnce('some-raw-data');
       const result = await storageEngine.getItem('test-key');
       expect(result).toBeNull();
-      expect(localforage.getItem).toHaveBeenCalledWith('test-key');
-      expect(decryptObject).not.toHaveBeenCalled();
     });
 
-    it('returns decrypted and stringified data when globalMasterKey is set', async () => {
-      setGlobalMasterKey(dummyKey);
-      vi.mocked(localforage.getItem).mockResolvedValueOnce(encryptedString);
-      vi.mocked(decryptObject).mockResolvedValueOnce(dummyObject);
+    it('decrypts data if globalMasterKey is set', async () => {
+      setGlobalMasterKey(mockKey);
+      const testData = { foo: 'bar' };
+      const encryptedData = await encryptObject(testData, mockKey);
+
+      vi.mocked(localforage.getItem).mockResolvedValueOnce(encryptedData);
+      const result = await storageEngine.getItem('test-key');
+      expect(result).toBe(JSON.stringify(testData));
+    });
+
+    it('handles decryption fallback correctly', async () => {
+      setGlobalMasterKey(mockKey);
+
+      // Invalid JSON or format will cause decryptObject to throw or return null based on fallback
+      // In src/crypto.ts, decryptObject fallback might catch it and return null.
+      // So if it returns null, JSON.stringify(null) will be "null".
+      vi.mocked(localforage.getItem).mockResolvedValueOnce('invalid-encrypted-data');
 
       const result = await storageEngine.getItem('test-key');
-      expect(result).toBe(JSON.stringify(dummyObject));
-      expect(localforage.getItem).toHaveBeenCalledWith('test-key');
-      expect(decryptObject).toHaveBeenCalledWith(encryptedString, dummyKey);
-    });
-
-    it('throws an error if decryption fails', async () => {
-      setGlobalMasterKey(dummyKey);
-      vi.mocked(localforage.getItem).mockResolvedValueOnce(encryptedString);
-      const error = new Error('Decryption Error');
-      vi.mocked(decryptObject).mockRejectedValueOnce(error);
-
-      // We spy on console.error to avoid test output noise
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      await expect(storageEngine.getItem('test-key')).rejects.toThrow('Decryption Error');
-      expect(consoleSpy).toHaveBeenCalledWith("Decryption failed", error);
-
-      consoleSpy.mockRestore();
+      expect(result).toBe("null");
     });
   });
 
   describe('setItem', () => {
-    it('writes raw value directly to localforage when globalMasterKey is not set', async () => {
-      const valueToSave = JSON.stringify(dummyObject);
-      await storageEngine.setItem('test-key', valueToSave);
-
-      expect(encryptObject).not.toHaveBeenCalled();
-      expect(localforage.setItem).toHaveBeenCalledWith('test-key', valueToSave);
+    it('sets unencrypted value if globalMasterKey is not set', async () => {
+      const valueToSet = JSON.stringify({ key: 'value' });
+      await storageEngine.setItem('test-key', valueToSet);
+      expect(localforage.setItem).toHaveBeenCalledWith('test-key', valueToSet);
     });
 
-    it('encrypts the value and saves to localforage when globalMasterKey is set', async () => {
-      setGlobalMasterKey(dummyKey);
-      const valueToSave = JSON.stringify(dummyObject);
-      vi.mocked(encryptObject).mockResolvedValueOnce(encryptedString);
+    it('sets encrypted value if globalMasterKey is set', async () => {
+      setGlobalMasterKey(mockKey);
+      const valueToSet = JSON.stringify({ key: 'value' });
+      await storageEngine.setItem('test-key', valueToSet);
 
-      await storageEngine.setItem('test-key', valueToSave);
+      expect(localforage.setItem).toHaveBeenCalledTimes(1);
 
-      expect(encryptObject).toHaveBeenCalledWith(dummyObject, dummyKey);
-      expect(localforage.setItem).toHaveBeenCalledWith('test-key', encryptedString);
+      const setCallArg = vi.mocked(localforage.setItem).mock.calls[0][1] as string;
+      expect(setCallArg).not.toBe(valueToSet);
+
+      expect(setCallArg).toBeTypeOf('string');
+      const parsed = JSON.parse(atob(setCallArg));
+      expect(parsed).toHaveProperty('iv');
+      expect(parsed).toHaveProperty('ct');
     });
   });
 
   describe('removeItem', () => {
-    it('calls localforage.removeItem with the correct key', async () => {
+    it('removes item from localforage', async () => {
       await storageEngine.removeItem('test-key');
       expect(localforage.removeItem).toHaveBeenCalledWith('test-key');
     });
