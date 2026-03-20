@@ -21,8 +21,6 @@ export const AchievementsPage: React.FC = () => {
     .sort((a,b) => new Date(b.dateAchieved || 0).getTime() - new Date(a.dateAchieved || 0).getTime());
   const pendingList = achievements.filter(a => !a.achieved);
 
-  console.log("AchievementsPage render:", { total: achievements.length, achieved: achievedList.length, pending: pendingList.length });
-
   const totalEarned = useMemo(() => transactions
       .filter(t => t.status === PaymentStatus.Paid || t.status === PaymentStatus.Overpaid || t.status === PaymentStatus.PartiallyPaid)
       .reduce((sum, t) => sum + (t.amountPaid || 0), 0), [transactions]);
