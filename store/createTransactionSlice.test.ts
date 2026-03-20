@@ -107,8 +107,8 @@ describe('createTransactionSlice', () => {
       });
 
       expect(updatedTransaction).toBeDefined();
-      expect(updatedTransaction?.paymentMethod).toBe('alert("xss")Card'); // Expect sanitized string
-      expect(updatedTransaction?.notes).toBe('Updated note alert("xss")'); // Expect sanitized string
+      expect(updatedTransaction?.paymentMethod).toBe('Card'); // Expect sanitized string
+      expect(updatedTransaction?.notes).toBe('Updated note '); // Expect sanitized string
     });
 
     it('returns undefined and ignores invalid transaction id', () => {
