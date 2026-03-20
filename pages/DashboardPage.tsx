@@ -1,7 +1,7 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore, useData } from '../store';
-import { Button, Card, StatDisplayCard, Icon } from '../components/ui';
+import { Button, Card, StatDisplayCard, Icon, ConfirmationModal } from '../components/ui';
 import { formatCurrency, formatDate, formatRelativeTime } from '../helpers';
 import { motion } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -22,6 +22,7 @@ export const DashboardPage: React.FC = () => {
   const addToast = useStore(s => s.addToast);
   const { totalUnpaid, totalPaidThisMonth, activeStudentsCount, overduePayments } = useData.derived();
   const navigate = useNavigate();
+  const [isConfirmingClearAll, setIsConfirmingClearAll] = useState(false);
 
   useEffect(() => {
     const lastBackup = localStorage.getItem('lastBackupDate');
@@ -330,7 +331,7 @@ export const DashboardPage: React.FC = () => {
               </h3>
               {activityLog.length > 0 && (
                 <button 
-                  onClick={clearActivityLog}
+                  onClick={() => setIsConfirmingClearAll(true)}
                   className="text-xs text-gray-500 hover:text-red-500 transition-colors"
                 >
                   Clear All
@@ -439,6 +440,25 @@ export const DashboardPage: React.FC = () => {
         </motion.div>
 
       </div>
+
+      <ConfirmationModal
+        isOpen={isConfirmingClearAll}
+        onClose={() => setIsConfirmingClearAll(false)}
+        onConfirm={() => {
+          clearActivityLog();
+          setIsConfirmingClearAll(false);
+          addToast('Activity log cleared', 'success');
+        }}
+        title="Clear Activity Log"
+        message={
+          <>
+            Are you sure you want to clear your entire recent activity history?
+            <br /><br />
+            <span className="text-danger">This action cannot be undone.</span>
+          </>
+        }
+        confirmButtonText="Clear All"
+      />
     </motion.div>
   );
 };
