@@ -2,7 +2,14 @@ import React, { useEffect, useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import { Github, Linkedin } from 'lucide-react';
 import { Button, Icon } from '../components/ui';
+
+const XIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 22.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+  </svg>
+);
 import { useStore } from '../store';
 import { Theme } from '../types';
 
@@ -54,20 +61,49 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
     }
   }, [isGamificationInView]);
 
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-primary text-gray-900 dark:text-gray-100 overflow-x-hidden font-sans custom-scrollbar">
       
-      {/* Theme Toggle Button */}
-      <div className="absolute top-6 right-6 z-50">
-        <Button
-            onClick={toggleTheme}
-            variant="ghost"
-            className="!p-3 rounded-full bg-white/50 dark:bg-black/50 backdrop-blur-md shadow-sm border border-gray-200 dark:border-white/10 transition-colors"
-            aria-label={`Switch to ${settings.theme === Theme.Dark ? 'Light' : 'Dark'} Mode`}
-        >
-            <Icon iconName={settings.theme === Theme.Dark ? 'sun' : 'moon'} className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-        </Button>
-      </div>
+      {/* Header */}
+      <header className="fixed top-0 inset-x-0 h-16 bg-white/70 dark:bg-primary/70 backdrop-blur-lg z-50 flex items-center justify-between px-4 md:px-8 border-b border-gray-200/50 dark:border-white/5">
+         <div className="flex items-center gap-2 font-display font-bold text-xl cursor-pointer" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
+            <div className="w-8 h-8 rounded-xl bg-accent flex items-center justify-center text-primary-dark">
+                <Icon iconName="academic-cap" className="w-5 h-5" />
+            </div>
+            Vellor
+         </div>
+         
+         <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-gray-600 dark:text-gray-300">
+             <button onClick={() => scrollTo('features')} className="hover:text-accent transition-colors">Features</button>
+             <button onClick={() => scrollTo('gamification')} className="hover:text-accent transition-colors">Gamification</button>
+             <button onClick={() => scrollTo('privacy')} className="hover:text-accent transition-colors">Privacy</button>
+         </nav>
+
+         <div className="flex items-center gap-4">
+            <a href="https://github.com/DhaatuTheGamer/vellor" target="_blank" rel="noreferrer" className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
+                <Github className="w-5 h-5" />
+            </a>
+            <a href="https://x.com/dhaatrik" target="_blank" rel="noreferrer" className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
+                <XIcon className="w-5 h-5" />
+            </a>
+            <a href="https://www.linkedin.com/in/dhaatrik-chowdhury" target="_blank" rel="noreferrer" className="text-gray-600 hover:text-[#0A66C2] dark:text-gray-400 dark:hover:text-[#0A66C2] transition-colors">
+                <Linkedin className="w-5 h-5" />
+            </a>
+            <div className="w-px h-6 bg-gray-200 dark:bg-white/10 ml-2 mr-1"></div>
+            <Button
+                onClick={toggleTheme}
+                variant="ghost"
+                className="!p-2 shadow-none border-none hover:bg-black/5 dark:hover:bg-white/5"
+                aria-label={`Switch to ${settings.theme === Theme.Dark ? 'Light' : 'Dark'} Mode`}
+            >
+                <Icon iconName={settings.theme === Theme.Dark ? 'sun' : 'moon'} className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+            </Button>
+         </div>
+      </header>
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center pt-20 pb-32 px-4 overflow-hidden">
@@ -80,7 +116,7 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.6, type: 'spring', bounce: 0.4 }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 backdrop-blur-sm mb-8 text-sm font-semibold text-accent">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 backdrop-blur-sm mb-8 text-sm font-semibold text-accent animate-pulse">
               <Icon iconName="sparkles" className="w-4 h-4" />
               <span>Vellor 4.0 is now live</span>
             </div>
@@ -106,7 +142,7 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
       </section>
 
       {/* Why Vellor Section */}
-      <section className="py-24 px-4 bg-white dark:bg-primary-dark/50 relative z-20">
+      <section id="features" className="py-24 px-4 bg-white dark:bg-primary-dark/50 relative z-20">
         <div className="max-w-6xl mx-auto">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -254,7 +290,7 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
       </section>
 
       {/* Gamification Section */}
-      <section ref={gamificationRef} className="py-24 px-4 bg-accent text-primary-dark relative z-20 overflow-hidden">
+      <section id="gamification" ref={gamificationRef} className="py-24 px-4 bg-accent text-primary-dark relative z-20 overflow-hidden">
          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAiPjwvcmVjdD4KPHBhdGggZD0iTTAgMEw4IDhaTTAgOEw4IDBaIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS1vcGFjaXR5PSIwLjA1IiBzdHJva2Utd2lkdGg9IjEiPjwvcGF0aD4KPC9zdmc+')] opacity-50"></div>
          <div className="max-w-4xl mx-auto text-center relative z-10">
             <motion.div
@@ -282,14 +318,14 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
       </section>
 
       {/* Uncompromising Privacy Section */}
-      <section className="py-24 px-4 bg-white dark:bg-primary-dark/50 relative z-20">
+      <section id="privacy" className="py-24 px-4 bg-white dark:bg-primary-dark/50 relative z-20">
          <div className="max-w-4xl mx-auto text-center">
              <motion.div
                initial={{ opacity: 0, y: 20 }}
                whileInView={{ opacity: 1, y: 0 }}
                viewport={{ once: true }}
              >
-                <div className="w-16 h-16 bg-gray-100 dark:bg-white/5 rounded-full mx-auto flex items-center justify-center mb-6 shadow-inner text-gray-500 dark:text-gray-400">
+                <div className="w-16 h-16 bg-gray-100 dark:bg-white/5 rounded-full mx-auto flex items-center justify-center mb-6 shadow-inner text-gray-700 dark:text-gray-400">
                     <Icon iconName="lock-closed" className="w-8 h-8" />
                 </div>
                 <h2 className="text-3xl md:text-4xl font-bold mb-6 font-display text-gray-900 dark:text-white">Uncompromising Privacy</h2>
@@ -308,11 +344,32 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
       </section>
 
       {/* Footer CTA */}
-      <section className="py-20 text-center relative z-20 border-t border-gray-100 dark:border-white/5">
+      <section className="py-24 px-4 text-center relative z-20 border-t border-gray-100 dark:border-white/5">
           <h2 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white">Ready to take control?</h2>
-          <Button onClick={onGetStarted} size="lg" className="rounded-full shadow-lg shadow-accent/20 py-4 px-10 text-lg">
+          <Button onClick={onGetStarted} size="lg" className="rounded-full shadow-lg shadow-accent/20 py-4 px-10 text-lg mb-16">
              Manage Your Business Now
           </Button>
+
+          {/* Actual Footer */}
+          <footer className="mt-12 pt-8 border-t border-gray-200/50 dark:border-white/5 max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between text-sm text-gray-500 gap-4">
+              <div className="flex items-center gap-2">
+                 <div className="w-6 h-6 rounded-lg bg-gray-200 dark:bg-white/10 flex items-center justify-center text-gray-600 dark:text-gray-400">
+                     <Icon iconName="academic-cap" className="w-3.5 h-3.5" />
+                 </div>
+                 <span className="font-semibold text-gray-800 dark:text-gray-300">Vellor</span> &copy; {new Date().getFullYear()}
+              </div>
+              <div className="flex items-center gap-6">
+                <a href="https://github.com/DhaatuTheGamer/vellor" target="_blank" rel="noreferrer" className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
+                    <Github className="w-5 h-5" />
+                </a>
+                <a href="https://x.com/dhaatrik" target="_blank" rel="noreferrer" className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
+                    <XIcon className="w-5 h-5" />
+                </a>
+                <a href="https://www.linkedin.com/in/dhaatrik-chowdhury" target="_blank" rel="noreferrer" className="text-gray-600 hover:text-[#0A66C2] dark:text-gray-400 dark:hover:text-[#0A66C2] transition-colors">
+                    <Linkedin className="w-5 h-5" />
+                </a>
+              </div>
+          </footer>
       </section>
 
     </div>
