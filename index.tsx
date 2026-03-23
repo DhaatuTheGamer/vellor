@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { HelmetProvider } from 'react-helmet-async';
 // Import the main App component, which serves as the entry point of the application's UI.
 import App from './App';
+import { Analytics } from "@vercel/analytics/react";
 
 // Get the root DOM element where the React application will be mounted.
 const rootElement = document.getElementById('root');
@@ -18,6 +19,7 @@ root.render(
   <React.StrictMode>
     <HelmetProvider>
       <App />
+      <Analytics />
     </HelmetProvider>
   </React.StrictMode>
 );
