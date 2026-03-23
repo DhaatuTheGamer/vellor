@@ -384,7 +384,7 @@ export const StudentsPage: React.FC = () => {
                 <Button size="sm" variant="ghost" className="!text-white dark:!text-gray-900 hover:bg-white/10 dark:hover:bg-black/10 whitespace-nowrap" onClick={handleBulkMarkPaid}>Mark Paid</Button>
                 <Button size="sm" variant="primary" className="shadow-none rounded-full whitespace-nowrap" onClick={handleBulkExport}>Export Invoices</Button>
             </div>
-            <button onClick={() => setSelectedStudentIds([])} className="ml-2 p-2 rounded-full hover:bg-white/10 dark:hover:bg-black/10 flex-shrink-0">
+            <button onClick={() => setSelectedStudentIds([])} className="ml-2 p-2 rounded-full hover:bg-white/10 dark:hover:bg-black/10 flex-shrink-0" aria-label="Clear selected students">
                 <Icon iconName="x-mark" className="w-5 h-5"/>
             </button>
           </motion.div>
