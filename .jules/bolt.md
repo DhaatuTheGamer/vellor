@@ -10,3 +10,7 @@
 ## 2024-11-20 - Performance: Avoid `Array.from()` on TypedArrays in hot paths
 **Learning:** `Array.from()` on TypedArrays (like `Uint8Array`) introduces significant overhead during iterations and element transformations compared to native indexing. In cryptographic or serialization operations handling thousands or millions of bytes, this allocation drastically impacts performance.
 **Action:** Replace `Array.from(typedArray)` with `const arr = new Array(typedArray.length); for(let i=0; i<typedArray.length; i++) arr[i] = typedArray[i];`. This eliminates the intermediate allocation overhead, executing operations typically ~2-3x faster for large buffers.
+
+## 2024-11-20 - Performance: Avoid multiple iterations over the same array
+**Learning:** Performing multiple chained array operations (like `.reduce()`, `.filter()`, and `.map()`) or separate iterations over the same large dataset (e.g., in `useDerivedData`) multiplies the iteration overhead and creates unnecessary intermediate array allocations, significantly degrading performance on hot paths.
+**Action:** Consolidate multiple passes over the same array into a single `for` loop, updating all necessary accumulators and arrays simultaneously within that single pass. Always hoist loop-invariant calculations (like `Date` object creation) outside the loop to maximize efficiency.

@@ -105,43 +105,52 @@ export const useDerivedData = () => {
   const transactions = useStore(state => state.transactions);
   const students = useStore(state => state.students);
   
-  const totalUnpaid = useMemo(() => transactions.reduce((acc, t) => {
-    if (t.status === PaymentStatus.Due) return acc + t.lessonFee;
-    if (t.status === PaymentStatus.PartiallyPaid) return acc + (t.lessonFee - t.amountPaid);
-    return acc;
-  }, 0), [transactions]);
+  const activeStudentsCount = useMemo(() => students.length, [students]);
 
-  const totalPaidThisMonth = useMemo(() => {
+  const { totalUnpaid, totalPaidThisMonth, overduePayments } = useMemo(() => {
     // ⚡ Bolt Performance: Hoist loop-invariant Date and extraction
     const today = new Date();
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth();
-
-    return transactions.reduce((acc, t) => {
-      // ⚡ Bolt Performance: Check status before creating expensive Date objects
-      if (t.status === PaymentStatus.Paid || t.status === PaymentStatus.PartiallyPaid || t.status === PaymentStatus.Overpaid) {
-        const transactionDate = new Date(t.date);
-        if (transactionDate.getFullYear() === currentYear && transactionDate.getMonth() === currentMonth) {
-          return acc + t.amountPaid;
-        }
-      }
-      return acc;
-    }, 0);
-  }, [transactions]);
-
-  const activeStudentsCount = useMemo(() => students.length, [students]);
-
-  const overduePayments = useMemo(() => {
-    // ⚡ Bolt Performance: Hoist loop-invariant Date processing
-    const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayTime = today.getTime();
 
-    return transactions.filter(t => {
-      const isOverdueStatus = t.status === PaymentStatus.Due || (t.status === PaymentStatus.PartiallyPaid && t.amountPaid < t.lessonFee);
-      // ⚡ Bolt Performance: Check status before parsing Date
-      return isOverdueStatus && new Date(t.date).getTime() < todayTime;
-    }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    let unpaid = 0;
+    let paidThisMonth = 0;
+    const overdue = [];
+
+    // ⚡ Bolt Performance: Single pass over transactions instead of two reduce + filter
+    for (let i = 0; i < transactions.length; i++) {
+      const t = transactions[i];
+
+      if (t.status === PaymentStatus.Due) {
+        unpaid += t.lessonFee;
+        if (new Date(t.date).getTime() < todayTime) {
+          overdue.push(t);
+        }
+      } else if (t.status === PaymentStatus.PartiallyPaid) {
+        unpaid += (t.lessonFee - t.amountPaid);
+        const transactionDate = new Date(t.date);
+        const tTime = transactionDate.getTime();
+
+        if (t.amountPaid < t.lessonFee && tTime < todayTime) {
+          overdue.push(t);
+        }
+
+        if (transactionDate.getFullYear() === currentYear && transactionDate.getMonth() === currentMonth) {
+          paidThisMonth += t.amountPaid;
+        }
+      } else if (t.status === PaymentStatus.Paid || t.status === PaymentStatus.Overpaid) {
+        const transactionDate = new Date(t.date);
+        if (transactionDate.getFullYear() === currentYear && transactionDate.getMonth() === currentMonth) {
+          paidThisMonth += t.amountPaid;
+        }
+      }
+    }
+
+    overdue.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    return { totalUnpaid: unpaid, totalPaidThisMonth: paidThisMonth, overduePayments: overdue };
   }, [transactions]);
 
   return {
