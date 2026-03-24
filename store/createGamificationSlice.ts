@@ -42,6 +42,95 @@ export const createGamificationSlice: StateCreator<AppState, [], [], Gamificatio
       let changed = false;
       const { students, transactions, gamification, settings } = state;
       
+      // ⚡ Bolt Performance: Pre-calculate metrics outside the loop (O(N + M) instead of O(Achievements * (N + M)))
+      let totalEarnedOverall = 0;
+      let paidThisMonth = 0;
+      let hasOverdue = false;
+      let hasPaid = false;
+      let hasMarathonSession = false;
+      let hasBonusEarned = false;
+      let hasHighTicket = false;
+      let hasBusyBee = false;
+      let hasLoyalScholar = false;
+
+      const now = Date.now();
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      const dateCounts: Record<string, number> = {};
+      const studentTxCounts: Record<string, number> = {};
+
+      for (let i = 0; i < transactions.length; i++) {
+          const t = transactions[i];
+          const status = t.status;
+          const amountPaid = t.amountPaid || 0;
+
+          if (status === PaymentStatus.Paid || status === PaymentStatus.Overpaid || status === PaymentStatus.PartiallyPaid) {
+              totalEarnedOverall += amountPaid;
+              try {
+                  const d = new Date(t.date);
+                  if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+                      paidThisMonth += amountPaid;
+                  }
+              } catch (e) { }
+          }
+
+          if (status === PaymentStatus.Paid) hasPaid = true;
+          if (status === PaymentStatus.Overpaid) hasBonusEarned = true;
+
+          if (!hasOverdue) {
+              const isDue = status === PaymentStatus.Due || (status === PaymentStatus.PartiallyPaid && amountPaid < (t.lessonFee || 0));
+              if (isDue) {
+                  try {
+                      const txDateMs = typeof t.date === 'number' ? t.date : (typeof t.date === 'string' ? Date.parse(t.date) : new Date(t.date).getTime());
+                      if (!isNaN(txDateMs) && (now - txDateMs) > 24 * 60 * 60 * 1000) {
+                          hasOverdue = true;
+                      }
+                  } catch (e) { }
+              }
+          }
+
+          if (!hasMarathonSession && (t.lessonDuration || 0) >= 180) hasMarathonSession = true;
+          if (!hasHighTicket && amountPaid >= 150) hasHighTicket = true;
+
+          if (!hasBusyBee) {
+              try {
+                  const dateStr = typeof t.date === 'string' ? t.date.split('T')[0] : new Date(t.date).toISOString().split('T')[0];
+                  const count = (dateCounts[dateStr] || 0) + 1;
+                  dateCounts[dateStr] = count;
+                  if (count >= 3) hasBusyBee = true;
+              } catch (e) { }
+          }
+
+          if (!hasLoyalScholar) {
+              const sid = t.studentId;
+              if (sid) {
+                  const count = (studentTxCounts[sid] || 0) + 1;
+                  studentTxCounts[sid] = count;
+                  if (count >= 10) hasLoyalScholar = true;
+              }
+          }
+      }
+
+      const uniqueSubjects = new Set<string>();
+      let hasHourly = false, hasPerLesson = false, hasMonthly = false;
+
+      for (let i = 0; i < students.length; i++) {
+          const s = students[i];
+          if (s.tuition && Array.isArray(s.tuition.subjects)) {
+              s.tuition.subjects.forEach(sub => {
+                  if (typeof sub === 'string') uniqueSubjects.add(sub.toLowerCase().trim());
+              });
+          }
+
+          const type = s.tuition?.rateType;
+          if (type === 'hourly') hasHourly = true;
+          else if (type === 'per_lesson') hasPerLesson = true;
+          else if (type === 'monthly') hasMonthly = true;
+      }
+
+      const hasSubjectMaster = uniqueSubjects.size >= 3;
+      const hasRateDiversifier = hasHourly && hasPerLesson && hasMonthly;
+
       const updatedAchievements = state.achievements.map(ach => {
         if (ach.achieved) return ach;
 
@@ -72,34 +161,16 @@ export const createGamificationSlice: StateCreator<AppState, [], [], Gamificatio
                 if (transactions.length >= 50) justAchieved = true;
                 break;
             case AchievementId.First100Earned:
+                if (totalEarnedOverall >= 100) justAchieved = true;
+                break;
             case AchievementId.First1000Earned:
+                if (totalEarnedOverall >= 1000) justAchieved = true;
+                break;
             case AchievementId.First5000Earned:
-                let totalEarnedOverall = 0;
-                for (let i = 0; i < transactions.length; i++) {
-                    const t = transactions[i];
-                    if (t.status === PaymentStatus.Paid || t.status === PaymentStatus.Overpaid || t.status === PaymentStatus.PartiallyPaid) {
-                        totalEarnedOverall += (t.amountPaid || 0);
-                    }
-                }
-                if (ach.id === AchievementId.First100Earned && totalEarnedOverall >= 100) justAchieved = true;
-                if (ach.id === AchievementId.First1000Earned && totalEarnedOverall >= 1000) justAchieved = true;
-                if (ach.id === AchievementId.First5000Earned && totalEarnedOverall >= 5000) justAchieved = true;
+                if (totalEarnedOverall >= 5000) justAchieved = true;
                 break;
             case AchievementId.DebtDemolisher:
-                const now = Date.now();
-                const hasOverdue = transactions.some(t => {
-                    const isDue = t.status === PaymentStatus.Due || (t.status === PaymentStatus.PartiallyPaid && (t.amountPaid || 0) < (t.lessonFee || 0));
-                    if (!isDue) return false;
-                    try {
-                        const txDateMs = typeof t.date === 'number' ? t.date : (typeof t.date === 'string' ? Date.parse(t.date) : new Date(t.date).getTime());
-                        if (isNaN(txDateMs)) return false;
-                        return (now - txDateMs) > 24 * 60 * 60 * 1000;
-                    } catch (e) { return false; }
-                });
-
-                if (!hasOverdue && transactions.some(t => t.status === PaymentStatus.Paid)) {
-                    justAchieved = true;
-                }
+                if (!hasOverdue && hasPaid) justAchieved = true;
                 break;
             case AchievementId.SevenDayStreak:
                 if (gamification.streak >= 7) justAchieved = true;
@@ -114,71 +185,25 @@ export const createGamificationSlice: StateCreator<AppState, [], [], Gamificatio
                 if (settings?.userName !== 'Tutor' && settings?.email && settings?.phone?.number) justAchieved = true;
                 break;
             case AchievementId.FirstGoalMet:
-                const currentMonth = new Date().getMonth();
-                const currentYear = new Date().getFullYear();
-                let paidThisMonth = 0;
-                for (let i = 0; i < transactions.length; i++) {
-                    const t = transactions[i];
-                    if (t.status === PaymentStatus.Paid || t.status === PaymentStatus.PartiallyPaid || t.status === PaymentStatus.Overpaid) {
-                        try {
-                            const d = new Date(t.date);
-                            if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
-                                paidThisMonth += (t.amountPaid || 0);
-                            }
-                        } catch (e) { }
-                    }
-                }
                 if (paidThisMonth >= (settings?.monthlyGoal || 500) && (settings?.monthlyGoal || 500) > 0) justAchieved = true;
                 break;
             case AchievementId.MarathonSession:
-                if (transactions.some(t => (t.lessonDuration || 0) >= 180)) justAchieved = true;
+                if (hasMarathonSession) justAchieved = true;
                 break;
             case AchievementId.BonusEarned:
-                if (transactions.some(t => t.status === PaymentStatus.Overpaid)) justAchieved = true;
+                if (hasBonusEarned) justAchieved = true;
                 break;
             case AchievementId.BusyBee:
-                const dateCounts: Record<string, number> = {};
-                for (let i = 0; i < transactions.length; i++) {
-                    try {
-                        const t = transactions[i];
-                        // ⚡ Bolt Performance: Avoid Date parsing for guaranteed ISO strings
-                        const dateStr = typeof t.date === 'string' ? t.date.split('T')[0] : new Date(t.date).toISOString().split('T')[0];
-                        const count = (dateCounts[dateStr] || 0) + 1;
-                        dateCounts[dateStr] = count;
-                        if (count >= 3) {
-                            justAchieved = true;
-                            break;
-                        }
-                    } catch (e) { }
-                }
+                if (hasBusyBee) justAchieved = true;
                 break;
             case AchievementId.SubjectMaster:
-                const uniqueSubjects = new Set<string>();
-                students.forEach(s => {
-                    if (s.tuition && Array.isArray(s.tuition.subjects)) {
-                        s.tuition.subjects.forEach(sub => {
-                            if (typeof sub === 'string') uniqueSubjects.add(sub.toLowerCase().trim());
-                        });
-                    }
-                });
-                if (uniqueSubjects.size >= 3) justAchieved = true;
+                if (hasSubjectMaster) justAchieved = true;
                 break;
             case AchievementId.LoyalScholar:
-                const studentTxCounts: Record<string, number> = {};
-                for (let i = 0; i < transactions.length; i++) {
-                    const sid = transactions[i].studentId;
-                    if (sid) {
-                        const count = (studentTxCounts[sid] || 0) + 1;
-                        studentTxCounts[sid] = count;
-                        if (count >= 10) {
-                            justAchieved = true;
-                            break;
-                        }
-                    }
-                }
+                if (hasLoyalScholar) justAchieved = true;
                 break;
             case AchievementId.HighTicket:
-                if (transactions.some(t => (t.amountPaid || 0) >= 150)) justAchieved = true;
+                if (hasHighTicket) justAchieved = true;
                 break;
             case AchievementId.LevelFive:
                 if ((gamification?.level || 1) >= 5) justAchieved = true;
@@ -187,18 +212,7 @@ export const createGamificationSlice: StateCreator<AppState, [], [], Gamificatio
                 if (transactions.length >= 100) justAchieved = true;
                 break;
             case AchievementId.RateDiversifier:
-                let hasHourly = false, hasPerLesson = false, hasMonthly = false;
-                for (let i = 0; i < students.length; i++) {
-                    const type = students[i].tuition?.rateType;
-                    if (type === 'hourly') hasHourly = true;
-                    else if (type === 'per_lesson') hasPerLesson = true;
-                    else if (type === 'monthly') hasMonthly = true;
-
-                    if (hasHourly && hasPerLesson && hasMonthly) {
-                        justAchieved = true;
-                        break;
-                    }
-                }
+                if (hasRateDiversifier) justAchieved = true;
                 break;
         }
 

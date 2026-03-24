@@ -14,3 +14,7 @@
 ## 2024-11-20 - Performance: Avoid multiple iterations over the same array
 **Learning:** Performing multiple chained array operations (like `.reduce()`, `.filter()`, and `.map()`) or separate iterations over the same large dataset (e.g., in `useDerivedData`) multiplies the iteration overhead and creates unnecessary intermediate array allocations, significantly degrading performance on hot paths.
 **Action:** Consolidate multiple passes over the same array into a single `for` loop, updating all necessary accumulators and arrays simultaneously within that single pass. Always hoist loop-invariant calculations (like `Date` object creation) outside the loop to maximize efficiency.
+
+## 2025-02-28 - Performance: Avoid full array iterations inside loop callbacks over static data
+**Learning:** Performing full-array scans (using `.some()`, `.forEach()`, or `for` loops) inside a `.map` iteration over a static configuration list (like definitions in `checkAndAwardAchievements`) causes redundant passes over the same unchanged data. This creates an unnecessary O(N*M) complexity multiplier (where N is data size and M is the number of configs).
+**Action:** Extract and hoist these array scans *before* the mapping loop. Consolidate them into a single, unified pre-calculation pass (O(N) complexity) that determines the boolean conditions needed, reducing the inner loop's work to simple conditional checks.
