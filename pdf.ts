@@ -3,6 +3,12 @@ import { DEFAULT_VELLOR_LOGO_BASE64 } from './src/defaultLogo';
 import autoTable from 'jspdf-autotable';
 import { Transaction, Student, AppSettings, PaymentStatus } from './types';
 
+interface jsPDFWithPlugin extends jsPDF {
+  lastAutoTable: {
+    finalY: number;
+  };
+}
+
 export const generateInvoicePDF = (
   transaction: Transaction,
   student: Student,
@@ -81,7 +87,7 @@ export const generateInvoicePDF = (
     headStyles: template === 'modern' ? { fillColor: brandAccent } : (template === 'classic' ? { fillColor: [0, 0, 0] } : { fillColor: [200, 200, 200], textColor: 0 }),
   });
 
-  const finalY = (doc as any).lastAutoTable.finalY + 15;
+  const finalY = (doc as jsPDFWithPlugin).lastAutoTable.finalY + 15;
   
   doc.setFontSize(10);
   doc.setTextColor(0);
@@ -139,7 +145,12 @@ export const generateProgressReportPDF = (
   const logoToUse = settings.invoiceLogoBase64 || settings.brandLogoBase64 || DEFAULT_VELLOR_LOGO_BASE64;
 
   if (logoToUse) {
-    try { doc.addImage(logoToUse, 'JPEG', 14, 10, 30, 30, undefined, 'FAST'); currentY = 45; } catch (e) {}
+    try {
+      doc.addImage(logoToUse, 'JPEG', 14, 10, 30, 30, undefined, 'FAST');
+      currentY = 45;
+    } catch (e) {
+      console.warn("Logo injection failed", e);
+    }
   }
 
   doc.setFontSize(22);
@@ -223,8 +234,11 @@ export const generateBulkInvoicePDF = (
     studentMap.get(t.studentId)!.push(t);
   });
 
+  const studentsById = new Map<string, Student>();
+  students.forEach(s => studentsById.set(s.id, s));
+
   studentMap.forEach((studentTransactions, studentId) => {
-    const student = students.find(s => s.id === studentId);
+    const student = studentsById.get(studentId);
     if (!student) return;
     
     // Sort transactions by date
@@ -239,7 +253,12 @@ export const generateBulkInvoicePDF = (
     let currentY = 20;
 
     if (logoToUse) {
-      try { doc.addImage(logoToUse, 'JPEG', 14, 10, 30, 30, undefined, 'FAST'); currentY = 45; } catch (e) {}
+      try {
+        doc.addImage(logoToUse, 'JPEG', 14, 10, 30, 30, undefined, 'FAST');
+        currentY = 45;
+      } catch (e) {
+        console.warn("Logo injection failed", e);
+      }
     }
 
     if (template === 'minimal') {
@@ -302,7 +321,7 @@ export const generateBulkInvoicePDF = (
       headStyles: template === 'modern' ? { fillColor: brandAccent } : (template === 'classic' ? { fillColor: [0, 0, 0] } : { fillColor: [200, 200, 200], textColor: 0 }),
     });
 
-    const finalY = (doc as any).lastAutoTable.finalY + 15;
+    const finalY = (doc as jsPDFWithPlugin).lastAutoTable.finalY + 15;
     
     doc.setFontSize(12);
     if (template === 'modern') doc.setFont('helvetica', 'bold');
