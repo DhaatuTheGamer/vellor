@@ -18,3 +18,7 @@
 **Vulnerability:** The application was decrypting stored legacy unencrypted fallback data and returning it without migrating it to the secure encryption standard, meaning old data would persist in an insecure format indefinitely.
 **Learning:** Fixing insecure storage formats (like legacy plain-text fallback parsing) requires a robust migration strategy upon read to automatically upgrade the data to the secure standard.
 **Prevention:** Implement a non-blocking `onLegacyData` callback that asynchronously re-encrypts and saves the secure payload without risking data loss if the storage write fails.
+## 2024-05-30 - Fix Missing XSS Sanitization in Transaction Fields
+**Vulnerability:** The `grade` and `progressRemark` fields in `store/createTransactionSlice.ts` were not sanitized when created or updated, while other string inputs (e.g., `paymentMethod`, `notes`) were. These fields are rendered in multiple places, including the public read-only portal, creating a potential XSS vulnerability if malicious data was injected into them.
+**Learning:** Even internal or non-primary text inputs need strict sanitization when they are persisted to state and eventually rendered in the DOM, especially on unauthenticated views like shared portal links.
+**Prevention:** Always ensure that every string field originating from user input is explicitly run through the DOMPurify `sanitizeString` wrapper before it is saved into the application's global state store.

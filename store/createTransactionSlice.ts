@@ -12,6 +12,8 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
       ...transactionData,
       paymentMethod: sanitizeString(transactionData.paymentMethod),
       notes: sanitizeString(transactionData.notes),
+      grade: sanitizeString(transactionData.grade),
+      progressRemark: sanitizeString(transactionData.progressRemark),
     };
 
     let status: PaymentStatus;
@@ -71,6 +73,12 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
      }
      if (transactionData.notes !== undefined) {
         sanitizedTransactionData.notes = sanitizeString(transactionData.notes);
+     }
+     if (transactionData.grade !== undefined) {
+        sanitizedTransactionData.grade = sanitizeString(transactionData.grade);
+     }
+     if (transactionData.progressRemark !== undefined) {
+        sanitizedTransactionData.progressRemark = sanitizeString(transactionData.progressRemark);
      }
 
      set(state => {
