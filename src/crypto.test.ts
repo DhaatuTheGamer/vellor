@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { importKeyFromBase64 } from './crypto';
+import { importKeyFromBase64, decryptObject, generateSalt, deriveKey } from './crypto';
 
 // Polyfill for crypto.subtle in jsdom environment if needed, but vitest globals=true with jsdom usually provides it, or we can use Node's crypto
 import { webcrypto } from 'crypto';
@@ -43,5 +43,29 @@ describe('importKeyFromBase64', () => {
 
     // importKey should throw when expecting a 256-bit AES key but given different length
     await expect(importKeyFromBase64(shortBase64)).rejects.toThrow();
+  });
+});
+
+describe('decryptObject', () => {
+  beforeAll(() => {
+    if (typeof globalThis.crypto === 'undefined' || !globalThis.crypto.subtle) {
+      Object.defineProperty(globalThis, 'crypto', {
+        value: webcrypto,
+      });
+    }
+  });
+
+  it('returns null when legacy decryption fallback catches an error', async () => {
+    const salt = generateSalt();
+    const key = await deriveKey('testpassword', salt);
+
+    // Provide a base64 string that is not a valid JSON structure for the initial parse
+    // AND will also throw an error during the legacy fallback's JSON.parse()
+    const invalidPayload = btoa('This is not a valid JSON string');
+
+    const result = await decryptObject(invalidPayload, key);
+
+    // Should return null from the catch(oldError) block
+    expect(result).toBeNull();
   });
 });
