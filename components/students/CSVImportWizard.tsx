@@ -11,7 +11,7 @@ interface CSVImportWizardProps {
 export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClose }) => {
     const [step, setStep] = useState<1 | 2>(1);
     const [originalHeaders, setOriginalHeaders] = useState<string[]>([]);
-    const [csvData, setCsvData] = useState<any[]>([]);
+    const [csvData, setCsvData] = useState<Record<string, string>[]>([]);
     const [mapping, setMapping] = useState<{ [key: string]: string }>({});
     const addStudent = useStore(s => s.addStudent);
     const addToast = useStore(s => s.addToast);
@@ -51,7 +51,7 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
              const data = [];
              for (let i = 1; i < lines.length; i++) {
                  const row = parseLine(lines[i]);
-                 let obj: any = {};
+                 let obj: Record<string, string> = {};
                  headers.forEach((h, idx) => obj[h] = row[idx] || '');
                  data.push(obj);
              }
