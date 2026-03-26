@@ -399,6 +399,7 @@ export const DashboardPage: React.FC = () => {
                 <button 
                   onClick={() => setIsConfirmingClearAll(true)}
                   className="text-xs text-gray-500 hover:text-red-500 transition-colors"
+                  aria-label="Clear all activity history"
                 >
                   Clear All
                 </button>
