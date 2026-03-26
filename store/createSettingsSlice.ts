@@ -35,6 +35,12 @@ export const createSettingsSlice: StateCreator<AppState, [], [], SettingsSlice> 
         state.addPoints(POINTS_ALLOCATION.COMPLETE_PROFILE, "Completed profile setup!");
         state.logActivity('Completed profile setup', 'check-circle');
     }
+    if (newSettings.userName) {
+        newSettings.userName = sanitizeString(newSettings.userName);
+    }
+    if (newSettings.email !== undefined) {
+        newSettings.email = sanitizeString(newSettings.email);
+    }
     if (newSettings.phone) {
         newSettings.phone.number = sanitizeString(newSettings.phone.number);
     }
