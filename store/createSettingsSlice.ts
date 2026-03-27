@@ -47,6 +47,18 @@ export const createSettingsSlice: StateCreator<AppState, [], [], SettingsSlice> 
     if (newSettings.country) {
         newSettings.country = sanitizeString(newSettings.country);
     }
+    if (newSettings.customRankTitles) {
+        newSettings.customRankTitles = newSettings.customRankTitles.map(title => sanitizeString(title));
+    }
+    if (newSettings.customAchievement) {
+        newSettings.customAchievement = sanitizeString(newSettings.customAchievement);
+    }
+    if (newSettings.brandColor) {
+        newSettings.brandColor = sanitizeString(newSettings.brandColor);
+    }
+    if (newSettings.currencySymbol) {
+        newSettings.currencySymbol = sanitizeString(newSettings.currencySymbol);
+    }
     set(s => ({ settings: { ...s.settings, ...newSettings } }));
     get().addToast('Settings saved successfully.', 'success');
     get().checkAndAwardAchievements();
