@@ -28,7 +28,8 @@ export const AchievementsPage: React.FC = () => {
         dateAchieved: new Date().toISOString() // Assuming earned today for sorting purposes if not stored
       });
     }
-    return list.sort((a,b) => new Date(b.dateAchieved || 0).getTime() - new Date(a.dateAchieved || 0).getTime());
+    // ⚡ Bolt Performance: Use Date.parse() instead of new Date().getTime()
+    return list.sort((a,b) => Date.parse(b.dateAchieved || "1970-01-01T00:00:00Z") - Date.parse(a.dateAchieved || "1970-01-01T00:00:00Z"));
   }, [achievements, settings?.customAchievement, settings?.customAchievementEarned]);
 
   const pendingList = useMemo(() => {

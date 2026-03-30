@@ -38,7 +38,8 @@ export const DashboardPage: React.FC = () => {
   useEffect(() => {
     const lastBackup = localStorage.getItem('lastBackupDate');
     if (lastBackup) {
-      const daysSinceBackup = (new Date().getTime() - new Date(lastBackup).getTime()) / (1000 * 3600 * 24);
+      // ⚡ Bolt Performance: Use Date.parse() instead of new Date().getTime()
+      const daysSinceBackup = (Date.now() - Date.parse(lastBackup)) / (1000 * 3600 * 24);
       if (daysSinceBackup > 7) {
         // Use a timeout to ensure toasts render after initial mount
         setTimeout(() => addToast("It's been over a week since your last backup! Go to Settings to export your data.", "info"), 1000);

@@ -110,7 +110,8 @@ export const generatePortalLink = (student: Student, transactions: Transaction[]
       status: t.status,
       grade: t.grade,
       progressRemark: t.progressRemark,
-    })).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      // ⚡ Bolt Performance: Use Date.parse() instead of new Date().getTime()
+    })).sort((a,b) => Date.parse(b.date) - Date.parse(a.date))
   };
   
   const base64 = btoa(encodeURIComponent(JSON.stringify(payload)));
