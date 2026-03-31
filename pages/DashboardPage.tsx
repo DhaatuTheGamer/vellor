@@ -314,8 +314,10 @@ export const DashboardPage: React.FC = () => {
                 {isEditingGoal ? (
                     <div className="flex items-center gap-2">
                         <span className="text-gray-500">/</span>
+                        <label htmlFor="monthly-goal-input" className="sr-only">Monthly Goal</label>
                         <input 
-                            type="number" 
+                            id="monthly-goal-input"
+                            type="number"
                             aria-label="Monthly goal"
                             className="w-20 px-2 py-1 bg-white/50 dark:bg-primary-dark/50 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-gray-900 dark:text-white outline-none" 
                             value={goalInput} 
