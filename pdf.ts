@@ -188,7 +188,8 @@ export const generateProgressReportPDF = (
 
   const reportTransactions = transactions
      .filter(t => t.studentId === student.id && (t.grade || t.progressRemark))
-     .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+     // ⚡ Bolt Performance: Use Date.parse() instead of new Date().getTime()
+     .sort((a,b) => Date.parse(b.date) - Date.parse(a.date));
 
   if (reportTransactions.length > 0) {
       autoTable(doc, {
@@ -242,7 +243,8 @@ export const generateBulkInvoicePDF = (
     if (!student) return;
     
     // Sort transactions by date
-    studentTransactions.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    // ⚡ Bolt Performance: Use Date.parse() instead of new Date().getTime()
+    studentTransactions.sort((a,b) => Date.parse(a.date) - Date.parse(b.date));
 
     if (!isFirstPage) {
       doc.addPage();

@@ -104,8 +104,13 @@ export const StudentDetailView: React.FC<StudentDetailViewProps> = ({ student, o
      return '';
   };
 
+  const progressTransactions = useMemo(() => {
+     // ⚡ Bolt Performance: Memoize the filtered array to avoid O(N) re-calculation during render
+     return studentTransactions.filter(t => t.grade || t.progressRemark);
+  }, [studentTransactions]);
+
   const gradeChartData = useMemo(() => {
-     return [...studentTransactions]
+     return [...progressTransactions]
         .reverse()
         .filter(t => t.grade && ['A','B','C','D','F'].includes(t.grade))
         .map(t => ({
@@ -113,7 +118,7 @@ export const StudentDetailView: React.FC<StudentDetailViewProps> = ({ student, o
            val: gradeToNumber(t.grade as string),
            grade: t.grade
         }));
-  }, [studentTransactions]);
+  }, [progressTransactions]);
 
   const handleExportReport = () => {
       generateProgressReportPDF(student, transactions, settings, parentNote);
@@ -401,9 +406,9 @@ export const StudentDetailView: React.FC<StudentDetailViewProps> = ({ student, o
                    </div>
                 )}
 
-                {studentTransactions.filter(t => t.grade || t.progressRemark).length > 0 ? (
+                {progressTransactions.length > 0 ? (
                   <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                     {studentTransactions.filter(t => t.grade || t.progressRemark).map(t => (
+                     {progressTransactions.map(t => (
                         <div key={t.id + "-prog"} className="p-4 bg-gray-50 dark:bg-primary/30 rounded-2xl border border-gray-100 dark:border-white/5 relative transition-colors hover:border-accent/40">
                            <div className="flex justify-between items-start mb-2">
                               <span className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1.5"><Icon iconName="calendar" className="w-4 h-4" /> {formatDate(t.date)}</span>
