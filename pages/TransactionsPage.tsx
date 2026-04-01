@@ -76,9 +76,13 @@ export const TransactionsPage: React.FC = () => {
   };
   
   const studentsMap = useMemo(() => {
-    const map = new Map<string, typeof students[0]>();
+    // ⚡ Bolt Performance: Pre-compute searchName for faster filtering
+    const map = new Map<string, typeof students[0] & { searchName: string }>();
     for (const student of students) {
-      map.set(student.id, student);
+      map.set(student.id, {
+        ...student,
+        searchName: `${student.firstName} ${student.lastName}`.toLowerCase()
+      });
     }
     return map;
   }, [students]);
@@ -177,8 +181,7 @@ export const TransactionsPage: React.FC = () => {
       if (query) {
         const student = studentsMap.get(t.studentId);
         if (!student) return false;
-        const fullName = `${student.firstName} ${student.lastName}`.toLowerCase();
-        if (!fullName.includes(query)) return false;
+        if (!student.searchName.includes(query)) return false;
       }
 
       return true;
