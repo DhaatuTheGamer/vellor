@@ -1,8 +1,23 @@
 import { StateCreator } from 'zustand';
 import { AppState, GamificationSlice } from './types';
 import { TUTOR_RANK_LEVELS, INITIAL_GAMIFICATION_STATS, ACHIEVEMENTS_DEFINITIONS } from '../constants';
-import { AchievementId, PaymentStatus } from '../types';
+import { AchievementId, PaymentStatus, Transaction } from '../types';
 import confetti from 'canvas-confetti';
+
+const isTransactionOverdue = (t: Transaction, now: number, amountPaid: number): boolean => {
+    const isDue = t.status === PaymentStatus.Due || (t.status === PaymentStatus.PartiallyPaid && amountPaid < (t.lessonFee || 0));
+    if (!isDue) return false;
+
+    try {
+        const txDateMs = typeof t.date === 'number' ? t.date : (typeof t.date === 'string' ? Date.parse(t.date) : new Date(t.date).getTime());
+        if (!isNaN(txDateMs) && (now - txDateMs) > 24 * 60 * 60 * 1000) {
+            return true;
+        }
+    } catch (e) {
+        console.error('Failed to parse transaction date for overdue check:', e);
+    }
+    return false;
+};
 
 export const createGamificationSlice: StateCreator<AppState, [], [], GamificationSlice> = (set, get) => ({
   gamification: INITIAL_GAMIFICATION_STATS,
@@ -79,18 +94,8 @@ export const createGamificationSlice: StateCreator<AppState, [], [], Gamificatio
           if (status === PaymentStatus.Paid) hasPaid = true;
           if (status === PaymentStatus.Overpaid) hasBonusEarned = true;
 
-          if (!hasOverdue) {
-              const isDue = status === PaymentStatus.Due || (status === PaymentStatus.PartiallyPaid && amountPaid < (t.lessonFee || 0));
-              if (isDue) {
-                  try {
-                      const txDateMs = typeof t.date === 'number' ? t.date : (typeof t.date === 'string' ? Date.parse(t.date) : new Date(t.date).getTime());
-                      if (!isNaN(txDateMs) && (now - txDateMs) > 24 * 60 * 60 * 1000) {
-                          hasOverdue = true;
-                      }
-                  } catch (e) {
-                      console.error('Failed to parse transaction date for overdue check:', e);
-                  }
-              }
+          if (!hasOverdue && isTransactionOverdue(t, now, amountPaid)) {
+              hasOverdue = true;
           }
 
           if (!hasMarathonSession && (t.lessonDuration || 0) >= 180) hasMarathonSession = true;

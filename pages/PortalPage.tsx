@@ -33,11 +33,15 @@ export const PortalPage: React.FC = () => {
     );
   }
 
-  const { tutorName, currencySymbol, student, transactions } = parsedData;
+  const { tutorName, currencySymbol, student: rawStudent, transactions: rawTransactions } = parsedData;
+
+  // Basic validation to prevent client-side DoS
+  const student = typeof rawStudent === 'object' && rawStudent !== null ? rawStudent : {};
+  const transactions = Array.isArray(rawTransactions) ? rawTransactions : [];
 
   const totalOwed = transactions.reduce((sum: number, t: any) => {
-    if (t.status === 'Due') return sum + t.lessonFee;
-    if (t.status === 'Partially Paid') return sum + (t.lessonFee - t.amountPaid);
+    if (t?.status === 'Due') return sum + (t.lessonFee || 0);
+    if (t?.status === 'Partially Paid') return sum + ((t.lessonFee || 0) - (t.amountPaid || 0));
     return sum;
   }, 0);
 
@@ -50,8 +54,8 @@ export const PortalPage: React.FC = () => {
            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white shadow-sm mb-4 overflow-hidden border border-gray-100">
              <img src="/logo.png" alt="Vellor" className="w-16 h-16 object-contain dark:bg-white/90 dark:rounded-2xl dark:p-2" />
            </div>
-           <h1 className="text-3xl font-bold text-gray-900 mb-1">{student.firstName} {student.lastName}'s Dashboard</h1>
-           <p className="text-gray-500 font-medium">Prepared by {tutorName}</p>
+           <h1 className="text-3xl font-bold text-gray-900 mb-1">{student?.firstName || 'Student'} {student?.lastName || ''}'s Dashboard</h1>
+           <p className="text-gray-500 font-medium">Prepared by {tutorName || 'Your Tutor'}</p>
         </div>
 
         {/* Summary Cards */}
@@ -64,7 +68,7 @@ export const PortalPage: React.FC = () => {
                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Subjects</h3>
              </div>
              <div className="flex flex-wrap gap-1.5 mt-2">
-                {student.subjects?.length > 0 ? student.subjects.map((sub: string, i: number) => (
+                {Array.isArray(student?.subjects) && student.subjects.length > 0 ? student.subjects.map((sub: string, i: number) => (
                   <span key={i} className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-md">{sub}</span>
                 )) : <span className="text-gray-400 text-sm">Not specified</span>}
              </div>
