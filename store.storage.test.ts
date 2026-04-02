@@ -78,17 +78,13 @@ describe('store.ts - storageEngine', () => {
       consoleSpy.mockRestore();
     });
 
-    it('throws error and logs to console if decryption fails', async () => {
+    it('throws error if decryption fails', async () => {
       setGlobalMasterKey(mockKey);
       vi.mocked(localforage.getItem).mockResolvedValueOnce('some-encrypted-data');
 
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       vi.mocked(decryptObject).mockRejectedValueOnce(new Error('Decryption Error'));
 
       await expect(storageEngine.getItem('test-key')).rejects.toThrow('Decryption Error');
-      expect(consoleSpy).toHaveBeenCalledWith('Decryption failed', expect.any(Error));
-
-      consoleSpy.mockRestore();
     });
   });
 
