@@ -228,6 +228,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({ student, onSave, onClo
               {...register('contact.email')} 
               error={errors.contact?.email?.message} 
               wrapperClassName="md:col-span-2" 
+              placeholder="john.doe@example.com"
             />
           </div>
         </div>
@@ -247,6 +248,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({ student, onSave, onClo
                 setSubjectsInput(e.target.value);
                 setValue('tuition.subjects', e.target.value.split(',').map(s => s.trim()).filter(Boolean), { shouldValidate: true });
               }}
+              placeholder="e.g. Math, Science"
             />
             <Input 
               label="Default Rate" 
@@ -254,6 +256,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({ student, onSave, onClo
               {...register('tuition.defaultRate')} 
               error={errors.tuition?.defaultRate?.message}
               min="0" step="0.01" 
+              placeholder="e.g. 50.00"
             />
             <Select 
               label="Rate Type" 
@@ -296,6 +299,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({ student, onSave, onClo
             label="Notes" 
             {...register('notes')} 
             error={errors.notes?.message}
+            placeholder="Add any additional notes about the student here..."
           />
         </div>
       </div>
