@@ -442,6 +442,7 @@ export const DashboardPage: React.FC = () => {
                                     onClick={() => deleteActivity(activity.id)}
                                     className="opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-primary-light transition-opacity"
                                     aria-label="Delete activity"
+                                    title="Delete activity"
                                   >
                                     <Icon iconName="x-mark" className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                                   </button>
