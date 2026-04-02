@@ -33,6 +33,7 @@ export const createStudentSlice: StateCreator<AppState, [], [], StudentSlice> = 
     };
     const newStudent: Student = {
       ...sanitizedStudentData,
+      searchName: `${sanitizedStudentData.firstName} ${sanitizedStudentData.lastName}`.toLowerCase(),
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
     };
@@ -55,6 +56,10 @@ export const createStudentSlice: StateCreator<AppState, [], [], StudentSlice> = 
 
           if (studentData.firstName !== undefined) studentToUpdate.firstName = sanitizeString(studentData.firstName);
           if (studentData.lastName !== undefined) studentToUpdate.lastName = sanitizeString(studentData.lastName);
+          if (studentData.firstName !== undefined || studentData.lastName !== undefined) {
+             studentToUpdate.searchName = `${studentToUpdate.firstName} ${studentToUpdate.lastName}`.toLowerCase();
+          }
+
           if (studentData.notes !== undefined) studentToUpdate.notes = sanitizeString(studentData.notes);
           if (studentData.country !== undefined) studentToUpdate.country = sanitizeString(studentData.country);
 

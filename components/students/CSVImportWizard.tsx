@@ -8,6 +8,22 @@ interface CSVImportWizardProps {
     onClose: () => void;
 }
 
+// Split safely avoiding commas inside quotes
+const parseLine = (line: string) => {
+    const result: string[] = [];
+    let cur = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+        if (line[i] === '"') inQuotes = !inQuotes;
+        else if (line[i] === ',' && !inQuotes) {
+            result.push(cur.trim().replace(/^"|"$/g, ''));
+            cur = '';
+        } else cur += line[i];
+    }
+    result.push(cur.trim().replace(/^"|"$/g, ''));
+    return result;
+};
+
 export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClose }) => {
     const [step, setStep] = useState<1 | 2>(1);
     const [originalHeaders, setOriginalHeaders] = useState<string[]>([]);
@@ -23,28 +39,17 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
         const reader = new FileReader();
         reader.onload = (event) => {
              const text = event.target?.result as string;
-             const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+             const rawLines = text.split('\n');
+             const lines: string[] = [];
+             for (let i = 0; i < rawLines.length; i++) {
+                 const trimmed = rawLines[i].trim();
+                 if (trimmed) lines.push(trimmed);
+             }
              if (lines.length < 2) { 
                  addToast("Invalid CSV format or not enough data rows.", "error"); 
                  return; 
              }
              
-             // Split safely avoiding commas inside quotes
-             const parseLine = (line: string) => {
-                 const result: string[] = [];
-                 let cur = '';
-                 let inQuotes = false;
-                 for (let i = 0; i < line.length; i++) {
-                     if (line[i] === '"') inQuotes = !inQuotes;
-                     else if (line[i] === ',' && !inQuotes) {
-                         result.push(cur.trim().replace(/^"|"$/g, ''));
-                         cur = '';
-                     } else cur += line[i];
-                 }
-                 result.push(cur.trim().replace(/^"|"$/g, ''));
-                 return result;
-             };
-
              const headers = parseLine(lines[0]);
              setOriginalHeaders(headers);
              

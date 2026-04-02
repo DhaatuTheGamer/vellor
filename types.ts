@@ -85,6 +85,8 @@ export interface Student {
   firstName: string;
   /** The student's last name. */
   lastName: string;
+  /** Pre-computed lowercased full name for faster searching. */
+  searchName?: string;
   /** The student's country. */
   country?: string;
   /** Information about the student's parent or guardian. */
