@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { importKeyFromBase64 } from './crypto';
+import { importKeyFromBase64, exportKeyToBase64 } from './crypto';
 
 // Polyfill for crypto.subtle in jsdom environment if needed, but vitest globals=true with jsdom usually provides it, or we can use Node's crypto
 import { webcrypto } from 'crypto';
@@ -43,5 +43,42 @@ describe('importKeyFromBase64', () => {
 
     // importKey should throw when expecting a 256-bit AES key but given different length
     await expect(importKeyFromBase64(shortBase64)).rejects.toThrow();
+  });
+});
+
+describe('exportKeyToBase64', () => {
+  beforeAll(() => {
+    if (typeof globalThis.crypto === 'undefined' || !globalThis.crypto.subtle) {
+      Object.defineProperty(globalThis, 'crypto', {
+        value: webcrypto,
+      });
+    }
+  });
+
+  it('successfully exports an imported key to the same base64 string', async () => {
+    const validBase64Key = '0RGoNs9kNzJa3LLq+i/hoUbA39sfrGJs5YpYj7vRYa4=';
+    const key = await importKeyFromBase64(validBase64Key);
+    const exported = await exportKeyToBase64(key);
+    expect(exported).toBe(validBase64Key);
+  });
+
+  it('can export and re-import a freshly generated key', async () => {
+    const freshKey = await globalThis.crypto.subtle.generateKey(
+      { name: 'AES-GCM', length: 256 },
+      true,
+      ['encrypt', 'decrypt']
+    );
+
+    const exportedBase64 = await exportKeyToBase64(freshKey);
+    expect(typeof exportedBase64).toBe('string');
+    expect(exportedBase64.length).toBeGreaterThan(0);
+
+    const reImportedKey = await importKeyFromBase64(exportedBase64);
+    expect(reImportedKey).toBeDefined();
+    expect(reImportedKey.type).toBe('secret');
+    expect(reImportedKey.algorithm.name).toBe('AES-GCM');
+
+    const reExportedBase64 = await exportKeyToBase64(reImportedKey);
+    expect(reExportedBase64).toBe(exportedBase64);
   });
 });
