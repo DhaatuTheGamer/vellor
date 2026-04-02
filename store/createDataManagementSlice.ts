@@ -6,7 +6,7 @@ import { backupSchema } from './validation';
 import { jsonReviver } from '../src/crypto';
 
 export const createDataManagementSlice: StateCreator<AppState, [], [], DataManagementSlice> = (set, get) => ({
-  exportData: () => {
+  exportData: async () => {
     try {
         const state = get();
         const dataToExport = { 
@@ -17,7 +17,26 @@ export const createDataManagementSlice: StateCreator<AppState, [], [], DataManag
             settings: state.settings, 
             activityLog: state.activityLog 
         };
-        const jsonString = JSON.stringify(dataToExport, null, 2);
+
+        const password = window.prompt("Enter a password to encrypt your backup (leave blank to export unencrypted):");
+        if (password === null) return; // User cancelled
+
+        let exportPayload: any = dataToExport;
+
+        if (password) {
+            const { generateSalt, deriveKey, encryptObject } = await import('../src/crypto');
+            const salt = generateSalt();
+            const key = await deriveKey(password, salt);
+            const encryptedData = await encryptObject(dataToExport, key);
+
+            exportPayload = {
+                __vellor_encrypted: true,
+                salt: Array.from(salt),
+                data: encryptedData
+            };
+        }
+
+        const jsonString = JSON.stringify(exportPayload, null, 2);
         const blob = new Blob([jsonString], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -39,11 +58,27 @@ export const createDataManagementSlice: StateCreator<AppState, [], [], DataManag
   importData: async (file: File) => {
     if (!file) { get().addToast('No file selected for import.', 'error'); return; }
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
         try {
             const result = event.target?.result;
             if (typeof result !== 'string') { throw new Error('File could not be read.'); }
-            const rawData = JSON.parse(result, jsonReviver);
+            let rawData = JSON.parse(result, jsonReviver);
+
+            if (rawData.__vellor_encrypted) {
+                const password = window.prompt("This backup is encrypted. Please enter the password:");
+                if (password === null) return; // User cancelled
+
+                const { deriveKey, decryptObject } = await import('../src/crypto');
+                const salt = new Uint8Array(rawData.salt);
+                const key = await deriveKey(password, salt);
+                try {
+                    const decrypted = await decryptObject(rawData.data, key);
+                    if (!decrypted) throw new Error("Decryption failed");
+                    rawData = decrypted;
+                } catch (e) {
+                    throw new Error("Incorrect password or corrupted encrypted data.");
+                }
+            }
 
             const parsedData = backupSchema.parse(rawData);
 
