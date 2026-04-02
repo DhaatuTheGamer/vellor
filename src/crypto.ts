@@ -99,7 +99,6 @@ export const decryptObject = async <T = any>(
       // but only if it's valid JSON that matches the schema
       return result;
     } catch (oldError) {
-      console.error("Fallback deserialization failed:", { originalError: error, fallbackError: oldError });
       // Throw the *original* error on failure to decrypt so that we do not fail open
       // to arbitrary unencrypted data
       throw error;
