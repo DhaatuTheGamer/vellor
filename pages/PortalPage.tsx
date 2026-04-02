@@ -1,27 +1,71 @@
-import React, { useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Card, Icon } from '../components/ui';
 import { formatCurrency, formatDate } from '../helpers';
 import { TransactionStatusBadge } from '../components/transactions/TransactionStatusBadge';
-import { jsonReviver } from '../src/crypto';
+import { jsonReviver, importKeyFromBase64, decryptObject } from '../src/crypto';
 
 export const PortalPage: React.FC = () => {
   const location = useLocation();
+  const [parsedData, setParsedData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
-  const parsedData = useMemo(() => {
-    try {
-      const searchParams = new URLSearchParams(location.search);
-      const dataParam = searchParams.get('data');
-      if (!dataParam) return null;
-      const decodedStr = decodeURIComponent(atob(dataParam));
-      return JSON.parse(decodedStr, jsonReviver);
-    } catch (e) {
-      console.error("Failed to parse portal data", e);
-      return null;
-    }
+  useEffect(() => {
+    const loadPortalData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const searchParams = new URLSearchParams(location.search);
+        const dataParam = searchParams.get('data');
+        const keyParam = searchParams.get('k');
+
+        if (!dataParam) {
+          setParsedData(null);
+          setIsLoading(false);
+          return;
+        }
+
+        if (keyParam) {
+          // New encrypted format
+          const key = await importKeyFromBase64(keyParam);
+          const decrypted = await decryptObject(dataParam, key);
+          if (decrypted) {
+            setParsedData(decrypted);
+          } else {
+            throw new Error("Decryption returned null");
+          }
+        } else {
+          // Legacy format (base64 only)
+          const decodedStr = decodeURIComponent(atob(dataParam));
+          const data = JSON.parse(decodedStr, jsonReviver);
+          setParsedData(data);
+        }
+      } catch (e) {
+        console.error("Failed to parse portal data", e);
+        setError("Invalid or expired portal link.");
+        setParsedData(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadPortalData();
   }, [location.search]);
 
-  if (!parsedData) {
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50 text-center p-4 font-sans">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="w-16 h-16 bg-gray-200 rounded-2xl mb-4"></div>
+          <div className="h-4 w-32 bg-gray-200 rounded-full mb-2"></div>
+          <div className="h-3 w-24 bg-gray-100 rounded-full"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !parsedData) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50 text-center p-4 font-sans">
         <Card className="max-w-md w-full py-12 px-6">

@@ -126,10 +126,15 @@ export const StudentDetailView: React.FC<StudentDetailViewProps> = ({ student, o
       useStore.getState().addToast('Progress Report exported!', 'success');
   };
 
-  const handleSharePortal = () => {
-     const link = generatePortalLink(student, studentTransactions, settings);
-     navigator.clipboard.writeText(link);
-     useStore.getState().addToast('Portal link copied to clipboard!', 'success');
+  const handleSharePortal = async () => {
+     try {
+       const link = await generatePortalLink(student, studentTransactions, settings);
+       await navigator.clipboard.writeText(link);
+       useStore.getState().addToast('Portal link copied to clipboard!', 'success');
+     } catch (error) {
+       console.error("Failed to generate portal link", error);
+       useStore.getState().addToast('Failed to generate portal link.', 'error');
+     }
   };
 
   const gradientClass = useMemo(() => getGradient(student.firstName + student.lastName), [student.firstName, student.lastName]);

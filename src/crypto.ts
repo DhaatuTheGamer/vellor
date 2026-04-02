@@ -2,6 +2,14 @@ export const generateSalt = (): Uint8Array => {
   return crypto.getRandomValues(new Uint8Array(16));
 };
 
+export const generateKey = async (): Promise<CryptoKey> => {
+  return await crypto.subtle.generateKey(
+    { name: "AES-GCM", length: 256 },
+    true,
+    ["encrypt", "decrypt"]
+  );
+};
+
 export const deriveKey = async (password: string, salt: Uint8Array): Promise<CryptoKey> => {
   const enc = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey(

@@ -4,6 +4,7 @@
  */
 import DOMPurify from 'dompurify';
 import { PaymentStatus, PhoneNumber, Student, Transaction, AppSettings } from './types';
+import { encryptObject, exportKeyToBase64, generateKey } from './src/crypto';
 
 /**
  * Sanitizes a string by stripping all HTML tags using DOMPurify.
@@ -91,9 +92,9 @@ export const generateWhatsAppLink = (phone: PhoneNumber | undefined, message: st
 };
 
 /**
- * Generates a Base64 encoded URL for the read-only student/parent portal.
+ * Generates an encrypted URL for the read-only student/parent portal.
  */
-export const generatePortalLink = (student: Student, transactions: Transaction[], settings: AppSettings): string => {
+export const generatePortalLink = async (student: Student, transactions: Transaction[], settings: AppSettings): Promise<string> => {
   const payload = {
     tutorName: settings.userName,
     currencySymbol: settings.currencySymbol,
@@ -114,7 +115,10 @@ export const generatePortalLink = (student: Student, transactions: Transaction[]
     })).sort((a,b) => Date.parse(b.date) - Date.parse(a.date))
   };
   
-  const base64 = btoa(encodeURIComponent(JSON.stringify(payload)));
+  const key = await generateKey();
+  const encrypted = await encryptObject(payload, key);
+  const exportedKey = await exportKeyToBase64(key);
   const baseUrl = window.location.href.split('#')[0];
-  return `${baseUrl}#/portal?data=${base64}`;
+
+  return `${baseUrl}#/portal?data=${encrypted}&k=${exportedKey}`;
 };

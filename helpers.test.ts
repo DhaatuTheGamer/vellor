@@ -1,8 +1,18 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { formatCurrency, formatPhoneNumber, getPaymentStatusColor, formatRelativeTime, generatePortalLink } from './helpers';
 import { PaymentStatus, Student, Transaction, AppSettings, Theme } from './types';
 
+import { webcrypto } from 'crypto';
+
 describe('Helpers', () => {
+    beforeAll(() => {
+        if (typeof globalThis.crypto === 'undefined' || !globalThis.crypto.subtle) {
+          Object.defineProperty(globalThis, 'crypto', {
+            value: webcrypto,
+          });
+        }
+    });
+
     it('formats currency correctly', () => {
         expect(formatCurrency(150, '$')).toBe('$150.00');
         expect(formatCurrency(0, '£')).toBe('£0.00');
@@ -75,16 +85,21 @@ describe('generatePortalLink', () => {
         userName: 'Tutor Tom'
     };
 
-    it('generates a valid portal link with encoded payload', () => {
-        const link = generatePortalLink(mockStudent, mockTransactions, mockSettings);
+    it('generates a valid portal link with encrypted payload', async () => {
+        const link = await generatePortalLink(mockStudent, mockTransactions, mockSettings);
 
         const baseUrl = window.location.href.split('#')[0];
         expect(link.startsWith(baseUrl)).toBe(true);
         expect(link).toContain('#/portal?data=');
+        expect(link).toContain('&k=');
 
-        const base64Data = link.split('?data=')[1];
-        const jsonPayload = decodeURIComponent(atob(base64Data));
-        const payload = JSON.parse(jsonPayload);
+        const url = new URL(link.replace('#/', ''));
+        const encryptedData = url.searchParams.get('data')!;
+        const exportedKey = url.searchParams.get('k')!;
+
+        const { importKeyFromBase64, decryptObject } = await import('./src/crypto');
+        const key = await importKeyFromBase64(exportedKey);
+        const payload = await decryptObject(encryptedData, key);
 
         expect(payload).toMatchObject({
             tutorName: 'Tutor Tom',
@@ -102,7 +117,7 @@ describe('generatePortalLink', () => {
         expect(payload.transactions[1].id).toBe('tx-1');
     });
 
-    it('sorts transactions by date descending', () => {
+    it('sorts transactions by date descending', async () => {
         // Unordered transactions
         const unorderedTransactions: Transaction[] = [
             { ...mockTransactions[0], id: 'old', date: '2023-01-01T00:00:00Z' },
@@ -110,19 +125,29 @@ describe('generatePortalLink', () => {
             { ...mockTransactions[0], id: 'middle', date: '2023-06-15T00:00:00Z' },
         ];
 
-        const link = generatePortalLink(mockStudent, unorderedTransactions, mockSettings);
-        const base64Data = link.split('?data=')[1];
-        const payload = JSON.parse(decodeURIComponent(atob(base64Data)));
+        const link = await generatePortalLink(mockStudent, unorderedTransactions, mockSettings);
+        const url = new URL(link.replace('#/', ''));
+        const encryptedData = url.searchParams.get('data')!;
+        const exportedKey = url.searchParams.get('k')!;
+
+        const { importKeyFromBase64, decryptObject } = await import('./src/crypto');
+        const key = await importKeyFromBase64(exportedKey);
+        const payload = await decryptObject(encryptedData, key);
 
         expect(payload.transactions[0].id).toBe('new');
         expect(payload.transactions[1].id).toBe('middle');
         expect(payload.transactions[2].id).toBe('old');
     });
 
-    it('handles empty transactions array', () => {
-        const link = generatePortalLink(mockStudent, [], mockSettings);
-        const base64Data = link.split('?data=')[1];
-        const payload = JSON.parse(decodeURIComponent(atob(base64Data)));
+    it('handles empty transactions array', async () => {
+        const link = await generatePortalLink(mockStudent, [], mockSettings);
+        const url = new URL(link.replace('#/', ''));
+        const encryptedData = url.searchParams.get('data')!;
+        const exportedKey = url.searchParams.get('k')!;
+
+        const { importKeyFromBase64, decryptObject } = await import('./src/crypto');
+        const key = await importKeyFromBase64(exportedKey);
+        const payload = await decryptObject(encryptedData, key);
 
         expect(payload.transactions).toHaveLength(0);
         expect(payload.transactions).toEqual([]);
