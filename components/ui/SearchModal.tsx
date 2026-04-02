@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Modal, Input } from '.';
 import { useStore } from '../../store';
 import { useNavigate } from 'react-router-dom';
@@ -16,11 +16,18 @@ export const SearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = (
     }
   }, [isOpen]);
 
+  const searchableStudents = useMemo(() => {
+    return students.map(s => ({
+      ...s,
+      _searchableName: (s.firstName + ' ' + s.lastName).toLowerCase()
+    }));
+  }, [students]);
+
   // ⚡ Bolt Performance: Hoist query.toLowerCase() outside the filter loop
   // to prevent unnecessary string operations during the O(N) array search.
   const lowerQuery = query.toLowerCase();
-  const filteredStudents = students.filter(s => 
-    (s.firstName + ' ' + s.lastName).toLowerCase().includes(lowerQuery)
+  const filteredStudents = query === '' ? [] : searchableStudents.filter(s =>
+    s._searchableName.includes(lowerQuery)
   ).slice(0, 5);
 
   const handleSelectStudent = (id: string) => {
