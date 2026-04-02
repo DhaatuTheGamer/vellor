@@ -65,7 +65,6 @@ export const storageEngine = {
         );
         return JSON.stringify(obj);
       } catch (error) {
-        console.error("Decryption failed", error);
         throw error;
       }
     }

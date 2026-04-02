@@ -4,6 +4,31 @@ import { importKeyFromBase64, encryptObject, decryptObject, deriveKey, generateS
 // Polyfill for crypto.subtle in jsdom environment if needed, but vitest globals=true with jsdom usually provides it, or we can use Node's crypto
 import { webcrypto } from 'crypto';
 
+describe('generateSalt', () => {
+  beforeAll(() => {
+    // Ensure crypto is available in the test environment
+    if (typeof globalThis.crypto === 'undefined' || !globalThis.crypto.subtle) {
+      Object.defineProperty(globalThis, 'crypto', {
+        value: webcrypto,
+      });
+    }
+  });
+
+  it('returns a Uint8Array of length 16', () => {
+    const salt = generateSalt();
+    expect(salt).toBeInstanceOf(Uint8Array);
+    expect(salt.length).toBe(16);
+  });
+
+  it('generates random values on subsequent calls', () => {
+    const salt1 = generateSalt();
+    const salt2 = generateSalt();
+
+    // They shouldn't be exactly the same
+    expect(salt1).not.toEqual(salt2);
+  });
+});
+
 describe('importKeyFromBase64', () => {
   beforeAll(() => {
     // Ensure crypto is available in the test environment (jsdom might not have it fully implemented)

@@ -104,7 +104,7 @@ export const decryptObject = async <T = any>(
       if (onLegacyData && result) {
         // We await the migration here so the new state is saved
         // before we return the legacy data for this initial load
-        await Promise.resolve(onLegacyData(result)).catch(e => console.error("Legacy migration failed:", e));
+        await Promise.resolve(onLegacyData(result)).catch(() => {});
       }
 
       // We return the legacy data so the app does not load an empty state,
