@@ -172,6 +172,18 @@ const MagneticButton: React.FC<{ children: React.ReactNode; onClick: () => void;
 };
 
 // Improvement #7: JSON-LD schema as a maintainable typed object
+const founderStoryParagraphs: React.ReactNode[] = [
+  <>For years, my entire "business" ran on flimsy notepads. I would write down class plans, contact numbers, and track who had paid what. But one sudden downpour during a commute, and those pages would be soaked, the ink bleeding into an unreadable mess, taking all my notes and contacts with it. Other days, I'd simply forget the notepad at home.</>,
+  <>When I finally upgraded to spreadsheets, the workload somehow got worse. I would still take notes on paper during the day, then come home exhausted, open my laptop, and manually type everything out. It was a massive, soul-sucking drain of hours. It was time I could have spent crafting better study lessons, making custom notes, or just working on my own passion projects.</>,
+  <>I built Vellor because I was tired of this irony. I would spend an hour teaching a student the elegance of physics or the beauty of mathematics, only to spend another hour wrestling with administrative overhead that was quietly stealing my joy. And when I looked for software to help? Every "solution" wanted $30 to $50 a month. They wanted my students' data. They wanted a cut of my earnings.</>,
+  <>When I finally stopped teaching in the 2024-2025 academic year, after ten long years, I looked back and realized something profound. This deeply underappreciated profession had given me far more than just remuneration. It taught me how to communicate, how to plan, and how to take absolute responsibility. I learned human psychology. I learned how to negotiate, how to talk about money, and how to build reward systems. I made a lot of mistakes, and I learned how to survive and grow from them.</>,
+  <>Ten years gave me countless interactions, countless memories, countless treats, countless gifts... and countless punishments (okay, I could actually count those, but it ruins the rhyme!). I started out of financial need, but words aren't enough to express the gratitude I feel today. I tell everyone now: <em className="text-accent font-semibold not-italic">teach at least once in your life</em>. The compounding effect it has on your personal and professional growth is exponential.</>,
+  <>Today, equipped with the knowledge of modern tech-stacks and AI, I felt a moral obligation to solve the exact problems I used to face. I wanted to make a contribution to this community with absolutely zero hidden motives. If I am building tools for educators, the tool itself must embody the ethics of education. Knowledge should be free, and the tools to share it should be too.</>,
+  <>Vellor is for the independent tutors who are tight on finances but possess massive ambitions. It's for the people who refuse to just be another carbon footprint, who want to do something great, and who are actively shaping a better future. No cloud servers harvesting your data. No subscription traps. Just a tool, built by a tutor, for tutors. Open-source, offline-first, and yours forever.</>,
+  <>I may have stepped away from the daily grind, but once a teacher, always a teacher. I still love it. This is just the start, and the story continues...</>
+];
+
+// Improvement #7: JSON-LD schema as a maintainable typed object
 const schemaData = {
   "@context": "https://schema.org",
   "@graph": [
@@ -975,30 +987,11 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
                       transition={{ duration: 0.5, ease: 'easeInOut' }}
                       className="overflow-hidden space-y-6"
                     >
-                      <p className="text-xl leading-relaxed text-gray-700 dark:text-gray-300 text-pretty">
-                        For years, my entire "business" ran on flimsy notepads. I would write down class plans, contact numbers, and track who had paid what. But one sudden downpour during a commute, and those pages would be soaked, the ink bleeding into an unreadable mess, taking all my notes and contacts with it. Other days, I'd simply forget the notepad at home.
-                      </p>
-                      <p className="text-xl leading-relaxed text-gray-700 dark:text-gray-300 text-pretty">
-                        When I finally upgraded to spreadsheets, the workload somehow got worse. I would still take notes on paper during the day, then come home exhausted, open my laptop, and manually type everything out. It was a massive, soul-sucking drain of hours. It was time I could have spent crafting better study lessons, making custom notes, or just working on my own passion projects.
-                      </p>
-                      <p className="text-xl leading-relaxed text-gray-700 dark:text-gray-300 text-pretty">
-                        I built Vellor because I was tired of this irony. I would spend an hour teaching a student the elegance of physics or the beauty of mathematics, only to spend another hour wrestling with administrative overhead that was quietly stealing my joy. And when I looked for software to help? Every "solution" wanted $30 to $50 a month. They wanted my students' data. They wanted a cut of my earnings.
-                      </p>
-                      <p className="text-xl leading-relaxed text-gray-700 dark:text-gray-300 text-pretty">
-                        When I finally stopped teaching in the 2024-2025 academic year, after ten long years, I looked back and realized something profound. This deeply underappreciated profession had given me far more than just remuneration. It taught me how to communicate, how to plan, and how to take absolute responsibility. I learned human psychology. I learned how to negotiate, how to talk about money, and how to build reward systems. I made a lot of mistakes, and I learned how to survive and grow from them.
-                      </p>
-                      <p className="text-xl leading-relaxed text-gray-700 dark:text-gray-300 text-pretty">
-                        Ten years gave me countless interactions, countless memories, countless treats, countless gifts... and countless punishments (okay, I could actually count those, but it ruins the rhyme!). I started out of financial need, but words aren't enough to express the gratitude I feel today. I tell everyone now: <em className="text-accent font-semibold not-italic">teach at least once in your life</em>. The compounding effect it has on your personal and professional growth is exponential.
-                      </p>
-                      <p className="text-xl leading-relaxed text-gray-700 dark:text-gray-300 text-pretty">
-                        Today, equipped with the knowledge of modern tech-stacks and AI, I felt a moral obligation to solve the exact problems I used to face. I wanted to make a contribution to this community with absolutely zero hidden motives. If I am building tools for educators, the tool itself must embody the ethics of education. Knowledge should be free, and the tools to share it should be too.
-                      </p>
-                      <p className="text-xl leading-relaxed text-gray-700 dark:text-gray-300 text-pretty">
-                        Vellor is for the independent tutors who are tight on finances but possess massive ambitions. It's for the people who refuse to just be another carbon footprint, who want to do something great, and who are actively shaping a better future. No cloud servers harvesting your data. No subscription traps. Just a tool, built by a tutor, for tutors. Open-source, offline-first, and yours forever.
-                      </p>
-                      <p className="text-xl leading-relaxed text-gray-700 dark:text-gray-300 text-pretty">
-                        I may have stepped away from the daily grind, but once a teacher, always a teacher. I still love it. This is just the start, and the story continues...
-                      </p>
+                      {founderStoryParagraphs.map((paragraph, idx) => (
+                        <p key={idx} className="text-xl leading-relaxed text-gray-700 dark:text-gray-300 text-pretty">
+                          {paragraph}
+                        </p>
+                      ))}
                       <p className="text-lg leading-relaxed text-gray-500 dark:text-gray-400 italic mt-4">
                         Take care, take love. And all the best to all of you who are out there actually shaping the world.
                       </p>
