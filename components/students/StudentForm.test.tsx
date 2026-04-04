@@ -18,7 +18,7 @@ describe('StudentForm', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.spyOn(globalThis.crypto, 'randomUUID').mockReturnValue('mock-uuid-1234');
+    vi.spyOn(globalThis.crypto, 'randomUUID').mockReturnValue('12345678-1234-1234-1234-123456789012');
   });
 
   it('renders correctly for a new student', () => {
@@ -58,7 +58,7 @@ describe('StudentForm', () => {
     const savedData = mockOnSave.mock.calls[0][0];
     expect(savedData.firstName).toBe('John');
     expect(savedData.lastName).toBe('Doe');
-    expect(savedData.id).toBe('mock-uuid-1234');
+    expect(savedData.id).toBe('12345678-1234-1234-1234-123456789012');
     expect(savedData.country).toBe('United States'); // default value
     expect(savedData.tuition.defaultRate).toBe(50); // default value
   });
