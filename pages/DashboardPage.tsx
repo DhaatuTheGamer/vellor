@@ -24,11 +24,14 @@ export const DashboardPage: React.FC = () => {
   const { totalUnpaid, totalPaidThisMonth, activeStudentsCount, overduePayments } = useData.derived();
   
   const predictedIncome = useMemo(() => {
-    return students.reduce((sum, student) => {
+    let sum = 0;
+    for (let i = 0; i < students.length; i++) {
+      const student = students[i];
       let monthlyMultiplier = 4;
       if (student.tuition.rateType === 'monthly') monthlyMultiplier = 1;
-      return sum + (student.tuition.defaultRate * monthlyMultiplier);
-    }, 0);
+      sum += (student.tuition.defaultRate * monthlyMultiplier);
+    }
+    return sum;
   }, [students]);
 
   const navigate = useNavigate();
