@@ -1,24 +1,3 @@
-## 2024-05-18 - Replacing array.filter().length with array.some()
-**Learning:** Checking if an array contains no elements matching a condition by using `array.filter(condition).length === 0` forces a complete iteration over the entire array, which is inefficient.
-**Action:** Replace this pattern with `!array.some(condition)`, which stops iterating (short-circuits) immediately upon finding the first match. Additionally, hoist calculations like `Date.now()` outside of loops and evaluate inexpensive boolean checks before executing expensive operations like date string parsing.
-## 2024-03-20 - Optimize Date parsing in gamification slice
-**Learning:** When attempting to optimize Date parsing across different timezones, converting Date objects to strings for naive matching against local methods (e.g. `new Date().getMonth()`) introduces major timezone regressions.
-**Action:** Always maintain exact logical alignment with the original code (e.g., using `new Date()` for correct timezones) and focus optimizations on safe short-circuiting logic that evaluates boolean conditions (like `t.status`) before executing expensive object allocations.
-## 2024-10-25 - Performance: Avoid Array `.filter().reduce()` chaining
-**Learning:** Chaining `.filter(condition).reduce(action, init)` on large arrays (like transaction lists in `createGamificationSlice.ts`) creates an unnecessary intermediate array and requires two passes over the data.
-**Action:** When filtering out elements purely to calculate an aggregate sum, combine the logic into a single `.reduce()` or `for` loop pass to eliminate intermediate allocations and cut execution time roughly in half.
-## 2024-11-20 - Performance: Avoid `Array.from()` on TypedArrays in hot paths
-**Learning:** `Array.from()` on TypedArrays (like `Uint8Array`) introduces significant overhead during iterations and element transformations compared to native indexing. In cryptographic or serialization operations handling thousands or millions of bytes, this allocation drastically impacts performance.
-**Action:** Replace `Array.from(typedArray)` with `const arr = new Array(typedArray.length); for(let i=0; i<typedArray.length; i++) arr[i] = typedArray[i];`. This eliminates the intermediate allocation overhead, executing operations typically ~2-3x faster for large buffers.
-
-## 2024-11-20 - Performance: Avoid multiple iterations over the same array
-**Learning:** Performing multiple chained array operations (like `.reduce()`, `.filter()`, and `.map()`) or separate iterations over the same large dataset (e.g., in `useDerivedData`) multiplies the iteration overhead and creates unnecessary intermediate array allocations, significantly degrading performance on hot paths.
-**Action:** Consolidate multiple passes over the same array into a single `for` loop, updating all necessary accumulators and arrays simultaneously within that single pass. Always hoist loop-invariant calculations (like `Date` object creation) outside the loop to maximize efficiency.
-
-## 2025-02-28 - Performance: Avoid full array iterations inside loop callbacks over static data
-**Learning:** Performing full-array scans (using `.some()`, `.forEach()`, or `for` loops) inside a `.map` iteration over a static configuration list (like definitions in `checkAndAwardAchievements`) causes redundant passes over the same unchanged data. This creates an unnecessary O(N*M) complexity multiplier (where N is data size and M is the number of configs).
-**Action:** Extract and hoist these array scans *before* the mapping loop. Consolidate them into a single, unified pre-calculation pass (O(N) complexity) that determines the boolean conditions needed, reducing the inner loop's work to simple conditional checks.
-
-## 2025-03-05 - Performance: Consolidate Array operations and optimize Date parsing
-**Learning:** Using `new Date(string).getTime()` in Array `.sort()` callbacks inside hot paths (like `getTransactionsByStudent`) allocates intermediate objects excessively. Further, chaining multiple array iterations (like `.filter()`, `.some()`, `.reduce()`) over the same array unnecessarily multiplies time complexity to O(k*N) instead of O(N) while creating intermediate arrays.
-**Action:** Replace `new Date(string).getTime()` with `Date.parse(string)` for a ~25-40% faster timestamp retrieval without memory allocations. Consolidate chained array operations (`.filter().some()`, `.reduce()`) into a single O(N) `for` loop that updates all needed variables at once.
+## 2024-04-03 - React.memo Broken by Inline Callbacks
+**Learning:** Even if list item components (`StudentListItem`, `TransactionListItem`) are wrapped in `React.memo`, passing un-memoized inline callbacks or arrow functions from the parent list component will break the memoization. This causes the entire list to re-render on any parent state change (e.g., typing in a search bar), leading to noticeable UI lag with large lists.
+**Action:** Always wrap event handler callbacks in `useCallback` when passing them down to child components that rely on `React.memo` to prevent unnecessary re-renders.

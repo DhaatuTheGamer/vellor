@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useStore } from '../store';
 import { Transaction, PaymentStatus } from '../types';
@@ -66,14 +66,17 @@ export const TransactionsPage: React.FC = () => {
       setMakeupPrompt({ isOpen: false, studentId: '' });
   };
 
-  const handleEditTransaction = (transaction: Transaction) => {
+  // ⚡ Bolt Performance: Memoize callbacks passed to React.memo child components
+  // Prevents the entire transaction list from re-rendering when the parent component updates
+  // (e.g., during text search or date filtering), making list updates much faster.
+  const handleEditTransaction = useCallback((transaction: Transaction) => {
     setEditingTransaction(transaction);
     setShowForm(true);
-  };
+  }, []);
 
-  const handleDeleteRequest = (transaction: Transaction) => {
+  const handleDeleteRequest = useCallback((transaction: Transaction) => {
     setConfirmingDelete(transaction);
-  };
+  }, []);
   
   const studentsMap = useMemo(() => {
     // ⚡ Bolt Performance: Pre-compute searchName for faster filtering
@@ -87,7 +90,7 @@ export const TransactionsPage: React.FC = () => {
     return map;
   }, [students]);
 
-  const handleGenerateInvoice = (transaction: Transaction) => {
+  const handleGenerateInvoice = useCallback((transaction: Transaction) => {
     const student = studentsMap.get(transaction.studentId);
     if (student) {
       generateInvoicePDF(transaction, student, settings);
@@ -95,9 +98,9 @@ export const TransactionsPage: React.FC = () => {
     } else {
       addToast('Student not found.', 'error');
     }
-  };
+  }, [studentsMap, settings, addToast]);
 
-  const handleShareWhatsApp = async (transaction: Transaction) => {
+  const handleShareWhatsApp = useCallback(async (transaction: Transaction) => {
     const student = studentsMap.get(transaction.studentId);
     if (!student) return addToast('Student not found.', 'error');
 
@@ -122,7 +125,7 @@ export const TransactionsPage: React.FC = () => {
     } catch (e) {
       // user likely cancelled sharing
     }
-  };
+  }, [studentsMap, settings, addToast]);
 
   const handleBulkInvoice = () => {
     const success = generateBulkInvoicePDF(students, transactions, settings);
