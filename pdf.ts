@@ -252,7 +252,6 @@ export const generateBulkInvoicePDF = (
       const d = studentTransactions[i].date;
       timeMap.set(studentTransactions[i], typeof d === 'string' ? Date.parse(d) : d.getTime());
     }
-    studentTransactions.sort((a,b) => timeMap.get(a)! - timeMap.get(b)!);
 
     if (!isFirstPage) {
       doc.addPage();
