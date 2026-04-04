@@ -112,6 +112,33 @@ describe('importKeyFromBase64', () => {
   });
 });
 
+describe('jsonReviver', () => {
+  it('returns undefined for prototype pollution keys', () => {
+    expect(jsonReviver('__proto__', 'value')).toBeUndefined();
+    expect(jsonReviver('constructor', 'value')).toBeUndefined();
+    expect(jsonReviver('prototype', 'value')).toBeUndefined();
+  });
+
+  it('parses valid ISO date strings to Date objects', () => {
+    const dateStr = '2023-10-27T10:00:00.000Z';
+    const result = jsonReviver('date', dateStr);
+    expect(result).toBeInstanceOf(Date);
+    expect((result as Date).toISOString()).toBe(dateStr);
+  });
+
+  it('returns original value for non-date strings', () => {
+    expect(jsonReviver('key', 'not a date')).toBe('not a date');
+    expect(jsonReviver('key', '2023-10-27')).toBe('2023-10-27'); // Not full ISO format
+  });
+
+  it('returns original value for non-string values', () => {
+    expect(jsonReviver('key', 123)).toBe(123);
+    expect(jsonReviver('key', true)).toBe(true);
+    expect(jsonReviver('key', null)).toBe(null);
+    expect(jsonReviver('key', { a: 1 })).toEqual({ a: 1 });
+  });
+});
+
 describe('decryptObject', () => {
   let validKey: CryptoKey;
   let anotherKey: CryptoKey;
