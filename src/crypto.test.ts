@@ -1,8 +1,49 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { importKeyFromBase64, generateSalt } from './crypto';
+import { importKeyFromBase64, generateSalt, jsonReviver } from './crypto';
 
 // Polyfill for crypto.subtle in jsdom environment if needed, but vitest globals=true with jsdom usually provides it, or we can use Node's crypto
 import { webcrypto } from 'crypto';
+
+describe('jsonReviver', () => {
+  it('returns standard values as is', () => {
+    expect(jsonReviver('name', 'John')).toBe('John');
+    expect(jsonReviver('age', 30)).toBe(30);
+    expect(jsonReviver('isActive', true)).toBe(true);
+    const obj = { a: 1 };
+    expect(jsonReviver('data', obj)).toBe(obj);
+  });
+
+  it('revives ISO date strings into Date objects', () => {
+    const isoDate = '2023-10-27T10:00:00.000Z';
+    const result = jsonReviver('date', isoDate);
+    expect(result).toBeInstanceOf(Date);
+    expect((result as Date).toISOString()).toBe(isoDate);
+  });
+
+  it('does not revive invalid ISO-like strings', () => {
+    const invalidIso = '2023-13-45T25:61:61.000Z';
+    expect(jsonReviver('date', invalidIso)).toBe(invalidIso);
+  });
+
+  it('returns undefined for sensitive keys to prevent prototype pollution', () => {
+    expect(jsonReviver('__proto__', { attacker: 'props' })).toBeUndefined();
+    expect(jsonReviver('constructor', { attacker: 'props' })).toBeUndefined();
+    expect(jsonReviver('prototype', { attacker: 'props' })).toBeUndefined();
+  });
+
+  it('works correctly within JSON.parse', () => {
+    const json = '{"name":"John","date":"2023-10-27T10:00:00.000Z","__proto__":{"polluted":"yes"},"nested":{"constructor":"test"}}';
+    const parsed = JSON.parse(json, jsonReviver);
+
+    expect(parsed.name).toBe('John');
+    expect(parsed.date).toBeInstanceOf(Date);
+    expect(Object.prototype.hasOwnProperty.call(parsed, "__proto__")).toBe(false);
+    expect(Object.prototype.hasOwnProperty.call(parsed.nested, "constructor")).toBe(false);
+    // The object itself should still be returned at the end of parsing
+    expect(parsed).toBeDefined();
+    expect(parsed.nested).toBeDefined();
+  });
+});
 
 describe('generateSalt', () => {
   beforeAll(() => {

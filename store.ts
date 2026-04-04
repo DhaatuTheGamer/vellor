@@ -125,26 +125,26 @@ export const useDerivedData = () => {
     // ⚡ Bolt Performance: Single pass over transactions instead of two reduce + filter
     for (let i = 0; i < transactions.length; i++) {
       const t = transactions[i];
+      const tDateObj = typeof t.date === 'string' ? new Date(t.date) : t.date;
+      const tDateTime = tDateObj.getTime();
 
       if (t.status === PaymentStatus.Due) {
         unpaid += t.lessonFee;
-        if (Date.parse(t.date) < todayTime) {
+        if (tDateTime < todayTime) {
           overdue.push(t);
         }
       } else if (t.status === PaymentStatus.PartiallyPaid) {
         unpaid += (t.lessonFee - t.amountPaid);
 
-        if (t.amountPaid < t.lessonFee && Date.parse(t.date) < todayTime) {
+        if (t.amountPaid < t.lessonFee && tDateTime < todayTime) {
           overdue.push(t);
         }
 
-        // ⚡ Bolt Performance: String slice extraction is ~80% faster than new Date()
-        if (+t.date.substring(0, 4) === currentYear && +t.date.substring(5, 7) - 1 === currentMonth) {
+        if (tDateObj.getFullYear() === currentYear && tDateObj.getMonth() === currentMonth) {
           paidThisMonth += t.amountPaid;
         }
       } else if (t.status === PaymentStatus.Paid || t.status === PaymentStatus.Overpaid) {
-        // ⚡ Bolt Performance: String slice extraction is ~80% faster than new Date()
-        if (+t.date.substring(0, 4) === currentYear && +t.date.substring(5, 7) - 1 === currentMonth) {
+        if (tDateObj.getFullYear() === currentYear && tDateObj.getMonth() === currentMonth) {
           paidThisMonth += t.amountPaid;
         }
       }
