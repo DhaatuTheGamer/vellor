@@ -105,7 +105,8 @@ export const TransactionsPage: React.FC = () => {
       if (navigator.share) {
          const blob = generateInvoicePDF(transaction, student, settings, true) as Blob;
          if (!blob) return;
-         const file = new File([blob], `Invoice_${student.firstName}_${transaction.date.split('T')[0]}.pdf`, { type: 'application/pdf' });
+         const dateStr = typeof transaction.date === 'string' ? transaction.date : transaction.date.toISOString();
+         const file = new File([blob], `Invoice_${student.firstName}_${dateStr.split('T')[0]}.pdf`, { type: 'application/pdf' });
          await navigator.share({
            title: 'Tutoring Invoice',
            text: `Hello ${student.firstName}, here is your latest invoice from ${settings.userName}.`,
@@ -145,7 +146,7 @@ export const TransactionsPage: React.FC = () => {
     // using Date.parse() to avoid expensive Date object allocations during sorting
     const withTimestamps = transactions.map(t => ({
       t,
-      timestamp: Date.parse(t.date)
+      timestamp: typeof t.date === 'string' ? Date.parse(t.date) : t.date.getTime()
     }));
     return withTimestamps
       .sort((a, b) => b.timestamp - a.timestamp)

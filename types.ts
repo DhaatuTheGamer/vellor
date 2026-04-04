@@ -97,8 +97,8 @@ export interface Student {
   tuition: TuitionDetails;
   /** Any additional notes or important information about the student. */
   notes?: string;
-  /** The ISO date string representing when the student's profile was created. */
-  createdAt: string;
+  /** The date when the student's profile was created. */
+  createdAt: string | Date;
 }
 
 /**
@@ -138,8 +138,8 @@ export interface Transaction {
   id: string;
   /** The ID of the student associated with this transaction. */
   studentId: string;
-  /** The ISO date string for when the lesson or transaction occurred. */
-  date: string;
+  /** The date for when the lesson or transaction occurred. */
+  date: string | Date;
   /** The duration of the lesson in minutes, or a reference number (e.g., "1" for 1 month). */
   lessonDuration: number;
   /** The total fee charged for this lesson or period. */
@@ -158,8 +158,8 @@ export interface Transaction {
   progressRemark?: string;
   /** Any additional notes related to the transaction. */
   notes?: string;
-  /** The ISO date string representing when the transaction was logged. */
-  createdAt: string;
+  /** The date representing when the transaction was logged. */
+  createdAt: string | Date;
 }
 
 /**
@@ -175,8 +175,8 @@ export interface GamificationStats {
   levelName: string;
   /** The user's current login streak in days. */
   streak: number;
-  /** The ISO date string of the user's last activity. */
-  lastActiveDate: string | null;
+  /** The date of the user's last activity. */
+  lastActiveDate: string | Date | null;
 }
 
 /**
@@ -245,8 +245,8 @@ export interface Achievement {
   description: string;
   /** A flag indicating whether the user has earned this achievement. */
   achieved: boolean;
-  /** The ISO date string of when the achievement was earned. */
-  dateAchieved?: string;
+  /** The date of when the achievement was earned. */
+  dateAchieved?: string | Date;
   /** An emoji or icon name representing the achievement. */
   icon: string;
 }
@@ -298,7 +298,7 @@ export interface Activity {
   id: string;
   message: string;
   icon: IconName;
-  timestamp: string;
+  timestamp: string | Date;
 }
 
 /**

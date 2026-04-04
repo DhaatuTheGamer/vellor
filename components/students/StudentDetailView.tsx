@@ -71,8 +71,12 @@ export const StudentDetailView: React.FC<StudentDetailViewProps> = ({ student, o
       }
     }
 
-    // ⚡ Bolt Performance: Use Date.parse() instead of new Date().getTime() to avoid object allocation overhead during sorting
-    matchingTransactions.sort((a, b) => Date.parse(b.date) - Date.parse(a.date)); // Newest first
+    // ⚡ Bolt Performance: Ensure dates are handled as strings or Date objects before parsing
+    matchingTransactions.sort((a, b) => {
+      const aTime = typeof a.date === 'string' ? Date.parse(a.date) : a.date.getTime();
+      const bTime = typeof b.date === 'string' ? Date.parse(b.date) : b.date.getTime();
+      return bTime - aTime;
+    }); // Newest first
 
     return {
       studentTransactions: matchingTransactions,

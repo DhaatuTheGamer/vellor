@@ -141,10 +141,10 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
   },
 
   getTransactionsByStudent: (studentId) => {
-    // ⚡ Bolt Performance: Avoid Date.parse() overhead during O(N log N) sorting
+    // ⚡ Bolt Performance: Ensure dates are handled correctly during O(N log N) sorting
     return get().transactions
       .filter(t => t.studentId === studentId)
-      .map(t => ({ t, time: Date.parse(t.date) }))
+      .map(t => ({ t, time: typeof t.date === 'string' ? Date.parse(t.date) : t.date.getTime() }))
       .sort((a, b) => b.time - a.time)
       .map(obj => obj.t);
   },
@@ -175,8 +175,9 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
                 return str;
             };
 
+            const dateStr = typeof t.date === 'string' ? t.date : t.date.toISOString();
             return [
-                t.date.split('T')[0],
+                dateStr.split('T')[0],
                 escapeCSV(studentName),
                 t.lessonDuration.toString(),
                 t.lessonFee.toString(),

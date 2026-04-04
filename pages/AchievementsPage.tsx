@@ -31,7 +31,9 @@ export const AchievementsPage: React.FC = () => {
     // ⚡ Bolt Performance: Cache parsed dates to avoid redundant parsing during sort comparisons
     const timeMap = new Map<any, number>();
     for (let i = 0; i < list.length; i++) {
-      timeMap.set(list[i], Date.parse(list[i].dateAchieved || "1970-01-01T00:00:00Z"));
+      const d = list[i].dateAchieved;
+      const time = d ? (typeof d === 'string' ? Date.parse(d) : d.getTime()) : Date.parse("1970-01-01T00:00:00Z");
+      timeMap.set(list[i], time);
     }
     return list.sort((a, b) => (timeMap.get(b) || 0) - (timeMap.get(a) || 0));
   }, [achievements, settings?.customAchievement, settings?.customAchievementEarned]);
