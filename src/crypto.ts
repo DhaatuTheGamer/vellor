@@ -51,6 +51,10 @@ export const encryptObject = async (obj: any, key: CryptoKey): Promise<string> =
 };
 
 export const jsonReviver = (key: string, value: any) => {
+  const dateFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/;
+  if (typeof value === 'string' && dateFormat.test(value)) {
+    return new Date(value);
+  }
   if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
     return undefined;
   }

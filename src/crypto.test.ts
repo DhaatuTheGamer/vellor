@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { importKeyFromBase64, generateSalt, decryptObject, encryptObject } from './crypto';
+import { importKeyFromBase64, generateSalt, decryptObject, encryptObject, jsonReviver } from './crypto';
 
 // Polyfill for crypto.subtle in jsdom environment if needed, but vitest globals=true with jsdom usually provides it, or we can use Node's crypto
 import { webcrypto } from 'crypto';
@@ -68,6 +68,33 @@ describe('importKeyFromBase64', () => {
 
     // importKey should throw when expecting a 256-bit AES key but given different length
     await expect(importKeyFromBase64(shortBase64)).rejects.toThrow();
+  });
+});
+
+describe('jsonReviver', () => {
+  it('returns undefined for prototype pollution keys', () => {
+    expect(jsonReviver('__proto__', 'value')).toBeUndefined();
+    expect(jsonReviver('constructor', 'value')).toBeUndefined();
+    expect(jsonReviver('prototype', 'value')).toBeUndefined();
+  });
+
+  it('parses valid ISO date strings to Date objects', () => {
+    const dateStr = '2023-10-27T10:00:00.000Z';
+    const result = jsonReviver('date', dateStr);
+    expect(result).toBeInstanceOf(Date);
+    expect((result as Date).toISOString()).toBe(dateStr);
+  });
+
+  it('returns original value for non-date strings', () => {
+    expect(jsonReviver('key', 'not a date')).toBe('not a date');
+    expect(jsonReviver('key', '2023-10-27')).toBe('2023-10-27'); // Not full ISO format
+  });
+
+  it('returns original value for non-string values', () => {
+    expect(jsonReviver('key', 123)).toBe(123);
+    expect(jsonReviver('key', true)).toBe(true);
+    expect(jsonReviver('key', null)).toBe(null);
+    expect(jsonReviver('key', { a: 1 })).toEqual({ a: 1 });
   });
 });
 
