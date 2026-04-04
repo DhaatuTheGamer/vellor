@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { importKeyFromBase64, generateSalt } from './crypto';
+import { importKeyFromBase64, generateSalt, encryptObject } from './crypto';
 
 // Polyfill for crypto.subtle in jsdom environment if needed, but vitest globals=true with jsdom usually provides it, or we can use Node's crypto
 import { webcrypto } from 'crypto';
@@ -26,6 +26,33 @@ describe('generateSalt', () => {
 
     // They shouldn't be exactly the same
     expect(salt1).not.toEqual(salt2);
+  });
+});
+
+describe('encryptObject', () => {
+  beforeAll(() => {
+    // Ensure crypto is available in the test environment
+    if (typeof globalThis.crypto === 'undefined' || !globalThis.crypto.subtle) {
+      Object.defineProperty(globalThis, 'crypto', {
+        value: webcrypto,
+      });
+    }
+  });
+
+  it('throws an error if encryption fails due to bad key', async () => {
+    // Generate an incompatible key type (HMAC instead of AES-GCM)
+    const hmacKey = await crypto.subtle.generateKey(
+      {
+        name: "HMAC",
+        hash: { name: "SHA-256" }
+      },
+      true,
+      ["sign", "verify"]
+    );
+    const obj = { secret: 'data' };
+
+    // Attempting to use an HMAC key for AES-GCM encryption will fail
+    await expect(encryptObject(obj, hmacKey as CryptoKey)).rejects.toThrow();
   });
 });
 
