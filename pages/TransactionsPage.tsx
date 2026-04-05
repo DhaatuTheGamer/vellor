@@ -142,15 +142,8 @@ export const TransactionsPage: React.FC = () => {
   };
   
   const sortedTransactions = useMemo(() => {
-    // ⚡ Bolt Performance: Pre-compute timestamps for faster sorting (Schwartzian transform)
-    // using Date.parse() to avoid expensive Date object allocations during sorting
-    const withTimestamps = transactions.map(t => ({
-      t,
-      timestamp: Date.parse(t.date)
-    }));
-    return withTimestamps
-      .sort((a, b) => b.timestamp - a.timestamp)
-      .map(item => item.t);
+    // ⚡ Bolt Performance: Use direct string comparison for ISO 8601 dates to eliminate Date.parse() overhead and intermediate mapping
+    return [...transactions].sort((a, b) => b.date < a.date ? -1 : (b.date > a.date ? 1 : 0));
   }, [transactions]);
 
   const filteredTransactions = useMemo(() => {
