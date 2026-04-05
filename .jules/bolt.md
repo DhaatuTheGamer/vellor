@@ -25,4 +25,6 @@
 
 ## 2025-03-05 - Performance: Avoid mapping to calculate timestamps for sorting ISO strings
 **Learning:** Transforming an array using `.map` with `Date.parse()` to get timestamps for numeric `.sort()` (Schwartzian transform) is actually slower than just directly sorting via string comparison for ISO 8601 strings (e.g., `b.date < a.date ? -1 : 1`) because of the multiple array passes and the parsing overhead.
+**Action:** Replace `.map().sort().map()` chains with a single loop and direct lexicographical string sorting. This eliminates intermediate allocations and CPU time spent on string-to-date parsing, achieving ~20-30% faster sorts for standard ISO 8601 dates.## 2025-03-05 - Performance: Avoid mapping to calculate timestamps for sorting ISO strings
+**Learning:** Transforming an array using `.map` with `Date.parse()` to get timestamps for numeric `.sort()` (Schwartzian transform) is actually slower than just directly sorting via string comparison for ISO 8601 strings (e.g., `b.date < a.date ? -1 : 1`) because of the multiple array passes and the parsing overhead.
 **Action:** Replace `.map().sort().map()` chains with a single loop and direct lexicographical string sorting. This eliminates intermediate allocations and CPU time spent on string-to-date parsing, achieving ~20-30% faster sorts for standard ISO 8601 dates.

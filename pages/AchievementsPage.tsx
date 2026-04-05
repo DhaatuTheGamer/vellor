@@ -28,12 +28,12 @@ export const AchievementsPage: React.FC = () => {
         dateAchieved: new Date().toISOString() // Assuming earned today for sorting purposes if not stored
       });
     }
-    // ⚡ Bolt Performance: Cache parsed dates to avoid redundant parsing during sort comparisons
-    const timeMap = new Map<any, number>();
-    for (let i = 0; i < list.length; i++) {
-      timeMap.set(list[i], Date.parse(list[i].dateAchieved || "1970-01-01T00:00:00Z"));
-    }
-    return list.sort((a, b) => (timeMap.get(b) || 0) - (timeMap.get(a) || 0));
+    // ⚡ Bolt Performance: Use direct string comparison for ISO 8601 dates to eliminate Date.parse() overhead and intermediate mapping
+    return list.sort((a, b) => {
+      const dateA = a.dateAchieved || "1970-01-01T00:00:00Z";
+      const dateB = b.dateAchieved || "1970-01-01T00:00:00Z";
+      return dateB < dateA ? -1 : (dateB > dateA ? 1 : 0);
+    });
   }, [achievements, settings?.customAchievement, settings?.customAchievementEarned]);
 
   const pendingList = useMemo(() => {
