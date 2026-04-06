@@ -254,7 +254,7 @@ export const DashboardPage: React.FC = () => {
                   aria-selected={activeChart === 'income'}
                   aria-label="View Income Overview"
                   onClick={() => setActiveChart('income')}
-                  className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${activeChart === 'income' ? 'bg-white dark:bg-primary-light text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                  className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary ${activeChart === 'income' ? 'bg-white dark:bg-primary-light text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
                 >
                   Income
                 </button>
@@ -263,7 +263,7 @@ export const DashboardPage: React.FC = () => {
                   aria-selected={activeChart === 'students'}
                   aria-label="View Student Growth"
                   onClick={() => setActiveChart('students')}
-                  className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${activeChart === 'students' ? 'bg-white dark:bg-primary-light text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                  className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary ${activeChart === 'students' ? 'bg-white dark:bg-primary-light text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
                 >
                   Students
                 </button>
@@ -403,7 +403,7 @@ export const DashboardPage: React.FC = () => {
               {activityLog.length > 0 && (
                 <button 
                   onClick={() => setIsConfirmingClearAll(true)}
-                  className="text-xs text-gray-500 hover:text-red-500 transition-colors"
+                  className="text-xs text-gray-500 hover:text-red-500 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary rounded"
                   aria-label="Clear all activity history"
                 >
                   Clear All
@@ -439,7 +439,7 @@ export const DashboardPage: React.FC = () => {
                                   </div>
                                   <button 
                                     onClick={() => deleteActivity(activity.id)}
-                                    className="opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-primary-light transition-opacity"
+                                    className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-primary-light transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary"
                                     aria-label="Delete activity"
                                     title="Delete activity"
                                   >
