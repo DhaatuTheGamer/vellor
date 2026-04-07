@@ -77,18 +77,18 @@ export const TransactionsPage: React.FC = () => {
   
   const studentsMap = useMemo(() => {
     // ⚡ Bolt Performance: Pre-compute searchName for faster filtering
-    const map = new Map<string, { student: typeof students[0], searchName: string }>();
+    const map: Record<string, { student: typeof students[0], searchName: string }> = Object.create(null);
     for (const student of students) {
-      map.set(student.id, {
+      map[student.id] = {
         student,
         searchName: `${student.firstName} ${student.lastName}`.toLowerCase()
-      });
+      };
     }
     return map;
   }, [students]);
 
   const handleGenerateInvoice = (transaction: Transaction) => {
-    const entry = studentsMap.get(transaction.studentId);
+    const entry = studentsMap[transaction.studentId];
     if (entry) {
       generateInvoicePDF(transaction, entry.student, settings);
       addToast('Invoice generated successfully.', 'success');
@@ -98,7 +98,7 @@ export const TransactionsPage: React.FC = () => {
   };
 
   const handleShareWhatsApp = async (transaction: Transaction) => {
-    const entry = studentsMap.get(transaction.studentId);
+    const entry = studentsMap[transaction.studentId];
     if (!entry) return addToast('Student not found.', 'error');
     const student = entry.student;
 
@@ -142,15 +142,8 @@ export const TransactionsPage: React.FC = () => {
   };
   
   const sortedTransactions = useMemo(() => {
-    // ⚡ Bolt Performance: Pre-compute timestamps for faster sorting (Schwartzian transform)
-    // using Date.parse() to avoid expensive Date object allocations during sorting
-    const withTimestamps = transactions.map(t => ({
-      t,
-      timestamp: Date.parse(t.date)
-    }));
-    return withTimestamps
-      .sort((a, b) => b.timestamp - a.timestamp)
-      .map(item => item.t);
+    // ⚡ Bolt Performance: Use direct string comparison for ISO 8601 dates to eliminate Date.parse() overhead and intermediate mapping
+    return [...transactions].sort((a, b) => b.date < a.date ? -1 : (b.date > a.date ? 1 : 0));
   }, [transactions]);
 
   const filteredTransactions = useMemo(() => {
@@ -179,7 +172,7 @@ export const TransactionsPage: React.FC = () => {
 
       // Apply search filter
       if (query) {
-        const entry = studentsMap.get(t.studentId);
+        const entry = studentsMap[t.studentId];
         if (!entry) return false;
         if (!entry.searchName.includes(query)) return false;
       }
@@ -339,7 +332,7 @@ export const TransactionsPage: React.FC = () => {
           >
             {rowVirtualizer.getVirtualItems().map((virtualRow) => {
               const t = filteredTransactions[virtualRow.index];
-              const entry = studentsMap.get(t.studentId);
+              const entry = studentsMap[t.studentId];
               const student = entry?.student;
               return (
                 <div

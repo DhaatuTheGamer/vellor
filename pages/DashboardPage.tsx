@@ -77,7 +77,7 @@ export const DashboardPage: React.FC = () => {
     // ⚡ Bolt Performance: Pre-calculate target months and related data
     const monthIncomes = new Float64Array(6);
     const targetMonths: { name: string, thresholdDate: number }[] = [];
-    const monthLookup = new Map<string, number>();
+    const monthLookup: Record<string, number> = Object.create(null);
 
     for (let i = 5; i >= 0; i--) {
       const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
@@ -88,7 +88,7 @@ export const DashboardPage: React.FC = () => {
       const thresholdDate = new Date(year, month + 1, 0).getTime();
       const monthName = d.toLocaleString('default', { month: 'short' });
 
-      monthLookup.set(monthKey, 5 - i);
+      monthLookup[monthKey] = 5 - i;
       targetMonths.push({ name: monthName, thresholdDate });
     }
 
@@ -97,7 +97,7 @@ export const DashboardPage: React.FC = () => {
       const t = transactions[j];
       if (t.status === PaymentStatus.Paid || t.status === PaymentStatus.PartiallyPaid || t.status === PaymentStatus.Overpaid) {
         const monthKey = t.date.substring(0, 7);
-        const index = monthLookup.get(monthKey);
+        const index = monthLookup[monthKey];
         if (index !== undefined) {
           monthIncomes[index] += t.amountPaid;
         }
@@ -140,9 +140,9 @@ export const DashboardPage: React.FC = () => {
 
   // ⚡ Bolt Performance: Pre-calculate student lookup map to avoid O(N*M) lookups in virtualized lists
   const studentMap = useMemo(() => {
-    const map = new Map();
+    const map: Record<string, typeof students[0]> = Object.create(null);
     for (const student of students) {
-      map.set(student.id, student);
+      map[student.id] = student;
     }
     return map;
   }, [students]);
@@ -255,7 +255,7 @@ export const DashboardPage: React.FC = () => {
                   aria-selected={activeChart === 'income'}
                   aria-label="View Income Overview"
                   onClick={() => setActiveChart('income')}
-                  className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${activeChart === 'income' ? 'bg-white dark:bg-primary-light text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                  className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary ${activeChart === 'income' ? 'bg-white dark:bg-primary-light text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
                 >
                   Income
                 </button>
@@ -264,7 +264,7 @@ export const DashboardPage: React.FC = () => {
                   aria-selected={activeChart === 'students'}
                   aria-label="View Student Growth"
                   onClick={() => setActiveChart('students')}
-                  className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${activeChart === 'students' ? 'bg-white dark:bg-primary-light text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                  className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary ${activeChart === 'students' ? 'bg-white dark:bg-primary-light text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
                 >
                   Students
                 </button>
@@ -404,7 +404,7 @@ export const DashboardPage: React.FC = () => {
               {activityLog.length > 0 && (
                 <button 
                   onClick={() => setIsConfirmingClearAll(true)}
-                  className="text-xs text-gray-500 hover:text-red-500 transition-colors"
+                  className="text-xs text-gray-500 hover:text-red-500 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary rounded"
                   aria-label="Clear all activity history"
                 >
                   Clear All
@@ -477,7 +477,7 @@ export const DashboardPage: React.FC = () => {
                 <div style={{ height: `${rowVirtualizerOverdue.getTotalSize()}px`, width: '100%', position: 'relative' }}>
                   {rowVirtualizerOverdue.getVirtualItems().map(virtualRow => {
                     const t = overduePayments[virtualRow.index];
-                    const student = studentMap.get(t.studentId);
+                    const student = studentMap[t.studentId];
                     return (
                       <div 
                         key={t.id}

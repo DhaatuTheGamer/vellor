@@ -36,7 +36,7 @@ export const FAB: React.FC = () => {
               <button
                 onClick={handleLogLesson}
                 aria-label="Quick Log Lesson"
-                className="flex items-center gap-3 bg-white dark:bg-primary-light text-gray-900 dark:text-white px-4 py-2 rounded-full shadow-lg border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-primary transition-colors group"
+                className="flex items-center gap-3 bg-white dark:bg-primary-light text-gray-900 dark:text-white px-4 py-2 rounded-full shadow-lg border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-primary transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary"
               >
                 <span className="font-medium text-sm">Quick Log</span>
                 <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
@@ -46,7 +46,7 @@ export const FAB: React.FC = () => {
               <button
                 onClick={handleAddStudent}
                 aria-label="Add New Student"
-                className="flex items-center gap-3 bg-white dark:bg-primary-light text-gray-900 dark:text-white px-4 py-2 rounded-full shadow-lg border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-primary transition-colors group"
+                className="flex items-center gap-3 bg-white dark:bg-primary-light text-gray-900 dark:text-white px-4 py-2 rounded-full shadow-lg border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-primary transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary"
               >
                 <span className="font-medium text-sm">Add Student</span>
                 <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
@@ -59,7 +59,7 @@ export const FAB: React.FC = () => {
 
         <button
           onClick={toggleOpen}
-          className="w-14 h-14 rounded-full bg-accent text-primary-dark shadow-xl shadow-accent/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200"
+          className="w-14 h-14 rounded-full bg-accent text-primary-dark shadow-xl shadow-accent/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-accent/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary"
           aria-label="Quick actions"
         >
           <motion.div
