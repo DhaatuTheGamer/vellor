@@ -130,9 +130,10 @@ export const SettingsPage: React.FC = () => {
         <div className="space-y-6">
            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 ml-1">Brand Accent Color</label>
+                <label htmlFor="brandColorInput" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 ml-1">Brand Accent Color</label>
                 <div className="flex items-center gap-4">
                   <input 
+                    id="brandColorInput"
                     type="color" 
                     name="brandColor"
                     value={formData.brandColor || '#8b5cf6'}
@@ -145,7 +146,7 @@ export const SettingsPage: React.FC = () => {
               </div>
 
               <div>
-                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 ml-1">App Logo (Square)</label>
+                 <span id="appLogoLabel" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 ml-1">App Logo (Square)</span>
                  <div className="flex items-center gap-4">
                    {formData.brandLogoBase64 ? (
                      <div className="relative w-16 h-16 rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden bg-white shadow-sm">
@@ -155,9 +156,9 @@ export const SettingsPage: React.FC = () => {
                        </button>
                      </div>
                    ) : (
-                     <label className="cursor-pointer px-4 py-2 border border-dashed border-gray-300 dark:border-white/20 rounded-xl text-sm font-medium hover:border-accent hover:text-accent transition-colors">
+                     <label htmlFor="appLogoInput" className="cursor-pointer px-4 py-2 border border-dashed border-gray-300 dark:border-white/20 rounded-xl text-sm font-medium hover:border-accent hover:text-accent transition-colors">
                         Upload Logo
-                        <input type="file" accept="image/*" className="hidden" onChange={handleBrandLogoUpload} />
+                        <input id="appLogoInput" type="file" accept="image/*" aria-labelledby="appLogoLabel" className="hidden" onChange={handleBrandLogoUpload} />
                      </label>
                    )}
                  </div>
@@ -174,7 +175,7 @@ export const SettingsPage: React.FC = () => {
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 ml-1">Invoice Logo</label>
+               <span id="invoiceLogoLabel" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 ml-1">Invoice Logo</span>
                <div className="flex items-center gap-4">
                  {formData.invoiceLogoBase64 ? (
                    <div className="relative w-16 h-16 rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden bg-white">
@@ -184,9 +185,9 @@ export const SettingsPage: React.FC = () => {
                      </button>
                    </div>
                  ) : (
-                   <label className="cursor-pointer px-4 py-2 border border-dashed border-gray-300 dark:border-white/20 rounded-xl text-sm font-medium hover:border-accent hover:text-accent transition-colors">
+                   <label htmlFor="invoiceLogoInput" className="cursor-pointer px-4 py-2 border border-dashed border-gray-300 dark:border-white/20 rounded-xl text-sm font-medium hover:border-accent hover:text-accent transition-colors">
                       Upload Logo
-                      <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+                      <input id="invoiceLogoInput" type="file" accept="image/*" aria-labelledby="invoiceLogoLabel" className="hidden" onChange={handleLogoUpload} />
                    </label>
                  )}
                </div>
@@ -213,11 +214,11 @@ export const SettingsPage: React.FC = () => {
         <div className="space-y-6">
            <div className="flex items-center justify-between">
               <div>
-                 <h4 className="font-semibold text-gray-900 dark:text-white">Enable Gamification</h4>
+                 <h4 id="gamificationHeading" className="font-semibold text-gray-900 dark:text-white">Enable Gamification</h4>
                  <p className="text-sm text-gray-500 dark:text-gray-400">Show points, streaks, and ranks on your dashboard.</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
-                 <input type="checkbox" name="gamificationEnabled" checked={formData.gamificationEnabled ?? true} onChange={(e) => setFormData(prev => ({...prev, gamificationEnabled: e.target.checked}))} className="sr-only peer" />
+                 <input type="checkbox" aria-labelledby="gamificationHeading" name="gamificationEnabled" checked={formData.gamificationEnabled ?? true} onChange={(e) => setFormData(prev => ({...prev, gamificationEnabled: e.target.checked}))} className="sr-only peer" />
                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-accent"></div>
               </label>
            </div>
@@ -263,7 +264,7 @@ export const SettingsPage: React.FC = () => {
             <Button onClick={useStore(s => s.exportTransactionsCSV)} variant="outline" leftIcon="document-text" className="rounded-full border-accent text-accent hover:bg-accent/10">Export CSV (Taxes)</Button>
             <Button onClick={exportData} variant="outline" leftIcon="share" className="rounded-full">Export Data</Button>
             <Button onClick={() => fileInputRef.current?.click()} variant="outline" leftIcon="arrow-right" className="rounded-full">Import Data</Button>
-            <input type="file" accept=".json" ref={fileInputRef} onChange={handleImportFile} className="hidden" />
+            <input type="file" accept=".json" ref={fileInputRef} onChange={handleImportFile} className="hidden" aria-label="Import data file" />
             <Button onClick={() => setIsConfirmingReset(true)} variant="danger" leftIcon="warning" className="rounded-full ml-auto">Reset All Data</Button>
         </div>
       </Card>
