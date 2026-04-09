@@ -11,3 +11,6 @@
 ## 2024-10-24 - Accessible Checkboxes and Hover-Only UI Traps
 **Learning:** Reusing `div`s with `onClick` handlers for checkboxes (like the bulk selection in Student Lists) breaks accessibility because they are not keyboard-focusable and lack semantic meaning. Further, applying hover-only visibility classes (e.g. `opacity-0 group-hover:opacity-100`) creates a trap where keyboard users can tab to the item but cannot visually see their focus state.
 **Action:** Always replace non-semantic clickable `div`s with actual `<button type="button">` elements. When using `group-hover:opacity-100` to hide UI elements until hovered, *always* pair it with `focus-visible:opacity-100` and `focus-visible:ring-*` classes so keyboard users can see what they are about to interact with.
+## 2024-10-25 - Fixing Accessibility for Hidden Inputs inside Custom Toggles
+**Learning:** When fixing accessibility for custom UI toggles or checkboxes that hide the actual `<input className="sr-only">` inside a wrapper, do not change the wrapper `<label>` to a `<div>` or `<h*>`. The wrapper must remain a `<label>` to proxy clicks to the hidden input.
+**Action:** Enhance accessibility in these scenarios by applying an `id` to the heading text and an `aria-labelledby` attribute pointing to that heading on the hidden input, keeping the label wrapper intact.
