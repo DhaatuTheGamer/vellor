@@ -174,34 +174,33 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
             studentMap[students[i].id] = students[i];
         }
 
-        const rows = transactions.map(t => {
+        const escapeCSV = (str?: string) => {
+            if (!str) return '';
+            if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                return `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
+        };
+
+        const rows = [header.join(',')];
+        for (let i = 0, len = transactions.length; i < len; i++) {
+            const t = transactions[i];
             const student = studentMap[t.studentId];
             const studentName = student ? `${student.firstName} ${student.lastName}` : 'Unknown Student';
             
-            const escapeCSV = (str?: string) => {
-                if (!str) return '';
-                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-                    return `"${str.replace(/"/g, '""')}"`;
-                }
-                return str;
-            };
-
-            return [
-                t.date.split('T')[0],
-                escapeCSV(studentName),
-                t.lessonDuration.toString(),
-                t.lessonFee.toString(),
-                t.amountPaid.toString(),
-                t.status,
-                escapeCSV(t.paymentMethod),
+            rows.push(
+                t.date.split('T')[0] + ',' +
+                escapeCSV(studentName) + ',' +
+                t.lessonDuration.toString() + ',' +
+                t.lessonFee.toString() + ',' +
+                t.amountPaid.toString() + ',' +
+                t.status + ',' +
+                escapeCSV(t.paymentMethod) + ',' +
                 escapeCSV(t.notes)
-            ];
-        });
+            );
+        }
 
-        const csvContent = [
-            header.join(','),
-            ...rows.map(row => row.join(','))
-        ].join('\n');
+        const csvContent = rows.join('\n');
 
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);

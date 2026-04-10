@@ -25,16 +25,20 @@
 
 ## 2025-03-05 - Performance: Avoid mapping to calculate timestamps for sorting ISO strings
 **Learning:** Transforming an array using `.map` with `Date.parse()` to get timestamps for numeric `.sort()` (Schwartzian transform) is actually slower than just directly sorting via string comparison for ISO 8601 strings (e.g., `b.date < a.date ? -1 : 1`) because of the multiple array passes and the parsing overhead.
-**Action:** Replace `.map().sort().map()` chains with a single loop and direct lexicographical string sorting. This eliminates intermediate allocations and CPU time spent on string-to-date parsing, achieving ~20-30% faster sorts for standard ISO 8601 dates.## 2025-03-05 - Performance: Avoid mapping to calculate timestamps for sorting ISO strings
-**Learning:** Transforming an array using `.map` with `Date.parse()` to get timestamps for numeric `.sort()` (Schwartzian transform) is actually slower than just directly sorting via string comparison for ISO 8601 strings (e.g., `b.date < a.date ? -1 : 1`) because of the multiple array passes and the parsing overhead.
 **Action:** Replace `.map().sort().map()` chains with a single loop and direct lexicographical string sorting. This eliminates intermediate allocations and CPU time spent on string-to-date parsing, achieving ~20-30% faster sorts for standard ISO 8601 dates.
 
 ## 2025-03-05 - Performance: Use Object.create(null) for string-keyed dictionary lookups
 **Learning:** Initializing dictionaries for fast lookups using `new Map()` introduces measurable overhead in hot paths compared to V8's highly optimized internal dictionary mode. While Maps are great for complex key types, simple string-based lookups (like IDs or dates) are slower.
 **Action:** Replace `new Map()` with `Object.create(null)` and use a traditional `for` loop to populate it. Replace `.get(key)` and `.set(key, val)` with standard property access (`[key]`). This creates a pure dictionary object with no prototype overhead, resulting in significantly faster lookups.
+
 ## 2024-03-05 - Performance: Avoid Map usage inside array numeric sorting
 **Learning:** While Maps are useful for caching calculations (like parsed dates) before a sort to avoid repeated work, allocating a `new Map()` and accessing `.get()` inside the comparator still incurs V8 overhead.
 **Action:** For ISO 8601 string dates, completely remove the intermediate parsing step and the Map cache. Sort the dates directly using string lexicographical comparison to eliminate all allocations and parsing overhead while maintaining standard sort functionality.
+
 ## 2024-05-18 - Performance: Avoid full array iterations when updating single elements
 **Learning:** Using `Array.prototype.map()` to update a single specific item in a large array (like updating a specific student or transaction by ID) forces V8 to iterate over every remaining element after the target is found, introducing unnecessary O(N) overhead.
 **Action:** When updating a specific element in an array (especially inside Zustand state updaters), clone the array (`[...arr]`) and use a standard `for` loop to find the element, update it, and `break` immediately. This improves the average-case lookup time and avoids worst-case O(N) iteration overhead.
+
+## $(date +%Y-%m-%d) - Performance: Hoist functions out of mapping closures
+**Learning:** Defining helper functions inside array `.map` or `.forEach` callbacks causes V8 to allocate a new closure for that function on every iteration, leading to unnecessary memory usage and garbage collection overhead, particularly when iterating over large datasets like CSV rows.
+**Action:** Hoist helper functions out of the loop and use standard string concatenation within the loop, eliminating multi-pass allocations and accelerating overall execution time.
