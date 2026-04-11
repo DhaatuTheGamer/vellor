@@ -42,6 +42,7 @@
 ## $(date +%Y-%m-%d) - Performance: Hoist functions out of mapping closures
 **Learning:** Defining helper functions inside array `.map` or `.forEach` callbacks causes V8 to allocate a new closure for that function on every iteration, leading to unnecessary memory usage and garbage collection overhead, particularly when iterating over large datasets like CSV rows.
 **Action:** Hoist helper functions out of the loop and use standard string concatenation within the loop, eliminating multi-pass allocations and accelerating overall execution time.
-## $(date +%Y-%m-%d) - Performance: Avoid Array chaining on small input handlers
-**Learning:** Chaining `.split().map().filter()` inside frequent event handlers (like `onChange`) unnecessarily creates multiple intermediate arrays, although the impact on small inputs is minor, it's still less efficient than a single pass.
-**Action:** Replace small array chaining pipelines with a single `.reduce()` pass (or a `for` loop) to avoid intermediate allocations and speed up execution, even in low-impact areas.
+
+## 2024-05-18 - Performance: Avoid O(N) array search inside event handlers
+**Learning:** Using `Array.prototype.find()` inside frequently called event handlers (like drag and drop operations) results in O(N) linear time complexity for each invocation. In large arrays, this can cause frame drops and UI stuttering.
+**Action:** When performing repeated lookups by ID, cache the array elements into a dictionary object (`Object.create(null)`) ahead of time to enable O(1) lookups. This converts the overall operation from O(M * N) to O(N + M) and ensures consistent performance regardless of list size.
