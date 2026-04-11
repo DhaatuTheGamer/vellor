@@ -142,8 +142,14 @@ export const createGamificationSlice: StateCreator<AppState, [], [], Gamificatio
       const hasSubjectMaster = uniqueSubjects.size >= 3;
       const hasRateDiversifier = hasHourly && hasPerLesson && hasMonthly;
 
-      const updatedAchievements = state.achievements.map(ach => {
-        if (ach.achieved) return ach;
+      const updatedAchievements = new Array(state.achievements.length);
+
+      for (let i = 0, len = state.achievements.length; i < len; i++) {
+        const ach = state.achievements[i];
+        if (ach.achieved) {
+            updatedAchievements[i] = ach;
+            continue;
+        }
 
         let justAchieved = false;
         switch (ach.id) {
@@ -239,10 +245,11 @@ export const createGamificationSlice: StateCreator<AppState, [], [], Gamificatio
               get().logActivity(`Unlocked: ${ach.name}`, 'trophy');
             }, 0);
             changed = true;
-            return { ...ach, achieved: true, dateAchieved: new Date().toISOString() };
+            updatedAchievements[i] = { ...ach, achieved: true, dateAchieved: new Date().toISOString() };
+        } else {
+            updatedAchievements[i] = ach;
         }
-        return ach;
-      });
+      }
       
       if (changed) return { achievements: updatedAchievements };
       return {};
