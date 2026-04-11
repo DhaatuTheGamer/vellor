@@ -26,9 +26,21 @@ export const SearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = (
   // ⚡ Bolt Performance: Hoist query.toLowerCase() outside the filter loop
   // to prevent unnecessary string operations during the O(N) array search.
   const lowerQuery = query.toLowerCase();
-  const filteredStudents = query === '' ? [] : searchableStudents.filter(s =>
-    s._searchableName.includes(lowerQuery)
-  ).slice(0, 5);
+
+  // ⚡ Bolt Performance: Use an early-return bounded loop instead of .filter().slice()
+  // to avoid scanning the entire students array once 5 matches are found.
+  const filteredStudents = useMemo(() => {
+    if (query === '') return [];
+
+    const results = [];
+    for (let i = 0, len = searchableStudents.length; i < len; i++) {
+      if (searchableStudents[i]._searchableName.includes(lowerQuery)) {
+        results.push(searchableStudents[i]);
+        if (results.length >= 5) break;
+      }
+    }
+    return results;
+  }, [searchableStudents, query, lowerQuery]);
 
   const handleSelectStudent = (id: string) => {
     navigate(`/students/${id}`);

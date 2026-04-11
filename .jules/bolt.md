@@ -42,3 +42,6 @@
 ## $(date +%Y-%m-%d) - Performance: Hoist functions out of mapping closures
 **Learning:** Defining helper functions inside array `.map` or `.forEach` callbacks causes V8 to allocate a new closure for that function on every iteration, leading to unnecessary memory usage and garbage collection overhead, particularly when iterating over large datasets like CSV rows.
 **Action:** Hoist helper functions out of the loop and use standard string concatenation within the loop, eliminating multi-pass allocations and accelerating overall execution time.
+## 2024-05-18 - Avoid full-array scans when rendering limited search results
+**Learning:** Using `Array.prototype.filter().slice(0, N)` to render a small subset of search results forces an O(N) traversal of the entire dataset, even if the required `N` elements are found early. This causes unnecessary processing overhead for large collections (like the student search modal).
+**Action:** Replace `.filter().slice()` patterns with bounded `for` loops that explicitly check the results array length (`if (results.length >= N) break;`) to early-exit the search once the quota is met, significantly improving performance on large lists.
