@@ -27,6 +27,8 @@ const localizer = dateFnsLocalizer({
 
 const DragAndDropCalendar = withDragAndDrop(Calendar);
 
+const parsedDateCache = new Map<string, { start: Date; end: Date }>();
+
 export const CalendarPage: React.FC = () => {
   const transactions = useStore(s => s.transactions);
   const students = useStore(s => s.students);
@@ -48,20 +50,28 @@ export const CalendarPage: React.FC = () => {
       const student = studentMap[t.studentId];
       const studentName = student ? `${student.firstName} ${student.lastName}` : 'Unknown Student';
       
-      let startDateStr = t.date;
-      if (!startDateStr.includes('T')) {
-          startDateStr = `${startDateStr}T10:00:00`; // Fallback to 10 AM if only date is provided
-      }
+      const cacheKey = `${t.date}|${t.lessonDuration}`;
+      let dates = parsedDateCache.get(cacheKey);
       
-      const startDate = new Date(startDateStr);
-      // Fallback duration to 60 if not specified
-      const endDate = new Date(startDate.getTime() + (t.lessonDuration || 60) * 60000);
+      if (!dates) {
+          let startDateStr = t.date;
+          if (!startDateStr.includes('T')) {
+              startDateStr = `${startDateStr}T10:00:00`; // Fallback to 10 AM if only date is provided
+          }
+          const start = new Date(startDateStr);
+          // Fallback duration to 60 if not specified
+          const end = new Date(start.getTime() + (t.lessonDuration || 60) * 60000);
+          dates = { start, end };
 
-      return {
+          if (parsedDateCache.size > 5000) parsedDateCache.clear();
+          parsedDateCache.set(cacheKey, dates);
+      }
+
+      result[i] = {
         id: t.id,
         title: studentName,
-        start: startDate,
-        end: endDate,
+        start: dates.start,
+        end: dates.end,
         resource: t,
       };
     });
