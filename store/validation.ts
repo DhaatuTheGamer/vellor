@@ -59,7 +59,13 @@ export const appSettingsSchema = z.object({
   phone: phoneNumberSchema.optional(),
   email: z.string().optional(),
   monthlyGoal: z.number().optional(),
-});
+  brandLogoBase64: z.string().optional().refine(val => !val || val.startsWith('data:image/'), {
+    message: "Invalid image data URI"
+  }),
+  invoiceLogoBase64: z.string().optional().refine(val => !val || val.startsWith('data:image/'), {
+    message: "Invalid image data URI"
+  }),
+}).catchall(z.any());
 
 export const gamificationStatsSchema = z.object({
   points: z.number(),
