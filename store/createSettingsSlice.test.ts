@@ -88,6 +88,31 @@ describe('createSettingsSlice', () => {
       expect(useStore.getState().settings.phone?.number).toBe('1234567890');
       expect(useStore.getState().settings.country).toBe('United States');
     });
+
+    it('rejects invalid image data URIs for logos', () => {
+      // Set valid logos first
+      useStore.getState().updateSettings({
+        brandLogoBase64: 'data:image/png;base64,valid',
+        invoiceLogoBase64: 'data:image/jpeg;base64,valid'
+      });
+
+      expect(useStore.getState().settings.brandLogoBase64).toBe('data:image/png;base64,valid');
+      expect(useStore.getState().settings.invoiceLogoBase64).toBe('data:image/jpeg;base64,valid');
+
+      // Try to update with invalid ones
+      useStore.getState().updateSettings({
+        brandLogoBase64: 'javascript:alert("brand")',
+        invoiceLogoBase64: 'data:text/html,<script>alert("invoice")</script>'
+      });
+
+      // Should be cleared or at least not set to the malicious value
+      expect(useStore.getState().settings.brandLogoBase64).not.toBe('javascript:alert("brand")');
+      expect(useStore.getState().settings.invoiceLogoBase64).not.toBe('data:text/html,<script>alert("invoice")</script>');
+
+      // Based on my proposed fix (setting to empty string), they should be empty
+      expect(useStore.getState().settings.brandLogoBase64).toBe('');
+      expect(useStore.getState().settings.invoiceLogoBase64).toBe('');
+    });
   });
 
   describe('toggleTheme', () => {
