@@ -42,11 +42,6 @@
 ## $(date +%Y-%m-%d) - Performance: Hoist functions out of mapping closures
 **Learning:** Defining helper functions inside array `.map` or `.forEach` callbacks causes V8 to allocate a new closure for that function on every iteration, leading to unnecessary memory usage and garbage collection overhead, particularly when iterating over large datasets like CSV rows.
 **Action:** Hoist helper functions out of the loop and use standard string concatenation within the loop, eliminating multi-pass allocations and accelerating overall execution time.
-
-## 2024-05-18 - Performance: Avoid O(N) array search inside event handlers
-**Learning:** Using `Array.prototype.find()` inside frequently called event handlers (like drag and drop operations) results in O(N) linear time complexity for each invocation. In large arrays, this can cause frame drops and UI stuttering.
-**Action:** When performing repeated lookups by ID, cache the array elements into a dictionary object (`Object.create(null)`) ahead of time to enable O(1) lookups. This converts the overall operation from O(M * N) to O(N + M) and ensures consistent performance regardless of list size.
-
-## 2026-04-11 - Performance: Early return on empty search term
-**Learning:** Even when computations like `toLowerCase()` are hoisted outside a `.filter()` loop, processing an array with an empty search term still incurs O(N) array allocation overhead and string property accessing.
-**Action:** Always include an early return (e.g., `if (!searchTerm) return items;`) before a `.filter()` loop. This completely bypasses all loop operations when the search is empty (which is the default state), dropping time complexity from O(N) to O(1) and preventing redundant array allocations.
+## 2024-05-18 - Avoid full-array scans when rendering limited search results
+**Learning:** Using `Array.prototype.filter().slice(0, N)` to render a small subset of search results forces an O(N) traversal of the entire dataset, even if the required `N` elements are found early. This causes unnecessary processing overhead for large collections (like the student search modal).
+**Action:** Replace `.filter().slice()` patterns with bounded `for` loops that explicitly check the results array length (`if (results.length >= N) break;`) to early-exit the search once the quota is met, significantly improving performance on large lists.
