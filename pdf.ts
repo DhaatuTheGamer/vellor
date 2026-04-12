@@ -225,17 +225,15 @@ export const generateBulkInvoicePDF = (
   let hasContent = false;
   let isFirstPage = true;
 
-  // Find all unpaid or partially paid transactions
-  const unpaidTransactions = transactions.filter(
-    t => t.status === PaymentStatus.Due || t.status === PaymentStatus.PartiallyPaid
-  );
-
   // Group by student
+  // ⚡ Bolt Performance: Consolidate unpaid filtering and grouping into a single pass to eliminate intermediate allocations
   const studentMap: Record<string, Transaction[]> = Object.create(null);
-  for (let i = 0; i < unpaidTransactions.length; i++) {
-    const t = unpaidTransactions[i];
-    if (!studentMap[t.studentId]) studentMap[t.studentId] = [];
-    studentMap[t.studentId].push(t);
+  for (let i = 0; i < transactions.length; i++) {
+    const t = transactions[i];
+    if (t.status === PaymentStatus.Due || t.status === PaymentStatus.PartiallyPaid) {
+      if (!studentMap[t.studentId]) studentMap[t.studentId] = [];
+      studentMap[t.studentId].push(t);
+    }
   }
 
   const studentsById: Record<string, Student> = Object.create(null);
