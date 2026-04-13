@@ -20,7 +20,7 @@ export const AchievementsPage: React.FC = () => {
     const list = achievements.filter(a => a.achieved);
     if (settings?.customAchievement && settings?.customAchievementEarned) {
       list.push({
-        id: 'custom-achievement' as any,
+        id: AchievementId.CustomAchievement,
         name: 'Personal Goal',
         description: settings.customAchievement,
         achieved: true,
@@ -40,7 +40,7 @@ export const AchievementsPage: React.FC = () => {
     const list = achievements.filter(a => !a.achieved);
     if (settings?.customAchievement && !settings?.customAchievementEarned) {
       list.unshift({
-        id: 'custom-achievement' as any,
+        id: AchievementId.CustomAchievement,
         name: 'Personal Goal',
         description: settings.customAchievement,
         achieved: false,
@@ -159,7 +159,7 @@ export const AchievementsPage: React.FC = () => {
             {achievedList.map(ach => (
               <motion.div key={ach.id} variants={itemVariants} className="p-6 bg-white dark:bg-primary-light rounded-3xl shadow-sm border border-success/30 relative overflow-hidden group hover:shadow-md transition-shadow">
                 <div className="absolute -right-6 -top-6 w-24 h-24 bg-success/10 rounded-full blur-2xl group-hover:bg-success/20 transition-colors"></div>
-                <div className="mb-4"><Icon iconName={ach.icon as any} className="w-12 h-12 text-accent drop-shadow-sm" aria-label={ach.name} /></div>
+                <div className="mb-4"><Icon iconName={ach.icon} className="w-12 h-12 text-accent drop-shadow-sm" aria-label={ach.name} /></div>
                 <h3 className="text-lg font-display font-bold text-gray-900 dark:text-white mb-1">{ach.name}</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{ach.description}</p>
                 {ach.dateAchieved && (
@@ -189,7 +189,7 @@ export const AchievementsPage: React.FC = () => {
             {pendingList.map(ach => (
               <motion.div key={ach.id} variants={itemVariants} className="p-6 bg-gray-50 dark:bg-primary/50 rounded-3xl border border-gray-200 dark:border-white/5 flex flex-col opacity-80 hover:opacity-100 transition-opacity">
                 <div className="w-16 h-16 rounded-2xl bg-gray-200 dark:bg-primary-light flex items-center justify-center mb-4 grayscale">
-                  <Icon iconName={ach.icon as any} className="w-8 h-8" aria-label={ach.name} />
+                  <Icon iconName={ach.icon} className="w-8 h-8" aria-label={ach.name} />
                 </div>
                 <h3 className="text-lg font-display font-semibold text-gray-700 dark:text-gray-300 mb-1">{ach.name}</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 flex-grow mb-4">{ach.description}</p>

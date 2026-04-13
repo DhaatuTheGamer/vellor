@@ -230,6 +230,7 @@ export enum AchievementId {
   LevelFive = 'LEVEL_FIVE',
   CenturyClub = 'CENTURY_CLUB',
   RateDiversifier = 'RATE_DIVERSIFIER',
+  CustomAchievement = 'CUSTOM_ACHIEVEMENT',
 }
 
 /**
@@ -248,7 +249,7 @@ export interface Achievement {
   /** The ISO date string of when the achievement was earned. */
   dateAchieved?: string;
   /** An emoji or icon name representing the achievement. */
-  icon: string;
+  icon: IconName;
 }
 
 /**

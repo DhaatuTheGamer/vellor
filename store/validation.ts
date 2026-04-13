@@ -81,13 +81,13 @@ export const achievementSchema = z.object({
   description: z.string(),
   achieved: z.boolean(),
   dateAchieved: z.string().optional(),
-  icon: z.string(),
+  icon: z.string() as unknown as z.ZodType<IconName>,
 });
 
 export const activitySchema = z.object({
   id: z.string(),
   message: z.string(),
-  icon: z.custom<IconName>(),
+  icon: z.string() as unknown as z.ZodType<IconName>,
   timestamp: z.string(),
 });
 
