@@ -82,6 +82,7 @@ export const Icon: React.FC<IconProps> = ({ iconName, className = 'w-6 h-6', ...
     'briefcase': LucideIcons.Briefcase,
     'party-popper': LucideIcons.PartyPopper,
     'chevron-down': LucideIcons.ChevronDown,
+    'chevron-up': LucideIcons.ChevronUp,
     'heart': LucideIcons.Heart,
   };
 

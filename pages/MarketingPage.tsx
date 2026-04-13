@@ -4,6 +4,7 @@ import * as Accordion from '@radix-ui/react-accordion';
 import { motion, useInView, useScroll, useTransform, AnimatePresence, useMotionValue, useSpring, useMotionValueEvent } from 'framer-motion';
 import { Github, Linkedin, X, Menu } from 'lucide-react';
 import { Button, Icon } from '../components/ui';
+import { IconName } from '../types';
 
 // Lazy-load heavy chart component for improved Time to Interactive
 const LazyRevenueChart = lazy(() =>
@@ -163,7 +164,7 @@ const MagneticButton: React.FC<{ children: React.ReactNode; onClick: () => void;
       <Button 
         onClick={onClick} 
         className={className}
-        rightIcon={rightIcon as any}
+        rightIcon={rightIcon as IconName}
       >
         {children}
       </Button>
@@ -657,7 +658,7 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
                 className="p-8 rounded-[2rem] bg-gray-50 dark:bg-primary border border-gray-100 dark:border-white/5 hover:border-accent/30 transition-colors"
               >
                 <div className="w-14 h-14 rounded-2xl bg-accent/10 text-accent flex items-center justify-center mb-6">
-                  <Icon iconName={item.icon as any} className="w-7 h-7" />
+                  <Icon iconName={item.icon as IconName} className="w-7 h-7" />
                 </div>
                 <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">{item.title}</h3>
                 <p className="text-gray-500 dark:text-gray-400">{item.desc}</p>
@@ -703,7 +704,7 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
                     {item.step}
                   </div>
                   <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-300 flex items-center justify-center mx-auto mb-4 group-hover:text-accent transition-colors">
-                    <Icon iconName={item.icon as any} className="w-5 h-5" />
+                    <Icon iconName={item.icon as IconName} className="w-5 h-5" />
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{item.title}</h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400">{item.desc}</p>
@@ -1014,7 +1015,7 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
                 className="inline-flex items-center gap-2 text-accent font-semibold text-base hover:underline underline-offset-4 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-gray-50 dark:focus-visible:ring-offset-primary rounded-md mt-2"
               >
                 {isManifestoExpanded ? 'Show less' : 'Read the full story'}
-                <Icon iconName={isManifestoExpanded ? 'chevron-up' as any : 'chevron-down' as any} className="w-4 h-4" />
+                <Icon iconName={isManifestoExpanded ? 'chevron-up' : 'chevron-down'} className="w-4 h-4" />
               </button>
             </div>
 
@@ -1462,7 +1463,7 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
                     onClick={() => scrollToAndClose(item.id)}
                     className="flex items-center gap-3 px-4 py-3 rounded-xl text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 font-semibold transition-colors"
                   >
-                    <Icon iconName={item.icon as any} className="w-5 h-5 text-gray-400" />
+                    <Icon iconName={item.icon as IconName} className="w-5 h-5 text-gray-400" />
                     {item.label}
                   </button>
                 ))}

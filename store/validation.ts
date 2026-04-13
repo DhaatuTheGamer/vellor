@@ -81,7 +81,7 @@ export const achievementSchema = z.object({
   description: z.string(),
   achieved: z.boolean(),
   dateAchieved: z.string().optional(),
-  icon: z.string(),
+  icon: z.string() as z.ZodType<IconName>,
 });
 
 export const activitySchema = z.object({
