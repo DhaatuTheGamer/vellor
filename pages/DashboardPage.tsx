@@ -4,10 +4,10 @@ import { useStore, useData } from '../store';
 import { Button, Card, StatDisplayCard, Icon, ConfirmationModal, OnboardingWizard } from '../components/ui';
 import { formatCurrency, formatDate, formatRelativeTime } from '../helpers';
 import { motion } from 'framer-motion';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { PaymentStatus } from '../types';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { usePwaInstall } from '../usePwaInstall';
+import { DashboardCharts } from '../components/dashboard/DashboardCharts';
+import { DashboardGoal } from '../components/dashboard/DashboardGoal';
 
 /**
  * The main dashboard page of the application.
@@ -17,7 +17,6 @@ export const DashboardPage: React.FC = () => {
   const gamification = useStore(s => s.gamification);
   const students = useStore(s => s.students);
   const activityLog = useStore(s => s.activityLog);
-  const transactions = useStore(s => s.transactions);
   const deleteActivity = useStore(s => s.deleteActivity);
   const clearActivityLog = useStore(s => s.clearActivityLog);
   const addToast = useStore(s => s.addToast);
@@ -53,74 +52,7 @@ export const DashboardPage: React.FC = () => {
     }
   }, []); // Run only once on mount
 
-  const monthlyIncomeGoal = settings.monthlyGoal || 500; 
-  const moneyTreeProgress = Math.min(100, (totalPaidThisMonth / monthlyIncomeGoal) * 100);
-
-  const [isEditingGoal, setIsEditingGoal] = React.useState(false);
-  const [goalInput, setGoalInput] = React.useState(monthlyIncomeGoal.toString());
   const updateSettings = useStore(s => s.updateSettings);
-
-  const handleGoalSave = () => {
-    updateSettings({ monthlyGoal: parseFloat(goalInput) || 500 });
-    setIsEditingGoal(false);
-  };
-
-  const [activeChart, setActiveChart] = React.useState<'income' | 'students'>('income');
-
-  const chartData = useMemo(() => {
-    const data = [];
-    const today = new Date();
-
-    // ⚡ Bolt Performance: Pre-compute the fallback date outside the loop
-    const fallbackDate = Date.now();
-
-    // ⚡ Bolt Performance: Pre-calculate target months and related data
-    const monthIncomes = new Float64Array(6);
-    const targetMonths: { name: string, thresholdDate: number }[] = [];
-    const monthLookup: Record<string, number> = Object.create(null);
-
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-      const year = d.getFullYear();
-      const month = d.getMonth();
-      const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
-
-      const thresholdDate = new Date(year, month + 1, 0).getTime();
-      const monthName = d.toLocaleString('default', { month: 'short' });
-
-      monthLookup[monthKey] = 5 - i;
-      targetMonths.push({ name: monthName, thresholdDate });
-    }
-
-    // ⚡ Bolt Performance: Single pass over transactions with O(1) month lookup
-    for (let j = 0; j < transactions.length; j++) {
-      const t = transactions[j];
-      if (t.status === PaymentStatus.Paid || t.status === PaymentStatus.PartiallyPaid || t.status === PaymentStatus.Overpaid) {
-        const monthKey = t.date.substring(0, 7);
-        const index = monthLookup[monthKey];
-        if (index !== undefined) {
-          monthIncomes[index] += t.amountPaid;
-        }
-      }
-    }
-
-    // ⚡ Bolt Performance: Pre-calculate student creation times
-    const studentTimes = new Float64Array(students.length);
-    for (let j = 0; j < students.length; j++) {
-      const s = students[j];
-      studentTimes[j] = s.createdAt ? Date.parse(s.createdAt) : fallbackDate;
-    }
-
-    for (let i = 0; i < 6; i++) {
-      const { name, thresholdDate } = targetMonths[i];
-      let studentsCount = 0;
-      for (let j = 0; j < studentTimes.length; j++) {
-          if (studentTimes[j] <= thresholdDate) studentsCount++;
-      }
-      data.push({ name, income: monthIncomes[i], students: studentsCount });
-    }
-    return data;
-  }, [transactions, students]);
 
   const activityParentRef = React.useRef<HTMLDivElement>(null);
   const rowVirtualizerActivity = useVirtualizer({
@@ -242,116 +174,10 @@ export const DashboardPage: React.FC = () => {
         </motion.div>
 
         {/* Dynamic Chart */}
-        <motion.div variants={itemVariants} className="col-span-1 md:col-span-2 lg:col-span-2 row-span-2">
-          <Card className="h-full rounded-3xl border border-white/20 dark:border-white/5 shadow-xl shadow-black/5 bg-white/60 dark:bg-primary-light/60 backdrop-blur-xl flex flex-col">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-display font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <Icon iconName={activeChart === 'income' ? 'chart-bar' : 'users'} className={`w-5 h-5 ${activeChart === 'income' ? 'text-accent' : 'text-blue-500'}`} />
-                {activeChart === 'income' ? 'Income Overview' : 'Student Growth'}
-              </h3>
-              <div className="flex bg-gray-100 dark:bg-primary rounded-full p-1" role="tablist" aria-label="Chart view options">
-                <button 
-                  role="tab"
-                  aria-selected={activeChart === 'income'}
-                  aria-label="View Income Overview"
-                  onClick={() => setActiveChart('income')}
-                  className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary ${activeChart === 'income' ? 'bg-white dark:bg-primary-light text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
-                >
-                  Income
-                </button>
-                <button 
-                  role="tab"
-                  aria-selected={activeChart === 'students'}
-                  aria-label="View Student Growth"
-                  onClick={() => setActiveChart('students')}
-                  className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary ${activeChart === 'students' ? 'bg-white dark:bg-primary-light text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
-                >
-                  Students
-                </button>
-              </div>
-            </div>
-            <div className="flex-1 min-h-[200px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorStudents" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="text-gray-200 dark:text-white/10" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} className="text-gray-500 dark:text-gray-400" />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} className="text-gray-500 dark:text-gray-400" tickFormatter={(value) => activeChart === 'income' ? `${settings.currencySymbol}${value}` : value} />
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)' }}
-                    itemStyle={{ color: activeChart === 'income' ? '#8b5cf6' : '#3b82f6', fontWeight: 'bold' }}
-                    formatter={(value: any) => activeChart === 'income' ? [formatCurrency(Number(value), settings.currencySymbol), 'Income'] : [value, 'Students']}
-                  />
-                  <Area type="monotone" dataKey={activeChart} stroke={activeChart === 'income' ? '#8b5cf6' : '#3b82f6'} strokeWidth={3} fillOpacity={1} fill={`url(#color${activeChart === 'income' ? 'Income' : 'Students'})`} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
-        </motion.div>
+        <DashboardCharts itemVariants={itemVariants} />
 
         {/* Money Tree (Goal Progress) */}
-        <motion.div variants={itemVariants} className="col-span-1 md:col-span-1 lg:col-span-1">
-          <Card className="h-full rounded-3xl border border-white/20 dark:border-white/5 shadow-xl shadow-black/5 bg-white/60 dark:bg-primary-light/60 backdrop-blur-xl flex flex-col justify-center relative overflow-hidden group">
-            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-accent/10 rounded-full blur-3xl group-hover:bg-accent/20 transition-colors duration-500"></div>
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-display font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Icon iconName="banknotes" className="w-5 h-5 text-accent" />
-                  Monthly Goal
-                </h3>
-              </div>
-              <div className="mb-2 flex justify-between items-end">
-                <span className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(totalPaidThisMonth, settings.currencySymbol)}</span>
-                {isEditingGoal ? (
-                    <div className="flex items-center gap-2">
-                        <span className="text-gray-500">/</span>
-                        <label htmlFor="monthly-goal-input" className="sr-only">Monthly Goal</label>
-                        <input 
-                            id="monthly-goal-input"
-                            type="number"
-                            aria-label="Monthly goal"
-                            className="w-20 px-2 py-1 bg-white/50 dark:bg-primary-dark/50 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-gray-900 dark:text-white outline-none" 
-                            value={goalInput} 
-                            onChange={e => setGoalInput(e.target.value)} 
-                            onBlur={handleGoalSave} 
-                            onKeyDown={e => e.key === 'Enter' && handleGoalSave()} 
-                            autoFocus 
-                        />
-                    </div>
-                ) : (
-                    <span 
-                        className="text-sm font-medium text-gray-500 dark:text-gray-400 cursor-pointer hover:text-accent transition-colors"
-                        onClick={() => setIsEditingGoal(true)}
-                        title="Click to edit goal"
-                    >
-                        / {formatCurrency(monthlyIncomeGoal, settings.currencySymbol)}
-                        <Icon iconName="pencil" className="w-3 h-3 inline-block ml-1 opacity-50" />
-                    </span>
-                )}
-              </div>
-              <div className="w-full h-3 bg-gray-100 dark:bg-primary/50 rounded-full overflow-hidden shadow-inner border border-gray-200 dark:border-white/5">
-                <motion.div 
-                  className="h-full bg-accent relative"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${moneyTreeProgress}%` }}
-                  transition={{ duration: 1, ease: "easeOut" }}
-                >
-                  <div className="absolute inset-0 bg-white/20 w-full h-full animate-[shimmer_2s_infinite]" style={{ backgroundImage: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)' }}></div>
-                </motion.div>
-              </div>
-              {moneyTreeProgress >= 100 && <p className="text-sm mt-3 text-accent font-medium animate-pulse flex items-center gap-2">Goal Achieved! <Icon iconName="party-popper" className="w-5 h-5" /></p>}
-            </div>
-          </Card>
-        </motion.div>
+        <DashboardGoal itemVariants={itemVariants} />
 
         {/* Active Students */}
         <motion.div variants={itemVariants} className="col-span-1 lg:col-span-1 cursor-pointer" onClick={() => navigate('/students')}>
