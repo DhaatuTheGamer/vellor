@@ -131,7 +131,7 @@ const BeforeAfterSlider = () => {
 };
 
 // Magnetic button wrapper - subtly pulls toward cursor on hover
-const MagneticButton: React.FC<{ children: React.ReactNode; onClick: () => void; className?: string; rightIcon?: string }> = ({ children, onClick, className, rightIcon }) => {
+const MagneticButton: React.FC<{ children: React.ReactNode; onClick: () => void; className?: string; rightIcon?: import('../types').IconName }> = ({ children, onClick, className, rightIcon }) => {
   const ref = useRef<HTMLDivElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -163,7 +163,7 @@ const MagneticButton: React.FC<{ children: React.ReactNode; onClick: () => void;
       <Button 
         onClick={onClick} 
         className={className}
-        rightIcon={rightIcon as any}
+        rightIcon={rightIcon}
       >
         {children}
       </Button>
@@ -644,9 +644,9 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { title: "No Subscriptions", desc: "Most tutoring software costs $30+ a month. Vellor is 100% free forever.", icon: "currency-dollar" },
-              { title: "Lightning Fast", desc: "Built on React 19 and Vite. Feel the 60fps animations and instant interactions.", icon: "rocket" },
-              { title: "Offline First", desc: "No internet? No problem. Install as a native app and manage your business anywhere.", icon: "bolt" }
+              { title: "No Subscriptions", desc: "Most tutoring software costs $30+ a month. Vellor is 100% free forever.", icon: "currency-dollar" as const },
+              { title: "Lightning Fast", desc: "Built on React 19 and Vite. Feel the 60fps animations and instant interactions.", icon: "rocket" as const },
+              { title: "Offline First", desc: "No internet? No problem. Install as a native app and manage your business anywhere.", icon: "bolt" as const }
             ].map((item, i) => (
               <motion.div 
                 key={item.title}
@@ -657,7 +657,7 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
                 className="p-8 rounded-[2rem] bg-gray-50 dark:bg-primary border border-gray-100 dark:border-white/5 hover:border-accent/30 transition-colors"
               >
                 <div className="w-14 h-14 rounded-2xl bg-accent/10 text-accent flex items-center justify-center mb-6">
-                  <Icon iconName={item.icon as any} className="w-7 h-7" />
+                  <Icon iconName={item.icon} className="w-7 h-7" />
                 </div>
                 <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">{item.title}</h3>
                 <p className="text-gray-500 dark:text-gray-400">{item.desc}</p>
@@ -686,10 +686,10 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
 
             <div className="grid md:grid-cols-4 gap-8 relative z-10">
               {[
-                { step: 1, title: "Onboard Students", desc: "Add student details and set custom goals instantly.", icon: "user-add" },
-                { step: 2, title: "Log Lessons", desc: "Track hours, topics, and performance with a single click.", icon: "clock" },
-                { step: 3, title: "Auto-Invoice", desc: "Generate PDFs and send WhatsApp reminders effortlessly.", icon: "document-text" },
-                { step: 4, title: "Track Growth", desc: "Monitor revenue and earn gamified achievements.", icon: "trending-up" }
+                { step: 1, title: "Onboard Students", desc: "Add student details and set custom goals instantly.", icon: "user-plus" as const },
+                { step: 2, title: "Log Lessons", desc: "Track hours, topics, and performance with a single click.", icon: "clock" as const },
+                { step: 3, title: "Auto-Invoice", desc: "Generate PDFs and send WhatsApp reminders effortlessly.", icon: "document-text" as const },
+                { step: 4, title: "Track Growth", desc: "Monitor revenue and earn gamified achievements.", icon: "trending-up" as const }
               ].map((item, i) => (
                 <motion.div
                   key={item.step}
@@ -703,7 +703,7 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
                     {item.step}
                   </div>
                   <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-300 flex items-center justify-center mx-auto mb-4 group-hover:text-accent transition-colors">
-                    <Icon iconName={item.icon as any} className="w-5 h-5" />
+                    <Icon iconName={item.icon} className="w-5 h-5" />
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{item.title}</h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400">{item.desc}</p>
@@ -1014,7 +1014,7 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
                 className="inline-flex items-center gap-2 text-accent font-semibold text-base hover:underline underline-offset-4 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-gray-50 dark:focus-visible:ring-offset-primary rounded-md mt-2"
               >
                 {isManifestoExpanded ? 'Show less' : 'Read the full story'}
-                <Icon iconName={isManifestoExpanded ? 'chevron-up' as any : 'chevron-down' as any} className="w-4 h-4" />
+                <Icon iconName={isManifestoExpanded ? 'chevron-up' : 'chevron-down'} className="w-4 h-4" />
               </button>
             </div>
 
@@ -1451,18 +1451,18 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
               </div>
               <div className="flex-1 flex flex-col gap-1 p-4 overflow-y-auto">
                 {[
-                  { label: 'Features', id: 'features', icon: 'sparkles' },
-                  { label: 'Gamification', id: 'gamification', icon: 'trophy' },
-                  { label: 'Privacy', id: 'privacy', icon: 'lock-closed' },
-                  { label: 'Open Source', id: 'open-source', icon: 'code' },
-                  { label: 'FAQ', id: 'faq', icon: 'question-mark-circle' },
+                  { label: 'Features', id: 'features', icon: 'sparkles' as const },
+                  { label: 'Gamification', id: 'gamification', icon: 'trophy' as const },
+                  { label: 'Privacy', id: 'privacy', icon: 'lock-closed' as const },
+                  { label: 'Open Source', id: 'open-source', icon: 'code' as const },
+                  { label: 'FAQ', id: 'faq', icon: 'question-mark-circle' as const },
                 ].map((item) => (
                   <button
                     key={item.id}
                     onClick={() => scrollToAndClose(item.id)}
                     className="flex items-center gap-3 px-4 py-3 rounded-xl text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 font-semibold transition-colors"
                   >
-                    <Icon iconName={item.icon as any} className="w-5 h-5 text-gray-400" />
+                    <Icon iconName={item.icon} className="w-5 h-5 text-gray-400" />
                     {item.label}
                   </button>
                 ))}
