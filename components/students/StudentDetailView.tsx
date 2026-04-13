@@ -6,6 +6,7 @@ import { TransactionStatusBadge } from '../transactions/TransactionStatusBadge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
 import { generateProgressReportPDF } from '../../pdf';
 import { useStore } from '../../store';
 
@@ -402,7 +403,7 @@ export const StudentDetailView: React.FC<StudentDetailViewProps> = ({ student, o
                             <YAxis domain={[1, 5]} tickFormatter={formatGrade} stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} width={30} />
                             <Tooltip 
                                contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
-                               formatter={(_value: any, _name: any, props: any) => [props.payload.grade, 'Grade']}
+                               formatter={(_value: ValueType | undefined, _name: NameType | undefined, props: { payload?: { grade?: string } }) => [props.payload?.grade || '', 'Grade']}
                             />
                             <Line type="monotone" dataKey="val" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 4, fill: '#8b5cf6', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
                          </LineChart>
