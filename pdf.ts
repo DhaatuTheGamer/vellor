@@ -186,12 +186,21 @@ export const generateProgressReportPDF = (
      currentY += 15;
   }
 
-  const reportTransactions = transactions
-     .filter(t => t.studentId === student.id && (t.grade || t.progressRemark))
-     // ⚡ Bolt Performance: Avoid Date.parse() overhead during O(N log N) sorting
-     .map(t => ({ t, time: typeof t.date === 'string' ? new Date(t.date).getTime() : (t.date as unknown as Date).getTime() }))
-     .sort((a,b) => b.time - a.time)
-     .map(obj => obj.t);
+  const mapped = [];
+  for (let i = 0; i < transactions.length; i++) {
+    const t = transactions[i];
+    if (t.studentId === student.id && (t.grade || t.progressRemark)) {
+      mapped.push({
+        t,
+        time: typeof t.date === 'string' ? Date.parse(t.date) : (t.date as unknown as Date).getTime()
+      });
+    }
+  }
+  mapped.sort((a, b) => b.time - a.time);
+  const reportTransactions = new Array(mapped.length);
+  for (let i = 0; i < mapped.length; i++) {
+    reportTransactions[i] = mapped[i].t;
+  }
 
   if (reportTransactions.length > 0) {
       autoTable(doc, {
