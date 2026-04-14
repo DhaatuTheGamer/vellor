@@ -186,10 +186,21 @@ export const generateProgressReportPDF = (
      currentY += 15;
   }
 
-  const reportTransactions = transactions
-     .filter(t => t.studentId === student.id && (t.grade || t.progressRemark))
-     // ⚡ Bolt Performance: Avoid mapping and parsing overhead by using direct lexicographical string comparison
-     .sort((a, b) => b.date < a.date ? -1 : (b.date > a.date ? 1 : 0));
+  const mapped = [];
+  for (let i = 0; i < transactions.length; i++) {
+    const t = transactions[i];
+    if (t.studentId === student.id && (t.grade || t.progressRemark)) {
+      mapped.push({
+        t,
+        time: typeof t.date === 'string' ? Date.parse(t.date) : (t.date as unknown as Date).getTime()
+      });
+    }
+  }
+  mapped.sort((a, b) => b.time - a.time);
+  const reportTransactions = new Array(mapped.length);
+  for (let i = 0; i < mapped.length; i++) {
+    reportTransactions[i] = mapped[i].t;
+  }
 
   if (reportTransactions.length > 0) {
       autoTable(doc, {
