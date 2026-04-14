@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useStore } from '../../store';
 import { Transaction, Student, PaymentStatus, AttendanceStatus } from '../../types';
 import { Button, Input, Select, Textarea, Icon } from '../ui';
@@ -157,10 +157,15 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ transaction, s
     onSave(transactionToSave);
   };
 
-  const studentOptions = [
-    { value: '', label: 'Select a student' },
-    ...students.map(s => ({ value: s.id, label: `${s.firstName} ${s.lastName}` }))
-  ];
+  const studentOptions = useMemo(() => {
+    const options = new Array(students.length + 1);
+    options[0] = { value: '', label: 'Select a student' };
+    for (let i = 0; i < students.length; i++) {
+      const s = students[i];
+      options[i + 1] = { value: s.id, label: `${s.firstName} ${s.lastName}` };
+    }
+    return options;
+  }, [students]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
