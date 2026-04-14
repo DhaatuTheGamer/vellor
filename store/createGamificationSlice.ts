@@ -127,27 +127,16 @@ export const createGamificationSlice: StateCreator<AppState, [], [], Gamificatio
 
       for (let i = 0; i < students.length; i++) {
           const s = students[i];
+          if (s.tuition && Array.isArray(s.tuition.subjects)) {
+              s.tuition.subjects.forEach(sub => {
+                  if (typeof sub === 'string') uniqueSubjects.add(sub.toLowerCase().trim());
+              });
+          }
 
           const type = s.tuition?.rateType;
           if (type === 'hourly') hasHourly = true;
           else if (type === 'per_lesson') hasPerLesson = true;
           else if (type === 'monthly') hasMonthly = true;
-
-          // ⚡ Bolt Performance: Only parse subjects until we reach the threshold for the achievement
-          if (s.tuition && Array.isArray(s.tuition.subjects) && uniqueSubjects.size < 3) {
-              const subjects = s.tuition.subjects;
-              for (let j = 0; j < subjects.length; j++) {
-                  const sub = subjects[j];
-                  if (typeof sub === 'string') {
-                      uniqueSubjects.add(sub.toLowerCase().trim());
-                  }
-              }
-          }
-
-          // ⚡ Bolt Performance: Early break if all dependent achievements are already satisfied
-          if (hasHourly && hasPerLesson && hasMonthly && uniqueSubjects.size >= 3) {
-              break;
-          }
       }
 
       const hasSubjectMaster = uniqueSubjects.size >= 3;

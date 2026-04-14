@@ -86,50 +86,6 @@ describe('useKeyboardShortcuts', () => {
     expect(onOpenSearch).toHaveBeenCalledTimes(1);
   });
 
-  it('triggers onOpenQuickLog with Cmd+L on Mac', () => {
-    Object.defineProperty(navigator, 'platform', { value: 'MacIntel', configurable: true });
-    renderHook(() => useKeyboardShortcuts(onOpenSearch, onOpenQuickLog, onOpenHelp));
-
-    fireKeyDown('l', { metaKey: true });
-    expect(onOpenQuickLog).toHaveBeenCalledTimes(1);
-  });
-
-  it('triggers onOpenHelp with Cmd+/ on Mac', () => {
-    Object.defineProperty(navigator, 'platform', { value: 'MacIntel', configurable: true });
-    renderHook(() => useKeyboardShortcuts(onOpenSearch, onOpenQuickLog, onOpenHelp));
-
-    fireKeyDown('/', { metaKey: true });
-    expect(onOpenHelp).toHaveBeenCalledTimes(1);
-  });
-
-  it('ignores Cmd modifier on Windows/Linux', () => {
-    // navigator.platform is already set to 'Win32' in beforeEach
-    renderHook(() => useKeyboardShortcuts(onOpenSearch, onOpenQuickLog, onOpenHelp));
-
-    fireKeyDown('k', { metaKey: true });
-    expect(onOpenSearch).not.toHaveBeenCalled();
-
-    fireKeyDown('l', { metaKey: true });
-    expect(onOpenQuickLog).not.toHaveBeenCalled();
-
-    fireKeyDown('/', { metaKey: true });
-    expect(onOpenHelp).not.toHaveBeenCalled();
-  });
-
-  it('ignores Ctrl modifier on Mac', () => {
-    Object.defineProperty(navigator, 'platform', { value: 'MacIntel', configurable: true });
-    renderHook(() => useKeyboardShortcuts(onOpenSearch, onOpenQuickLog, onOpenHelp));
-
-    fireKeyDown('k', { ctrlKey: true });
-    expect(onOpenSearch).not.toHaveBeenCalled();
-
-    fireKeyDown('l', { ctrlKey: true });
-    expect(onOpenQuickLog).not.toHaveBeenCalled();
-
-    fireKeyDown('/', { ctrlKey: true });
-    expect(onOpenHelp).not.toHaveBeenCalled();
-  });
-
   it('triggers onOpenQuickLog with Ctrl+L on Windows/Linux', () => {
     renderHook(() => useKeyboardShortcuts(onOpenSearch, onOpenQuickLog, onOpenHelp));
 

@@ -24,88 +24,6 @@ const parseLine = (line: string) => {
     return result;
 };
 
-interface UploadStepProps {
-    handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}
-
-const UploadStep: React.FC<UploadStepProps> = ({ handleFileUpload }) => (
-    <div className="text-center py-8">
-       <div className="w-16 h-16 mx-auto bg-gray-50 dark:bg-primary-light rounded-full flex items-center justify-center mb-6 shadow-sm border border-gray-100 dark:border-white/10">
-          <Icon iconName="document-text" className="w-8 h-8 text-accent" />
-       </div>
-       <h3 className="text-xl font-display font-bold mb-2 text-gray-900 dark:text-white">Upload CSV File</h3>
-       <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-sm mx-auto">Upload a CSV file containing your student roster to bulk import them into Vellor.</p>
-
-       <label className="bg-accent text-white px-8 py-3.5 rounded-full cursor-pointer hover:bg-accent/90 transition-all shadow-lg shadow-accent/20 font-bold inline-block">
-           Choose CSV File
-           <input type="file" accept=".csv" className="hidden" onClick={(e) => (e.target as HTMLInputElement).value = ''} onChange={handleFileUpload} />
-       </label>
-
-       <div className="mt-8 p-4 bg-gray-50 dark:bg-primary/30 rounded-2xl text-left border border-gray-100 dark:border-white/5 text-sm">
-          <p className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Supported Columns (Auto-mapped):</p>
-          <ul className="grid grid-cols-2 gap-2 text-gray-600 dark:text-gray-400">
-             <li className="flex items-center gap-1.5"><Icon iconName="check-circle" className="w-3.5 h-3.5 text-success" /> First Name</li>
-             <li className="flex items-center gap-1.5"><Icon iconName="check-circle" className="w-3.5 h-3.5 text-success" /> Last Name</li>
-             <li className="flex items-center gap-1.5"><Icon iconName="check-circle" className="w-3.5 h-3.5 text-success" /> Email</li>
-             <li className="flex items-center gap-1.5"><Icon iconName="check-circle" className="w-3.5 h-3.5 text-success" /> Phone</li>
-             <li className="flex items-center gap-1.5"><Icon iconName="check-circle" className="w-3.5 h-3.5 text-success" /> Default Rate</li>
-             <li className="flex items-center gap-1.5"><Icon iconName="check-circle" className="w-3.5 h-3.5 text-success" /> Subjects</li>
-          </ul>
-       </div>
-    </div>
-);
-
-interface MappingStepProps {
-    csvDataLength: number;
-    mapping: { [key: string]: string };
-    setMapping: (mapping: { [key: string]: string }) => void;
-    originalHeaders: string[];
-    setStep: (step: 1 | 2) => void;
-    handleImport: () => void;
-}
-
-const MappingStep: React.FC<MappingStepProps> = ({
-    csvDataLength,
-    mapping,
-    setMapping,
-    originalHeaders,
-    setStep,
-    handleImport
-}) => (
-    <div className="space-y-6">
-        <div className="bg-accent/10 border border-accent/20 p-4 rounded-2xl text-accent font-medium text-sm">
-            Found {csvDataLength} records. Let's map your columns to Vellor fields. We've auto-mapped the ones we recognized.
-        </div>
-
-        <div className="bg-gray-50 dark:bg-primary/50 p-5 rounded-3xl space-y-4 border border-gray-100 dark:border-white/5 max-h-[50vh] overflow-y-auto custom-scrollbar">
-            {[
-              { field: 'firstName', label: 'First Name (Required)' },
-              { field: 'lastName', label: 'Last Name' },
-              { field: 'email', label: 'Email Address' },
-              { field: 'studentPhone', label: 'Phone Number' },
-              { field: 'defaultRate', label: 'Default Rate' },
-              { field: 'subjects', label: 'Subject' }
-            ].map(({field, label}) => (
-               <div key={field} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white dark:bg-primary-light rounded-xl border border-gray-200 dark:border-white/10">
-                   <span className="text-sm font-bold text-gray-700 dark:text-gray-300 sm:w-1/3 truncate">{label}</span>
-                   <div className="sm:w-2/3">
-                       <Select
-                         value={mapping[field] || ''}
-                         onChange={e => setMapping({...mapping, [field]: e.target.value})}
-                         options={[{label: '-- Skip Field --', value: ''}, ...originalHeaders.map(h => ({label: h, value: h}))]}
-                       />
-                   </div>
-               </div>
-            ))}
-        </div>
-
-        <div className="flex justify-between items-center pt-4 border-t border-gray-100 dark:border-white/10">
-            <Button variant="ghost" onClick={() => setStep(1)} className="rounded-full">Upload Different File</Button>
-            <Button variant="primary" onClick={handleImport} className="rounded-full px-6 shadow-lg shadow-accent/20 font-bold">Import {csvDataLength} Students</Button>
-        </div>
-    </div>
-);
-
 export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClose }) => {
     const [step, setStep] = useState<1 | 2>(1);
     const [originalHeaders, setOriginalHeaders] = useState<string[]>([]);
@@ -216,18 +134,65 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Import Students (CSV)">
             {step === 1 && (
-                <UploadStep handleFileUpload={handleFileUpload} />
+                <div className="text-center py-8">
+                   <div className="w-16 h-16 mx-auto bg-gray-50 dark:bg-primary-light rounded-full flex items-center justify-center mb-6 shadow-sm border border-gray-100 dark:border-white/10">
+                      <Icon iconName="document-text" className="w-8 h-8 text-accent" />
+                   </div>
+                   <h3 className="text-xl font-display font-bold mb-2 text-gray-900 dark:text-white">Upload CSV File</h3>
+                   <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-sm mx-auto">Upload a CSV file containing your student roster to bulk import them into Vellor.</p>
+
+                   <label className="bg-accent text-white px-8 py-3.5 rounded-full cursor-pointer hover:bg-accent/90 transition-all shadow-lg shadow-accent/20 font-bold inline-block">
+                       Choose CSV File
+                       <input type="file" accept=".csv" className="hidden" onClick={(e) => (e.target as HTMLInputElement).value = ''} onChange={handleFileUpload} />
+                   </label>
+
+                   <div className="mt-8 p-4 bg-gray-50 dark:bg-primary/30 rounded-2xl text-left border border-gray-100 dark:border-white/5 text-sm">
+                      <p className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Supported Columns (Auto-mapped):</p>
+                      <ul className="grid grid-cols-2 gap-2 text-gray-600 dark:text-gray-400">
+                         <li className="flex items-center gap-1.5"><Icon iconName="check-circle" className="w-3.5 h-3.5 text-success" /> First Name</li>
+                         <li className="flex items-center gap-1.5"><Icon iconName="check-circle" className="w-3.5 h-3.5 text-success" /> Last Name</li>
+                         <li className="flex items-center gap-1.5"><Icon iconName="check-circle" className="w-3.5 h-3.5 text-success" /> Email</li>
+                         <li className="flex items-center gap-1.5"><Icon iconName="check-circle" className="w-3.5 h-3.5 text-success" /> Phone</li>
+                         <li className="flex items-center gap-1.5"><Icon iconName="check-circle" className="w-3.5 h-3.5 text-success" /> Default Rate</li>
+                         <li className="flex items-center gap-1.5"><Icon iconName="check-circle" className="w-3.5 h-3.5 text-success" /> Subjects</li>
+                      </ul>
+                   </div>
+                </div>
             )}
             
             {step === 2 && (
-                <MappingStep
-                    csvDataLength={csvData.length}
-                    mapping={mapping}
-                    setMapping={setMapping}
-                    originalHeaders={originalHeaders}
-                    setStep={setStep}
-                    handleImport={handleImport}
-                />
+                <div className="space-y-6">
+                    <div className="bg-accent/10 border border-accent/20 p-4 rounded-2xl text-accent font-medium text-sm">
+                        Found {csvData.length} records. Let's map your columns to Vellor fields. We've auto-mapped the ones we recognized.
+                    </div>
+
+                    <div className="bg-gray-50 dark:bg-primary/50 p-5 rounded-3xl space-y-4 border border-gray-100 dark:border-white/5 max-h-[50vh] overflow-y-auto custom-scrollbar">
+                        {[
+                          { field: 'firstName', label: 'First Name (Required)' },
+                          { field: 'lastName', label: 'Last Name' },
+                          { field: 'email', label: 'Email Address' },
+                          { field: 'studentPhone', label: 'Phone Number' },
+                          { field: 'defaultRate', label: 'Default Rate' },
+                          { field: 'subjects', label: 'Subject' }
+                        ].map(({field, label}) => (
+                           <div key={field} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white dark:bg-primary-light rounded-xl border border-gray-200 dark:border-white/10">
+                               <span className="text-sm font-bold text-gray-700 dark:text-gray-300 sm:w-1/3 truncate">{label}</span>
+                               <div className="sm:w-2/3">
+                                   <Select
+                                     value={mapping[field] || ''}
+                                     onChange={e => setMapping({...mapping, [field]: e.target.value})}
+                                     options={[{label: '-- Skip Field --', value: ''}, ...originalHeaders.map(h => ({label: h, value: h}))]}
+                                   />
+                               </div>
+                           </div>
+                        ))}
+                    </div>
+
+                    <div className="flex justify-between items-center pt-4 border-t border-gray-100 dark:border-white/10">
+                        <Button variant="ghost" onClick={() => setStep(1)} className="rounded-full">Upload Different File</Button>
+                        <Button variant="primary" onClick={handleImport} className="rounded-full px-6 shadow-lg shadow-accent/20 font-bold">Import {csvData.length} Students</Button>
+                    </div>
+                </div>
             )}
         </Modal>
     );

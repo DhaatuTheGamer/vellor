@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Calendar, dateFnsLocalizer, Event } from 'react-big-calendar';
+import { Calendar, dateFnsLocalizer, Event as RBCEvent } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { enUS } from 'date-fns/locale/en-US';
 // @ts-expect-error - CSS import does not have type declarations
@@ -27,15 +27,7 @@ const localizer = dateFnsLocalizer({
 
 const DragAndDropCalendar = withDragAndDrop(Calendar) as any;
 
-interface CalendarEvent extends Event {
-  id: string;
-  title: string;
-  start: Date;
-  end: Date;
-  resource: Transaction;
-}
-
-interface CalendarEvent extends Event {
+interface CalendarEvent extends RBCEvent {
   id: string;
   title: string;
   start: Date;
@@ -86,8 +78,8 @@ export const CalendarPage: React.FC = () => {
     });
   }, [transactions, studentMap]);
 
-  const eventStyleGetter = (event: CalendarEvent) => {
-    const t = event.resource;
+  const eventStyleGetter = (e: CalendarEvent) => {
+    const t = e.resource;
     let backgroundColor = '#8b5cf6'; // accent
 
     if (t.status === PaymentStatus.Due) backgroundColor = '#f43f5e'; // danger
@@ -105,7 +97,8 @@ export const CalendarPage: React.FC = () => {
     return { style };
   };
 
-  const handleEventDrop = ({ event, start, end }: { event: CalendarEvent; start: Date | string; end: Date | string }) => {
+  const handleEventDrop = (args: { event: CalendarEvent; start: Date | string; end: Date | string }) => {
+    const { event, start, end } = args;
     const t = event.resource;
     const startDate = typeof start === 'string' ? new Date(start) : start;
     const endDate = typeof end === 'string' ? new Date(end) : end;
@@ -118,7 +111,8 @@ export const CalendarPage: React.FC = () => {
     addToast('Lesson rescheduled successfully.', 'success');
   };
 
-  const handleEventResize = ({ event, start, end }: { event: CalendarEvent; start: Date | string; end: Date | string }) => {
+  const handleEventResize = (args: { event: CalendarEvent; start: Date | string; end: Date | string }) => {
+    const { event, start, end } = args;
     const t = event.resource;
     const startDate = typeof start === 'string' ? new Date(start) : start;
     const endDate = typeof end === 'string' ? new Date(end) : end;
@@ -199,14 +193,14 @@ export const CalendarPage: React.FC = () => {
 
         {/* Calendar View */}
         <div className="flex-1 bg-white dark:bg-primary rounded-3xl shadow-sm border border-gray-100 dark:border-white/5 p-6 overflow-hidden calendar-container relative z-10 w-full min-h-[500px]">
-          <DragAndDropCalendar<CalendarEvent>
+          <DragAndDropCalendar
             localizer={localizer}
             events={events}
             startAccessor="start"
             endAccessor="end"
             style={{ height: '100%' }}
             eventPropGetter={eventStyleGetter}
-            onSelectEvent={(event) => setSelectedEvent(event)}
+            onSelectEvent={(e: any) => setSelectedEvent(e as CalendarEvent)}
             views={['month', 'week', 'day']}
             onEventDrop={handleEventDrop}
             onEventResize={handleEventResize}
