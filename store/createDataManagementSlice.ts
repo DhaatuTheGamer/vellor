@@ -9,7 +9,7 @@ export const createDataManagementSlice: StateCreator<AppState, [], [], DataManag
   masterKey: null,
   setMasterKey: (key) => set({ masterKey: key }),
 
-  exportData: async () => {
+  exportData: async (password?: string | null) => {
     try {
         const state = get();
         const dataToExport = { 
@@ -21,7 +21,6 @@ export const createDataManagementSlice: StateCreator<AppState, [], [], DataManag
             activityLog: state.activityLog 
         };
 
-        const password = window.prompt("Enter a password to encrypt your backup (leave blank to export unencrypted):");
         if (password === null) return; // User cancelled
 
         let exportPayload: any = dataToExport;
@@ -58,51 +57,54 @@ export const createDataManagementSlice: StateCreator<AppState, [], [], DataManag
     }
   },
 
-  importData: async (file: File) => {
+  importData: async (file: File, password?: string | null) => {
     if (!file) { get().addToast('No file selected for import.', 'error'); return; }
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-        try {
-            const result = event.target?.result;
-            if (typeof result !== 'string') { throw new Error('File could not be read.'); }
-            let rawData = JSON.parse(result, jsonReviver);
 
-            if (rawData.__vellor_encrypted) {
-                const password = window.prompt("This backup is encrypted. Please enter the password:");
-                if (password === null) return; // User cancelled
+    // Check if the user cancelled an explicit password prompt loop
+    if (password === null) return;
 
-                const { deriveKey, decryptObject } = await import('../src/crypto');
-                const salt = new Uint8Array(rawData.salt);
-                const key = await deriveKey(password, salt);
-                let decrypted;
-                try {
-                    decrypted = await decryptObject(rawData.data, key);
-                } catch {
-                    throw new Error("Incorrect password or corrupted encrypted data.");
-                }
+    try {
+        const result = await file.text();
+        let rawData = JSON.parse(result, jsonReviver);
 
-                if (!decrypted) throw new Error("Decryption failed");
-                rawData = decrypted;
+        if (rawData.__vellor_encrypted) {
+            if (password === undefined) {
+                // Signal to the caller that a password is required
+                throw new Error("PASSWORD_REQUIRED");
             }
 
-            const parsedData = backupSchema.parse(rawData);
+            const { deriveKey, decryptObject } = await import('../src/crypto');
+            const salt = new Uint8Array(rawData.salt);
+            const key = await deriveKey(password, salt);
+            let decrypted;
+            try {
+                decrypted = await decryptObject(rawData.data, key);
+            } catch {
+                throw new Error("Incorrect password or corrupted encrypted data.");
+            }
 
-            set({
-                students: parsedData.students,
-                transactions: parsedData.transactions,
-                settings: parsedData.settings,
-                ...(parsedData.gamification && { gamification: parsedData.gamification }),
-                ...(parsedData.achievements && { achievements: parsedData.achievements }),
-                ...(parsedData.activityLog && { activityLog: parsedData.activityLog })
-            });
-            get().addToast('Data imported successfully! The app will reload.', 'success');
-            setTimeout(() => window.location.reload(), 2000);
-        } catch (error) {
-            get().addToast(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+            if (!decrypted) throw new Error("Decryption failed");
+            rawData = decrypted;
         }
-    };
-    reader.onerror = () => { get().addToast('Error reading file.', 'error'); };
-    reader.readAsText(file);
+
+        const parsedData = backupSchema.parse(rawData);
+
+        set({
+            students: parsedData.students,
+            transactions: parsedData.transactions,
+            settings: parsedData.settings,
+            ...(parsedData.gamification && { gamification: parsedData.gamification }),
+            ...(parsedData.achievements && { achievements: parsedData.achievements }),
+            ...(parsedData.activityLog && { activityLog: parsedData.activityLog })
+        });
+        get().addToast('Data imported successfully! The app will reload.', 'success');
+        setTimeout(() => window.location.reload(), 2000);
+    } catch (error) {
+        if (error instanceof Error && error.message === "PASSWORD_REQUIRED") {
+            throw error; // Re-throw to be caught by UI
+        }
+        get().addToast(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+    }
   },
 
   resetData: () => {
