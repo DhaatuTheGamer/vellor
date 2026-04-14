@@ -258,16 +258,8 @@ export const generateBulkInvoicePDF = (
     if (!student) continue;
     
     // Sort transactions by date
-    // ⚡ Bolt Performance: Avoid Date.parse() overhead during O(N log N) sorting
-    const mapped = new Array(studentTransactions.length);
-    for (let i = 0; i < studentTransactions.length; i++) {
-      const t = studentTransactions[i];
-      mapped[i] = { t, time: typeof t.date === 'string' ? new Date(t.date).getTime() : (t.date as unknown as Date).getTime() };
-    }
-    mapped.sort((a, b) => a.time - b.time);
-    for (let i = 0; i < mapped.length; i++) {
-      studentTransactions[i] = mapped[i].t;
-    }
+    // ⚡ Bolt Performance: Avoid mapping and parsing overhead by using direct lexicographical string comparison
+    studentTransactions.sort((a, b) => a.date < b.date ? -1 : (a.date > b.date ? 1 : 0));
 
     if (!isFirstPage) {
       doc.addPage();
