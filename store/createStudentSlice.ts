@@ -116,61 +116,16 @@ export const createStudentSlice: StateCreator<AppState, [], [], StudentSlice> = 
   deleteStudent: (studentId) => {
     const state = get();
     const studentToDelete = state.students.find(s => s.id === studentId);
-
-    set(state => {
-      // ⚡ Bolt Performance: Use an optimized array removal strategy that avoids allocation
-      // if no elements match the condition, preserving existing references to prevent re-renders.
-      let newStudents = state.students;
-      for (let i = 0, len = state.students.length; i < len; i++) {
-        if (state.students[i].id === studentId) {
-          newStudents = state.students.slice(0, i);
-          for (let j = i + 1; j < len; j++) {
-            if (state.students[j].id !== studentId) {
-              newStudents.push(state.students[j]);
-            }
-          }
-          break;
-        }
-      }
-
-      let newTransactions = state.transactions;
-      for (let i = 0, len = state.transactions.length; i < len; i++) {
-        if (state.transactions[i].studentId === studentId) {
-          newTransactions = state.transactions.slice(0, i);
-          for (let j = i + 1; j < len; j++) {
-            if (state.transactions[j].studentId !== studentId) {
-              newTransactions.push(state.transactions[j]);
-            }
-          }
-          break;
-        }
-      }
-
-      return {
-        students: newStudents,
-        transactions: newTransactions
-      };
-    });
-
+    set(state => ({
+      students: state.students.filter(s => s.id !== studentId),
+      transactions: state.transactions.filter(t => t.studentId !== studentId)
+    }));
     if (studentToDelete) {
         get().addToast(`Student "${studentToDelete.firstName}" and their transactions have been deleted.`, 'info');
     }
   },
 
-  getStudentById: (() => {
-    let cachedStudents: Student[] | null = null;
-    const studentMap = new Map<string, Student>();
-    return (studentId) => {
-      const currentStudents = get().students;
-      if (currentStudents !== cachedStudents) {
-        cachedStudents = currentStudents;
-        studentMap.clear();
-        for (let i = 0, len = currentStudents.length; i < len; i++) {
-          const s = currentStudents[i];
-          studentMap.set(s.id, s);
-        }
-      }
-      return studentMap.get(studentId);
-    };
-  })(),
+  getStudentById: (studentId) => {
+    return get().students.find(s => s.id === studentId);
+  },
 });

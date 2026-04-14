@@ -36,7 +36,7 @@ const XIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 import { useStore } from '../store';
-import { Theme, IconName } from '../types';
+import { Theme } from '../types';
 
 interface MarketingPageProps {
   onGetStarted: () => void;
@@ -132,7 +132,7 @@ const BeforeAfterSlider = () => {
 };
 
 // Magnetic button wrapper - subtly pulls toward cursor on hover
-const MagneticButton: React.FC<{ children: React.ReactNode; onClick: () => void; className?: string; rightIcon?: IconName }> = ({ children, onClick, className, rightIcon }) => {
+const MagneticButton: React.FC<{ children: React.ReactNode; onClick: () => void; className?: string; rightIcon?: string }> = ({ children, onClick, className, rightIcon }) => {
   const ref = useRef<HTMLDivElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -222,7 +222,7 @@ const schemaData = {
   ],
 };
 
-const PremiumFeaturesSection = ({ data }: { data: { month: string; revenue: number }[] }) => (
+const PremiumFeaturesSection = ({ data }: { data: any }) => (
   <section data-pomelli-section="premium-features" data-crawler-intent="education" className="py-24 px-4 relative z-20">
     <div className="max-w-6xl mx-auto">
        <motion.div
@@ -644,13 +644,11 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {(
-              [
-                { title: "No Subscriptions", desc: "Most tutoring software costs $30+ a month. Vellor is 100% free forever.", icon: "currency-dollar" },
-                { title: "Lightning Fast", desc: "Built on React 19 and Vite. Feel the 60fps animations and instant interactions.", icon: "rocket" },
-                { title: "Offline First", desc: "No internet? No problem. Install as a native app and manage your business anywhere.", icon: "bolt" }
-              ] as Array<{ title: string; desc: string; icon: IconName }>
-            ).map((item, i) => (
+            {[
+              { title: "No Subscriptions", desc: "Most tutoring software costs $30+ a month. Vellor is 100% free forever.", icon: "currency-dollar" },
+              { title: "Lightning Fast", desc: "Built on React 19 and Vite. Feel the 60fps animations and instant interactions.", icon: "rocket" },
+              { title: "Offline First", desc: "No internet? No problem. Install as a native app and manage your business anywhere.", icon: "bolt" }
+            ].map((item, i) => (
               <motion.div 
                 key={item.title}
                 initial={{ opacity: 0, y: 20 }}
@@ -688,14 +686,12 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
             <div className="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-gradient-to-r from-transparent via-accent/50 to-transparent -translate-y-1/2 z-0"></div>
 
             <div className="grid md:grid-cols-4 gap-8 relative z-10">
-              {(
-                [
-                  { step: 1, title: "Onboard Students", desc: "Add student details and set custom goals instantly.", icon: "user-plus" },
-                  { step: 2, title: "Log Lessons", desc: "Track hours, topics, and performance with a single click.", icon: "clock" },
-                  { step: 3, title: "Auto-Invoice", desc: "Generate PDFs and send WhatsApp reminders effortlessly.", icon: "document-text" },
-                  { step: 4, title: "Track Growth", desc: "Monitor revenue and earn gamified achievements.", icon: "trending-up" }
-                ] as Array<{ step: number; title: string; desc: string; icon: IconName }>
-              ).map((item, i) => (
+              {[
+                { step: 1, title: "Onboard Students", desc: "Add student details and set custom goals instantly.", icon: "user-add" },
+                { step: 2, title: "Log Lessons", desc: "Track hours, topics, and performance with a single click.", icon: "clock" },
+                { step: 3, title: "Auto-Invoice", desc: "Generate PDFs and send WhatsApp reminders effortlessly.", icon: "document-text" },
+                { step: 4, title: "Track Growth", desc: "Monitor revenue and earn gamified achievements.", icon: "trending-up" }
+              ].map((item, i) => (
                 <motion.div
                   key={item.step}
                   initial={{ opacity: 0, y: 30 }}
@@ -1455,15 +1451,13 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
                 </button>
               </div>
               <div className="flex-1 flex flex-col gap-1 p-4 overflow-y-auto">
-                {(
-                  [
-                    { label: 'Features', id: 'features', icon: 'sparkles' },
-                    { label: 'Gamification', id: 'gamification', icon: 'trophy' },
-                    { label: 'Privacy', id: 'privacy', icon: 'lock-closed' },
-                    { label: 'Open Source', id: 'open-source', icon: 'code' },
-                    { label: 'FAQ', id: 'faq', icon: 'question-mark-circle' },
-                  ] as Array<{ label: string; id: string; icon: IconName }>
-                ).map((item) => (
+                {[
+                  { label: 'Features', id: 'features', icon: 'sparkles' },
+                  { label: 'Gamification', id: 'gamification', icon: 'trophy' },
+                  { label: 'Privacy', id: 'privacy', icon: 'lock-closed' },
+                  { label: 'Open Source', id: 'open-source', icon: 'code' },
+                  { label: 'FAQ', id: 'faq', icon: 'question-mark-circle' },
+                ].map((item) => (
                   <button
                     key={item.id}
                     onClick={() => scrollToAndClose(item.id)}
