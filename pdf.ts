@@ -186,12 +186,21 @@ export const generateProgressReportPDF = (
      currentY += 15;
   }
 
-  const reportTransactions = transactions
-     .filter(t => t.studentId === student.id && (t.grade || t.progressRemark))
-     // ⚡ Bolt Performance: Avoid Date.parse() overhead during O(N log N) sorting
-     .map(t => ({ t, time: typeof t.date === 'string' ? new Date(t.date).getTime() : (t.date as unknown as Date).getTime() }))
-     .sort((a,b) => b.time - a.time)
-     .map(obj => obj.t);
+  const mapped = [];
+  for (let i = 0; i < transactions.length; i++) {
+    const t = transactions[i];
+    if (t.studentId === student.id && (t.grade || t.progressRemark)) {
+      mapped.push({
+        t,
+        time: typeof t.date === 'string' ? Date.parse(t.date) : (t.date as unknown as Date).getTime()
+      });
+    }
+  }
+  mapped.sort((a, b) => b.time - a.time);
+  const reportTransactions = new Array(mapped.length);
+  for (let i = 0; i < mapped.length; i++) {
+    reportTransactions[i] = mapped[i].t;
+  }
 
   if (reportTransactions.length > 0) {
       autoTable(doc, {
@@ -249,16 +258,8 @@ export const generateBulkInvoicePDF = (
     if (!student) continue;
     
     // Sort transactions by date
-    // ⚡ Bolt Performance: Avoid Date.parse() overhead during O(N log N) sorting
-    const mapped = new Array(studentTransactions.length);
-    for (let i = 0; i < studentTransactions.length; i++) {
-      const t = studentTransactions[i];
-      mapped[i] = { t, time: typeof t.date === 'string' ? new Date(t.date).getTime() : (t.date as unknown as Date).getTime() };
-    }
-    mapped.sort((a, b) => a.time - b.time);
-    for (let i = 0; i < mapped.length; i++) {
-      studentTransactions[i] = mapped[i].t;
-    }
+    // ⚡ Bolt Performance: Avoid mapping and parsing overhead by using direct lexicographical string comparison
+    studentTransactions.sort((a, b) => a.date < b.date ? -1 : (a.date > b.date ? 1 : 0));
 
     if (!isFirstPage) {
       doc.addPage();

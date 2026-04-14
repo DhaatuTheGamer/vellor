@@ -1,0 +1,146 @@
+import React, { useState, useEffect } from 'react';
+import { useStore } from '../../store';
+import { generateSalt, deriveKey, exportKeyToBase64, importKeyFromBase64 } from '../../src/crypto';
+import { Icon, Button } from '../ui';
+
+export const SetupEncryption: React.FC<{ onUnlocked: () => void }> = ({ onUnlocked }) => {
+  const [isFirstTime, setIsFirstTime] = useState<boolean | null>(null);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [recoveryKey, setRecoveryKey] = useState<string | null>(null);
+  const [useRecovery, setUseRecovery] = useState(false);
+  const [recoveryInput, setRecoveryInput] = useState('');
+
+  useEffect(() => {
+    const saltString = localStorage.getItem('vellor-salt');
+    setIsFirstTime(!saltString);
+  }, []);
+
+  const handleUnlock = async () => {
+    try {
+      if (isFirstTime) {
+        if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
+        const salt = generateSalt();
+        localStorage.setItem('vellor-salt', btoa(String.fromCharCode(...salt)));
+        const key = await deriveKey(password, salt);
+        const exported = await exportKeyToBase64(key);
+        useStore.getState().setMasterKey(key);
+        setRecoveryKey(exported);
+      } else {
+        if (useRecovery) {
+           if (recoveryInput.length < 20) { setError("Invalid recovery key format."); return; }
+           const key = await importKeyFromBase64(recoveryInput);
+           useStore.getState().setMasterKey(key);
+           await useStore.persist.rehydrate();
+           onUnlocked();
+        } else {
+           const saltString = localStorage.getItem('vellor-salt')!;
+           const saltStrDecoded = atob(saltString);
+           const salt = new Uint8Array(saltStrDecoded.split('').map(c => c.charCodeAt(0)));
+           const key = await deriveKey(password, salt);
+           useStore.getState().setMasterKey(key);
+           await useStore.persist.rehydrate();
+           onUnlocked();
+        }
+      }
+    } catch (err) {
+      setError("Incorrect password or decryption failed. If you reset your cache, you must wipe the site data.");
+      useStore.getState().setMasterKey(null);
+    }
+  };
+
+  const completeFirstTimeSetup = async () => {
+      await useStore.persist.rehydrate();
+      onUnlocked();
+  };
+
+  if (isFirstTime === null) return null;
+
+  if (recoveryKey) {
+     return (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-900/50 backdrop-blur-md z-50">
+          <div className="bg-white dark:bg-primary p-8 rounded-3xl shadow-2xl max-w-md w-full ml-4 mr-4">
+            <h2 className="text-2xl font-display font-bold mb-4 text-gray-900 dark:text-white">
+              Recovery Key
+            </h2>
+            <div className="p-4 bg-danger/10 border border-danger/30 rounded-xl mb-6">
+                <p className="text-danger text-sm font-semibold mb-2 flex items-center gap-2">
+                   <Icon iconName="warning" className="w-5 h-5 flex-shrink-0" />
+                   CRITICAL WARNING
+                </p>
+                <p className="text-gray-700 dark:text-gray-300 text-sm">
+                   Your data is encrypted entirely on your device. We cannot reset your master password. If you lose your password, THIS RECOVERY KEY is your ONLY way to access your data.
+                </p>
+            </div>
+            <div className="bg-gray-100 dark:bg-primary-dark p-4 rounded-xl flex items-center gap-3 mb-6">
+                <code className="text-xs break-all text-gray-900 dark:text-white font-mono flex-1 select-all">{recoveryKey}</code>
+                <Button variant="ghost" size="sm" onClick={() => navigator.clipboard.writeText(recoveryKey)} className="flex-shrink-0 !p-2" aria-label="Copy recovery key">
+                   <Icon iconName="document-text" className="w-5 h-5 text-accent" />
+                </Button>
+            </div>
+            <button
+              className="w-full py-3 bg-accent text-primary-dark font-bold rounded-xl hover:opacity-90 transition-opacity"
+              onClick={completeFirstTimeSetup}
+            >
+              I have safely stored my recovery key
+            </button>
+          </div>
+        </div>
+     );
+  }
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-gray-900/50 backdrop-blur-md z-50">
+      <div className="bg-white dark:bg-primary p-8 rounded-3xl shadow-2xl max-w-md w-full ml-4 mr-4">
+        <h2 className="text-2xl font-display font-bold mb-4 text-gray-900 dark:text-white">
+          {isFirstTime ? 'Set Master Password' : (useRecovery ? 'Recover Data' : 'Unlock Vellor')}
+        </h2>
+        <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm">
+          {isFirstTime
+            ? 'Your data is encrypted locally. Create a strong master password to secure it. If you forget this password, your data cannot be recovered.'
+            : (useRecovery ? 'Enter your Recovery Key to restore access to your data.' : 'Enter your master password to decrypt your data.')}
+        </p>
+        <div className="space-y-4">
+           {!useRecovery ? (
+             <div>
+               <input
+                 type="password"
+                 value={password}
+                 onChange={e => { setPassword(e.target.value); setError(''); }}
+                 className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-primary-dark text-gray-900 dark:text-white focus:ring-2 focus:ring-accent outline-none"
+                 placeholder="Master Password"
+                 onKeyDown={e => e.key === 'Enter' && handleUnlock()}
+               />
+             </div>
+           ) : (
+             <div>
+                <input
+                 type="text"
+                 value={recoveryInput}
+                 onChange={e => { setRecoveryInput(e.target.value); setError(''); }}
+                 className="w-full px-4 py-3 rounded-xl font-mono text-sm border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-primary-dark text-gray-900 dark:text-white focus:ring-2 focus:ring-accent outline-none"
+                 placeholder="Paste your Recovery Key here"
+                 onKeyDown={e => e.key === 'Enter' && handleUnlock()}
+               />
+             </div>
+           )}
+           {error && <p className="text-danger text-sm">{error}</p>}
+           <button
+             className="w-full py-3 bg-accent text-primary-dark font-bold rounded-xl hover:opacity-90 transition-opacity"
+             onClick={handleUnlock}
+           >
+             {isFirstTime ? 'Set Password & Start' : 'Unlock'}
+           </button>
+
+           {!isFirstTime && (
+              <div className="text-center mt-4">
+                 <button onClick={() => { setUseRecovery(!useRecovery); setError(''); setPassword(''); setRecoveryInput(''); }} className="text-sm text-gray-500 hover:text-accent transition-colors">
+                    {useRecovery ? 'Use Master Password Instead' : 'Forgot Password? Use Recovery Key'}
+                 </button>
+              </div>
+           )}
+        </div>
+      </div>
+    </div>
+  );
+};

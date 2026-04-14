@@ -13,6 +13,14 @@ export const PortalPage: React.FC = () => {
       const searchParams = new URLSearchParams(location.search);
       const dataParam = searchParams.get('data');
       if (!dataParam) return null;
+
+      // 🛡️ SECURITY RATIONALE:
+      // Vellor is a 100% offline Progressive Web App (PWA) with no backend or database.
+      // The `data` parameter is passed entirely within the URL hash fragment (`#/portal?data=...`).
+      // Hash fragments are processed locally by the browser and are never sent to any server.
+      // Therefore, this data cannot be intercepted over the network, recorded in server logs,
+      // or exposed to backend vulnerabilities. Using `btoa`/`atob` here provides a stateless,
+      // offline-friendly mechanism for sharing snapshots without needing a centralized database.
       const decodedStr = decodeURIComponent(atob(dataParam));
       return JSON.parse(decodedStr, jsonReviver);
     } catch (e) {
