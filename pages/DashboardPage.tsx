@@ -180,7 +180,20 @@ export const DashboardPage: React.FC = () => {
         <DashboardGoal itemVariants={itemVariants} />
 
         {/* Active Students */}
-        <motion.div variants={itemVariants} className="col-span-1 lg:col-span-1 cursor-pointer" onClick={() => navigate('/students')}>
+        <motion.div
+            variants={itemVariants}
+            className="col-span-1 lg:col-span-1 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary rounded-3xl"
+            onClick={() => navigate('/students')}
+            role="button"
+            tabIndex={0}
+            aria-label="View Active Students"
+            onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    navigate('/students');
+                }
+            }}
+        >
           <Card className="h-full rounded-3xl border border-white/20 dark:border-white/5 shadow-xl shadow-black/5 bg-white/60 dark:bg-primary-light/60 backdrop-blur-xl flex flex-col items-center justify-center text-center relative overflow-hidden hover:border-accent/30 transition-colors">
             <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl"></div>
             <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-4 relative z-10">

@@ -55,9 +55,18 @@ export const DashboardGoal: React.FC<DashboardGoalProps> = ({ itemVariants }) =>
                     </div>
                 ) : (
                     <span
-                        className="text-sm font-medium text-gray-500 dark:text-gray-400 cursor-pointer hover:text-accent transition-colors"
+                        className="text-sm font-medium text-gray-500 dark:text-gray-400 cursor-pointer hover:text-accent transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary rounded px-1"
                         onClick={() => setIsEditingGoal(true)}
                         title="Click to edit goal"
+                        role="button"
+                        tabIndex={0}
+                        aria-label="Edit monthly goal"
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                setIsEditingGoal(true);
+                            }
+                        }}
                     >
                         / {formatCurrency(monthlyIncomeGoal, settings.currencySymbol)}
                         <Icon iconName="pencil" className="w-3 h-3 inline-block ml-1 opacity-50" />
