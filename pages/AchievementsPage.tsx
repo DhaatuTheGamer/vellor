@@ -16,47 +16,39 @@ export const AchievementsPage: React.FC = () => {
   const transactions = useStore(s => s.transactions);
   const settings = useStore(s => s.settings);
   
-  const [achievedList, pendingList] = useMemo(() => {
-    const achieved: typeof achievements = [];
-    const pending: typeof achievements = [];
-
-    // ⚡ Bolt Performance: Use a single for-loop to split the achievements list
-    // This avoids double filtering and intermediate array allocations
-    for (let i = 0, len = achievements.length; i < len; i++) {
-      const a = achievements[i];
-      if (a.achieved) achieved.push(a);
-      else pending.push(a);
-    }
-
-    if (settings?.customAchievement) {
-      if (settings?.customAchievementEarned) {
-        achieved.push({
-          id: 'custom-achievement' as any,
-          name: 'Personal Goal',
-          description: settings.customAchievement,
-          achieved: true,
-          icon: 'star',
-          dateAchieved: new Date().toISOString() // Assuming earned today for sorting purposes if not stored
-        });
-      } else {
-        pending.unshift({
-          id: 'custom-achievement' as any,
-          name: 'Personal Goal',
-          description: settings.customAchievement,
-          achieved: false,
-          icon: 'star'
-        });
-      }
+  const achievedList = useMemo(() => {
+    const list = achievements.filter(a => a.achieved);
+    if (settings?.customAchievement && settings?.customAchievementEarned) {
+      list.push({
+        id: AchievementId.CustomAchievement,
+        name: 'Personal Goal',
+        description: settings.customAchievement,
+        achieved: true,
+        icon: 'star',
+        dateAchieved: new Date().toISOString() // Assuming earned today for sorting purposes if not stored
+      });
     }
 
     // ⚡ Bolt Performance: Use direct string comparison for ISO 8601 dates to eliminate Date.parse() overhead and intermediate mapping
-    achieved.sort((a, b) => {
+    return list.sort((a, b) => {
       const dateA = a.dateAchieved || "1970-01-01T00:00:00Z";
       const dateB = b.dateAchieved || "1970-01-01T00:00:00Z";
       return dateB < dateA ? -1 : (dateB > dateA ? 1 : 0);
     });
+  }, [achievements, settings?.customAchievement, settings?.customAchievementEarned]);
 
-    return [achieved, pending];
+  const pendingList = useMemo(() => {
+    const list = achievements.filter(a => !a.achieved);
+    if (settings?.customAchievement && !settings?.customAchievementEarned) {
+      list.unshift({
+        id: AchievementId.CustomAchievement,
+        name: 'Personal Goal',
+        description: settings.customAchievement,
+        achieved: false,
+        icon: 'star'
+      });
+    }
+    return list;
   }, [achievements, settings?.customAchievement, settings?.customAchievementEarned]);
 
   const totalAchievements = achievements.length + (settings?.customAchievement ? 1 : 0);
@@ -168,7 +160,7 @@ export const AchievementsPage: React.FC = () => {
             {achievedList.map(ach => (
               <motion.div key={ach.id} variants={itemVariants} className="p-6 bg-white dark:bg-primary-light rounded-3xl shadow-sm border border-success/30 relative overflow-hidden group hover:shadow-md transition-shadow">
                 <div className="absolute -right-6 -top-6 w-24 h-24 bg-success/10 rounded-full blur-2xl group-hover:bg-success/20 transition-colors"></div>
-                <div className="mb-4"><Icon iconName={ach.icon as any} className="w-12 h-12 text-accent drop-shadow-sm" aria-label={ach.name} /></div>
+                <div className="mb-4"><Icon iconName={ach.icon} className="w-12 h-12 text-accent drop-shadow-sm" aria-label={ach.name} /></div>
                 <h3 className="text-lg font-display font-bold text-gray-900 dark:text-white mb-1">{ach.name}</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{ach.description}</p>
                 {ach.dateAchieved && (
@@ -198,7 +190,7 @@ export const AchievementsPage: React.FC = () => {
             {pendingList.map(ach => (
               <motion.div key={ach.id} variants={itemVariants} className="p-6 bg-gray-50 dark:bg-primary/50 rounded-3xl border border-gray-200 dark:border-white/5 flex flex-col opacity-80 hover:opacity-100 transition-opacity">
                 <div className="w-16 h-16 rounded-2xl bg-gray-200 dark:bg-primary-light flex items-center justify-center mb-4 grayscale">
-                  <Icon iconName={ach.icon as any} className="w-8 h-8" aria-label={ach.name} />
+                  <Icon iconName={ach.icon} className="w-8 h-8" aria-label={ach.name} />
                 </div>
                 <h3 className="text-lg font-display font-semibold text-gray-700 dark:text-gray-300 mb-1">{ach.name}</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 flex-grow mb-4">{ach.description}</p>
