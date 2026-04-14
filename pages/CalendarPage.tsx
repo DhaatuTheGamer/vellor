@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
+import { Calendar, dateFnsLocalizer, Event } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { enUS } from 'date-fns/locale/en-US';
 // @ts-expect-error - CSS import does not have type declarations
@@ -25,7 +25,15 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
-const DragAndDropCalendar = withDragAndDrop(Calendar);
+const DragAndDropCalendar = withDragAndDrop(Calendar) as any;
+
+interface CalendarEvent extends Event {
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  resource: Transaction;
+}
 
 export const CalendarPage: React.FC = () => {
   const transactions = useStore(s => s.transactions);
@@ -34,7 +42,7 @@ export const CalendarPage: React.FC = () => {
   const addTransaction = useStore(s => s.addTransaction);
   const updateTransaction = useStore(s => s.updateTransaction);
   const addToast = useStore(s => s.addToast);
-  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [draggedStudentId, setDraggedStudentId] = useState<string | null>(null);
 
   const studentMap = useMemo(() => {
@@ -46,7 +54,7 @@ export const CalendarPage: React.FC = () => {
     return map;
   }, [students]);
 
-  const events = useMemo(() => {
+  const events = useMemo((): CalendarEvent[] => {
     return transactions.map(t => {
       const student = studentMap[t.studentId];
       const studentName = student ? `${student.firstName} ${student.lastName}` : 'Unknown Student';
@@ -70,8 +78,8 @@ export const CalendarPage: React.FC = () => {
     });
   }, [transactions, studentMap]);
 
-  const eventStyleGetter = (event: any) => {
-    const t = event.resource as Transaction;
+  const eventStyleGetter = (event: CalendarEvent) => {
+    const t = event.resource;
     let backgroundColor = '#8b5cf6'; // accent
 
     if (t.status === PaymentStatus.Due) backgroundColor = '#f43f5e'; // danger
@@ -89,22 +97,28 @@ export const CalendarPage: React.FC = () => {
     return { style };
   };
 
-  const handleEventDrop = ({ event, start, end }: any) => {
-    const t = event.resource as Transaction;
+  const handleEventDrop = ({ event, start, end }: { event: CalendarEvent; start: Date | string; end: Date | string }) => {
+    const t = event.resource;
+    const startDate = typeof start === 'string' ? new Date(start) : start;
+    const endDate = typeof end === 'string' ? new Date(end) : end;
+
     updateTransaction(t.id, {
       ...t,
-      date: start.toISOString(),
-      lessonDuration: Math.round((end.getTime() - start.getTime()) / 60000)
+      date: startDate.toISOString(),
+      lessonDuration: Math.round((endDate.getTime() - startDate.getTime()) / 60000)
     });
     addToast('Lesson rescheduled successfully.', 'success');
   };
 
-  const handleEventResize = ({ event, start, end }: any) => {
-    const t = event.resource as Transaction;
+  const handleEventResize = ({ event, start, end }: { event: CalendarEvent; start: Date | string; end: Date | string }) => {
+    const t = event.resource;
+    const startDate = typeof start === 'string' ? new Date(start) : start;
+    const endDate = typeof end === 'string' ? new Date(end) : end;
+
     updateTransaction(t.id, {
       ...t,
-      date: start.toISOString(),
-      lessonDuration: Math.round((end.getTime() - start.getTime()) / 60000)
+      date: startDate.toISOString(),
+      lessonDuration: Math.round((endDate.getTime() - startDate.getTime()) / 60000)
     });
     addToast('Lesson duration updated.', 'success');
   };
@@ -116,19 +130,22 @@ export const CalendarPage: React.FC = () => {
     return { title: `${student.firstName} ${student.lastName}` };
   };
 
-  const onDropFromOutside = ({ start, end }: any) => {
+  const onDropFromOutside = ({ start, end }: { start: Date | string; end: Date | string }) => {
     if (!draggedStudentId) return;
     const student = studentMap[draggedStudentId];
     if (!student) return;
+
+    const startDate = typeof start === 'string' ? new Date(start) : start;
+    const endDate = typeof end === 'string' ? new Date(end) : end;
     
     addTransaction({
        studentId: student.id,
-       date: start.toISOString(),
+       date: startDate.toISOString(),
        amountPaid: 0,
        lessonFee: student.tuition?.defaultRate || 0,
        paymentMethod: 'Cash',
        status: PaymentStatus.Scheduled,
-       lessonDuration: Math.round((end.getTime() - start.getTime()) / 60000) || student.tuition?.typicalLessonDuration || 60,
+       lessonDuration: Math.round((endDate.getTime() - startDate.getTime()) / 60000) || student.tuition?.typicalLessonDuration || 60,
     });
     addToast(`Scheduled lesson for ${student.firstName}`, 'success');
     setDraggedStudentId(null);
@@ -177,11 +194,11 @@ export const CalendarPage: React.FC = () => {
           <DragAndDropCalendar
             localizer={localizer}
             events={events}
-            startAccessor={(event: any) => event.start}
-            endAccessor={(event: any) => event.end}
+            startAccessor="start"
+            endAccessor="end"
             style={{ height: '100%' }}
             eventPropGetter={eventStyleGetter}
-            onSelectEvent={(event: any) => setSelectedEvent(event)}
+            onSelectEvent={(event: any) => setSelectedEvent(event as CalendarEvent)}
             views={['month', 'week', 'day']}
             onEventDrop={handleEventDrop}
             onEventResize={handleEventResize}
