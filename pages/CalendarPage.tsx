@@ -25,7 +25,15 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
-const DragAndDropCalendar = withDragAndDrop(Calendar);
+const DragAndDropCalendar = withDragAndDrop(Calendar) as any;
+
+interface CalendarEvent extends Event {
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  resource: Transaction;
+}
 
 interface CalendarEvent extends Event {
   id: string;
