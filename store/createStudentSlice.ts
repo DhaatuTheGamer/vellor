@@ -157,7 +157,20 @@ export const createStudentSlice: StateCreator<AppState, [], [], StudentSlice> = 
     }
   },
 
-  getStudentById: (studentId) => {
-    return get().students.find(s => s.id === studentId);
-  },
+  getStudentById: (() => {
+    let cachedStudents: Student[] | null = null;
+    const studentMap = new Map<string, Student>();
+    return (studentId) => {
+      const currentStudents = get().students;
+      if (currentStudents !== cachedStudents) {
+        cachedStudents = currentStudents;
+        studentMap.clear();
+        for (let i = 0, len = currentStudents.length; i < len; i++) {
+          const s = currentStudents[i];
+          studentMap.set(s.id, s);
+        }
+      }
+      return studentMap.get(studentId);
+    };
+  })(),
 });
