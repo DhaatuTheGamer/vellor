@@ -108,4 +108,20 @@ describe('pdf.ts utilities', () => {
      generateInvoicePDF(mockTransaction, mockStudent, { ...mockSettings, invoiceTemplate: 'minimal' }, false);
      expect(mockJsPDFInstance.setFontSize).toHaveBeenCalledWith(16); // specific to minimal template
   });
+
+  it('should ignore logo injection failure and proceed with PDF generation', () => {
+    mockJsPDFInstance.addImage.mockImplementationOnce(() => {
+      throw new Error('Failed to add image');
+    });
+
+    const settingsWithLogo = { ...mockSettings, invoiceLogoBase64: 'data:image/jpeg;base64,invalid' };
+
+    expect(() => {
+      generateInvoicePDF(mockTransaction, mockStudent, settingsWithLogo, false);
+    }).not.toThrow();
+
+    expect(mockJsPDFInstance.addImage).toHaveBeenCalled();
+    expect(mockJsPDFInstance.save).toHaveBeenCalled();
+    expect(mockJsPDFInstance.save).toHaveBeenCalledWith(expect.stringContaining('Invoice_John_'));
+  });
 });
