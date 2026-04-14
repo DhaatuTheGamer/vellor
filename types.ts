@@ -18,7 +18,7 @@ export enum Theme {
 /**
  * Defines the names of all available icons.
  */
-export type IconName = 'user' | 'users' | 'user-plus' | 'currency-dollar' | 'calendar' | 'cog' | 'plus' | 'pencil' | 'trash' | 'moon' | 'sun' | 'x-mark' | 'academic-cap' | 'chart-bar' | 'document-text' | 'arrow-left' | 'arrow-right' | 'identification' | 'warning' | 'bars' | 'banknotes' | 'star' | 'bolt' | 'trophy' | 'sparkles' | 'search' | 'check-circle' | 'x-circle' | 'information-circle' | 'user-circle' | 'share' | 'envelope' | 'phone' | 'globe' | 'arrow-right-on-rectangle' | 'book-open' | 'credit-card' | 'clock' | 'lock-closed' | 'chevron-right' | 'chevron-down' | 'trending-up' | 'crown' | 'building' | 'gem' | 'rocket' | 'brush' | 'flame' | 'award' | 'target' | 'gift' | 'brain' | 'handshake' | 'ticket' | 'briefcase' | 'party-popper' | 'heart';
+export type IconName = 'user' | 'users' | 'user-plus' | 'currency-dollar' | 'calendar' | 'cog' | 'plus' | 'pencil' | 'trash' | 'moon' | 'sun' | 'x-mark' | 'academic-cap' | 'chart-bar' | 'document-text' | 'arrow-left' | 'arrow-right' | 'identification' | 'warning' | 'bars' | 'banknotes' | 'star' | 'bolt' | 'trophy' | 'sparkles' | 'search' | 'check-circle' | 'x-circle' | 'information-circle' | 'user-circle' | 'share' | 'envelope' | 'phone' | 'globe' | 'arrow-right-on-rectangle' | 'book-open' | 'credit-card' | 'clock' | 'lock-closed' | 'chevron-right' | 'chevron-down' | 'trending-up' | 'crown' | 'building' | 'gem' | 'rocket' | 'brush' | 'flame' | 'award' | 'target' | 'gift' | 'brain' | 'handshake' | 'ticket' | 'briefcase' | 'party-popper' | 'heart' | 'chevron-up' | 'code' | 'question-mark-circle';
 
 
 /**
@@ -230,6 +230,7 @@ export enum AchievementId {
   LevelFive = 'LEVEL_FIVE',
   CenturyClub = 'CENTURY_CLUB',
   RateDiversifier = 'RATE_DIVERSIFIER',
+  CustomAchievement = 'CUSTOM_ACHIEVEMENT',
 }
 
 /**
@@ -248,7 +249,7 @@ export interface Achievement {
   /** The ISO date string of when the achievement was earned. */
   dateAchieved?: string;
   /** An emoji or icon name representing the achievement. */
-  icon: string;
+  icon: IconName;
 }
 
 /**
