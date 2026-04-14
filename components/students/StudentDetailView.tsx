@@ -2,12 +2,12 @@ import React, { useMemo } from 'react';
 import { Student, Transaction, PaymentStatus } from '../../types';
 import { Button, Card, Icon, Modal, Textarea } from '../ui';
 import { formatCurrency, formatDate, formatPhoneNumber, generateWhatsAppLink, generatePortalLink } from '../../helpers';
+import { TransactionStatusBadge } from '../transactions/TransactionStatusBadge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { generateProgressReportPDF } from '../../pdf';
 import { useStore } from '../../store';
-import { StudentHistoryTab } from './StudentHistoryTab';
-import { StudentProgressTab } from './StudentProgressTab';
 
 /**
  * Props for the StudentDetailView component.
@@ -323,25 +323,117 @@ export const StudentDetailView: React.FC<StudentDetailViewProps> = ({ student, o
       <AnimatePresence mode="wait">
         {activeTab === 'history' ? (
           <motion.div key="history" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
-            <StudentHistoryTab
-              studentTransactions={studentTransactions}
-              totalOwed={totalOwed}
-              totalPaidForStudent={totalPaidForStudent}
-              currencySymbol={currencySymbol}
-              studentId={student.id}
-              onLogPayment={onLogPayment}
-            />
-          </motion.div>
-        ) : (
+            <Card className="border-gray-100 dark:border-white/5">
+           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+              <h3 className="text-lg font-display font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <Icon iconName="clock" className="w-5 h-5 text-gray-400" />
+                History
+              </h3>
+              <div className="flex flex-wrap gap-4 bg-gray-50 dark:bg-primary/50 p-3 rounded-2xl w-full sm:w-auto">
+                <div>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-0.5">Total Paid</p>
+                  <p className="font-mono font-bold text-success">{formatCurrency(totalPaidForStudent, currencySymbol)}</p>
+                </div>
+                <div className="w-px bg-gray-200 dark:bg-white/10"></div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-0.5">Outstanding</p>
+                  <p className={`font-mono font-bold ${totalOwed > 0 ? 'text-danger' : 'text-gray-900 dark:text-white'}`}>{formatCurrency(totalOwed, currencySymbol)}</p>
+                </div>
+              </div>
+           </div>
+
+          {studentTransactions.length > 0 ? (
+            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+              {studentTransactions.map(t => (
+                <div key={t.id} className="p-4 bg-gray-50 dark:bg-primary/30 rounded-2xl border border-gray-100 dark:border-white/5 hover:border-gray-200 dark:hover:border-white/10 transition-colors">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-primary-light flex items-center justify-center flex-shrink-0 shadow-sm mt-0.5">
+                        <Icon iconName="calendar" className="w-5 h-5 text-gray-400" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">{formatDate(t.date)}</p>
+                        <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                          <span className="flex items-center gap-1"><Icon iconName="banknotes" className="w-3.5 h-3.5" /> Fee: {formatCurrency(t.lessonFee, currencySymbol)}</span>
+                          <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+                          <span>Paid: <span className={t.amountPaid > 0 ? 'text-success font-medium' : ''}>{formatCurrency(t.amountPaid, currencySymbol)}</span></span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="self-start sm:self-center">
+                      <TransactionStatusBadge status={t.status} />
+                    </div>
+                  </div>
+                  {t.notes && (
+                    <div className="mt-3 ml-13 p-2.5 bg-white dark:bg-primary-light rounded-xl text-sm text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-white/5">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Note:</span> {t.notes}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-gray-50 dark:bg-primary/30 rounded-2xl border border-dashed border-gray-200 dark:border-white/10">
+              <div className="w-16 h-16 mx-auto bg-white dark:bg-primary-light rounded-full flex items-center justify-center mb-4 shadow-sm">
+                <Icon iconName="document-text" className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="text-gray-500 dark:text-gray-400 font-medium">No transactions logged yet.</p>
+              <Button onClick={() => onLogPayment(student.id)} variant="ghost" size="sm" className="mt-4 text-accent">Log their first lesson</Button>
+            </div>
+          )}
+        </Card>
+      </motion.div>
+      ) : (
           <motion.div key="progress" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
-            <StudentProgressTab
-              gradeChartData={gradeChartData}
-              progressTransactions={progressTransactions}
-              setShowReportModal={setShowReportModal}
-              formatGrade={formatGrade}
-            />
+            <Card className="border-gray-100 dark:border-white/5">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                   <h3 className="text-lg font-display font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                     <Icon iconName="star" className="w-5 h-5 text-accent" />
+                     Progress & Remarks
+                   </h3>
+                   <Button size="sm" onClick={() => setShowReportModal(true)} variant="primary" className="rounded-full shadow-md shadow-accent/20 text-xs">Export Report</Button>
+                </div>
+
+                {gradeChartData.length > 1 && (
+                   <div className="h-48 w-full mb-8 mt-2 pr-4 bg-gray-50/50 dark:bg-primary-light/10 p-4 rounded-3xl">
+                      <ResponsiveContainer width="100%" height="100%">
+                         <LineChart data={gradeChartData}>
+                            <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
+                            <YAxis domain={[1, 5]} tickFormatter={formatGrade} stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} width={30} />
+                            <Tooltip
+                               contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
+                               formatter={(_value: any, _name: any, props: any) => [props.payload.grade, 'Grade']}
+                            />
+                            <Line type="monotone" dataKey="val" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 4, fill: '#8b5cf6', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
+                         </LineChart>
+                      </ResponsiveContainer>
+                   </div>
+                )}
+
+                {progressTransactions.length > 0 ? (
+                  <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                     {progressTransactions.map(t => (
+                        <div key={t.id + "-prog"} className="p-4 bg-gray-50 dark:bg-primary/30 rounded-2xl border border-gray-100 dark:border-white/5 relative transition-colors hover:border-accent/40">
+                           <div className="flex justify-between items-start mb-2">
+                              <span className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1.5"><Icon iconName="calendar" className="w-4 h-4" /> {formatDate(t.date)}</span>
+                              {t.grade && <span className="px-2.5 py-0.5 rounded-full bg-accent text-primary-dark font-bold text-sm shadow-sm">Grade: {t.grade}</span>}
+                           </div>
+                           {t.progressRemark && <p className="text-gray-900 dark:text-gray-100 font-medium mt-2">{t.progressRemark}</p>}
+                        </div>
+                     ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 bg-gray-50 dark:bg-primary/30 rounded-2xl border border-dashed border-gray-200 dark:border-white/10">
+                     <div className="w-16 h-16 mx-auto bg-white dark:bg-primary-light rounded-full flex items-center justify-center mb-4 shadow-sm">
+                       <Icon iconName="star" className="w-8 h-8 text-gray-400" />
+                     </div>
+                     <p className="text-gray-500 dark:text-gray-400 font-medium">No progress records found.</p>
+                     <p className="text-sm text-gray-400 mt-1">Add a grade or remark when logging lessons.</p>
+                  </div>
+                )}
+            </Card>
           </motion.div>
-        )}
+      )}
       </AnimatePresence>
       
       {/* Back Button */}

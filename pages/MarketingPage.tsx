@@ -35,7 +35,7 @@ const XIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 import { useStore } from '../store';
-import { Theme, IconName } from '../types';
+import { Theme } from '../types';
 
 interface MarketingPageProps {
   onGetStarted: () => void;
@@ -221,7 +221,7 @@ const schemaData = {
   ],
 };
 
-const PremiumFeaturesSection = ({ data }: { data: { month: string; revenue: number }[] }) => (
+const PremiumFeaturesSection = ({ data }: { data: any }) => (
   <section data-pomelli-section="premium-features" data-crawler-intent="education" className="py-24 px-4 relative z-20">
     <div className="max-w-6xl mx-auto">
        <motion.div

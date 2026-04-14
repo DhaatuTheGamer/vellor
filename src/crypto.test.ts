@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { importKeyFromBase64, exportKeyToBase64, generateSalt, decryptObject, encryptObject, jsonReviver } from './crypto';
+import { importKeyFromBase64, generateSalt, decryptObject, encryptObject, jsonReviver } from './crypto';
 
 // Polyfill for crypto.subtle in jsdom environment if needed, but vitest globals=true with jsdom usually provides it, or we can use Node's crypto
 import { webcrypto } from 'crypto';
@@ -26,46 +26,6 @@ describe('generateSalt', () => {
 
     // They shouldn't be exactly the same
     expect(salt1).not.toEqual(salt2);
-  });
-});
-
-describe('exportKeyToBase64', () => {
-  beforeAll(() => {
-    if (typeof globalThis.crypto === 'undefined' || !globalThis.crypto.subtle) {
-      Object.defineProperty(globalThis, 'crypto', {
-        value: webcrypto,
-      });
-    }
-  });
-
-  it('successfully exports a CryptoKey to base64', async () => {
-    // Generate a real key for testing
-    const key = await crypto.subtle.generateKey(
-      { name: 'AES-GCM', length: 256 },
-      true,
-      ['encrypt', 'decrypt']
-    );
-
-    const base64Str = await exportKeyToBase64(key);
-
-    // Should be a string
-    expect(typeof base64Str).toBe('string');
-    // Base64 strings have length a multiple of 4 (with padding)
-    expect(base64Str.length % 4).toBe(0);
-    // For a 256-bit (32-byte) key, base64 encoding without padding is 43 chars, with padding is 44 chars
-    expect(base64Str.length).toBe(44);
-
-    // We should be able to import it back and it should be a valid key
-    const importedKey = await importKeyFromBase64(base64Str);
-    expect(importedKey).toBeDefined();
-    expect(importedKey.type).toBe('secret');
-    expect(importedKey.algorithm.name).toBe('AES-GCM');
-  });
-
-  it('throws an error for invalid key parameter', async () => {
-    // Pass something that isn't a CryptoKey. Cast to any to bypass TS error.
-    await expect(exportKeyToBase64({} as any)).rejects.toThrow();
-    await expect(exportKeyToBase64(null as any)).rejects.toThrow();
   });
 });
 

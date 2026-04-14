@@ -89,10 +89,7 @@ const AppLayout: React.FC = () => {
   useReminders();
 
   // Calculate the number of achieved achievements to display a badge in the navbar
-  let achievedCount = 0;
-  for (let i = 0; i < achievements.length; i++) {
-    if (achievements[i].achieved) achievedCount++;
-  }
+  const achievedCount = achievements.filter(a => a.achieved).length;
 
   /**
    * Handles clicks on navigation links, closing the mobile sidebar if it's open.
