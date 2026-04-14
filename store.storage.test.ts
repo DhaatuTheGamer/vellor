@@ -79,12 +79,24 @@ describe('store.ts - storageEngine', () => {
     });
 
     it('throws error if decryption fails', async () => {
+      // 🧪 Testing Improvement: Ensure explicit coverage for the error path during storageEngine decryption.
+      // This test specifically triggers the try/catch block around decryptObject at store.ts:144
+      // by mocking localforage to return raw data and decryptObject to throw, mimicking a decryption failure.
       useStore.getState().setMasterKey(mockKey);
       vi.mocked(localforage.getItem).mockResolvedValueOnce('some-encrypted-data');
 
       vi.mocked(decryptObject).mockRejectedValueOnce(new Error('Decryption Error'));
 
       await expect(storageEngine.getItem('test-key')).rejects.toThrow('Decryption Error');
+    });
+
+    it('re-throws error when decryptObject fails during storageEngine decryption', async () => {
+      useStore.getState().setMasterKey(mockKey);
+      vi.mocked(localforage.getItem).mockResolvedValueOnce('mocked-raw-data');
+
+      vi.mocked(decryptObject).mockRejectedValueOnce(new Error('Decryption Error Path'));
+
+      await expect(storageEngine.getItem('another-test-key')).rejects.toThrow('Decryption Error Path');
     });
   });
 
