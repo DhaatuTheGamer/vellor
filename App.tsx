@@ -417,7 +417,12 @@ const SetupEncryption: React.FC<{ onUnlocked: () => void }> = ({ onUnlocked }) =
         } else {
            const saltString = localStorage.getItem('vellor-salt')!;
            const saltStrDecoded = atob(saltString);
-           const salt = new Uint8Array(saltStrDecoded.split('').map(c => c.charCodeAt(0)));
+           // ⚡ Bolt Performance: Replace .split('').map() with a pre-allocated Uint8Array and a for loop
+           // to eliminate multiple intermediate array allocations and O(N) passes during string decoding.
+           const salt = new Uint8Array(saltStrDecoded.length);
+           for (let i = 0; i < saltStrDecoded.length; i++) {
+               salt[i] = saltStrDecoded.charCodeAt(i);
+           }
            const key = await deriveKey(password, salt);
            useStore.getState().setMasterKey(key);
            await useStore.persist.rehydrate();
