@@ -1,3 +1,4 @@
+import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
 import React from 'react';
 import { Transaction } from '../../types';
 import { Button, Card, Icon } from '../ui';
@@ -60,8 +61,8 @@ export const StudentProgressTab: React.FC<StudentProgressTabProps> = ({
                   border: 'none',
                   boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
                 }}
-                formatter={(_value: any, _name: any, props: any) => [
-                  props.payload.grade,
+                formatter={(_value: ValueType | undefined, _name: NameType | undefined, props: { payload?: { grade?: string } }) => [
+                  props.payload?.grade || '',
                   'Grade',
                 ]}
               />
