@@ -48,10 +48,23 @@ export const StatDisplayCard: React.FC<StatDisplayCardProps> = ({
     const finalIconColorClass = customIconColorClass || defaultIconColorClass;
     const finalIconBgClass = customIconBgClass || defaultIconBgClass;
 
-    const cardClasses = `relative overflow-hidden group ${className} ${onClick ? 'cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300' : ''}`;
+    const cardClasses = `relative overflow-hidden group ${className} ${onClick ? 'cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary' : ''}`;
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            onClick();
+        }
+    };
 
     return (
-        <Card className={cardClasses} onClick={onClick}>
+        <Card
+            className={cardClasses}
+            onClick={onClick}
+            role={onClick ? "button" : undefined}
+            tabIndex={onClick ? 0 : undefined}
+            onKeyDown={handleKeyDown}
+        >
             <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-gradient-to-br from-white/5 to-white/0 dark:from-white/5 dark:to-transparent blur-2xl group-hover:scale-150 transition-transform duration-500"></div>
             
             <div className="flex items-start justify-between relative z-10">
