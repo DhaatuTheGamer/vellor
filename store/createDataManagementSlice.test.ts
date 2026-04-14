@@ -101,5 +101,14 @@ describe('createDataManagementSlice', () => {
 
       expect(addToastMock).toHaveBeenCalledWith('Failed to export data.', 'error');
     });
+
+    it('returns early when password prompt is cancelled', async () => {
+      const addToastMock = useStore.getState().addToast;
+
+      await useStore.getState().exportData(null);
+
+      expect(createObjectURLMock).not.toHaveBeenCalled();
+      expect(addToastMock).not.toHaveBeenCalled();
+    });
   });
 });
