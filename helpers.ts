@@ -118,6 +118,13 @@ export const generatePortalLink = (student: Student, transactions: Transaction[]
     .sort((a, b) => b.date < a.date ? -1 : (b.date > a.date ? 1 : 0))
   };
   
+  // 🛡️ SECURITY RATIONALE:
+  // Vellor is a 100% offline Progressive Web App (PWA) with no backend or database.
+  // The `data` parameter is passed entirely within the URL hash fragment (`#/portal?data=...`).
+  // Hash fragments are processed locally by the browser and are never sent to any server.
+  // Therefore, this data cannot be intercepted over the network, recorded in server logs,
+  // or exposed to backend vulnerabilities. Using `btoa`/`atob` here provides a stateless,
+  // offline-friendly mechanism for sharing snapshots without needing a centralized database.
   const base64 = btoa(encodeURIComponent(JSON.stringify(payload)));
   const baseUrl = window.location.href.split('#')[0];
   return `${baseUrl}#/portal?data=${base64}`;

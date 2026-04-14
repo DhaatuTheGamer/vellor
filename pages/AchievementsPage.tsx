@@ -16,38 +16,47 @@ export const AchievementsPage: React.FC = () => {
   const transactions = useStore(s => s.transactions);
   const settings = useStore(s => s.settings);
   
-  const achievedList = useMemo(() => {
-    const list = achievements.filter(a => a.achieved);
-    if (settings?.customAchievement && settings?.customAchievementEarned) {
-      list.push({
-        id: 'custom-achievement' as any,
-        name: 'Personal Goal',
-        description: settings.customAchievement,
-        achieved: true,
-        icon: 'star',
-        dateAchieved: new Date().toISOString() // Assuming earned today for sorting purposes if not stored
-      });
+  const [achievedList, pendingList] = useMemo(() => {
+    const achieved: typeof achievements = [];
+    const pending: typeof achievements = [];
+
+    // ⚡ Bolt Performance: Use a single for-loop to split the achievements list
+    // This avoids double filtering and intermediate array allocations
+    for (let i = 0, len = achievements.length; i < len; i++) {
+      const a = achievements[i];
+      if (a.achieved) achieved.push(a);
+      else pending.push(a);
     }
+
+    if (settings?.customAchievement) {
+      if (settings?.customAchievementEarned) {
+        achieved.push({
+          id: 'custom-achievement' as any,
+          name: 'Personal Goal',
+          description: settings.customAchievement,
+          achieved: true,
+          icon: 'star',
+          dateAchieved: new Date().toISOString() // Assuming earned today for sorting purposes if not stored
+        });
+      } else {
+        pending.unshift({
+          id: 'custom-achievement' as any,
+          name: 'Personal Goal',
+          description: settings.customAchievement,
+          achieved: false,
+          icon: 'star'
+        });
+      }
+    }
+
     // ⚡ Bolt Performance: Use direct string comparison for ISO 8601 dates to eliminate Date.parse() overhead and intermediate mapping
-    return list.sort((a, b) => {
+    achieved.sort((a, b) => {
       const dateA = a.dateAchieved || "1970-01-01T00:00:00Z";
       const dateB = b.dateAchieved || "1970-01-01T00:00:00Z";
       return dateB < dateA ? -1 : (dateB > dateA ? 1 : 0);
     });
-  }, [achievements, settings?.customAchievement, settings?.customAchievementEarned]);
 
-  const pendingList = useMemo(() => {
-    const list = achievements.filter(a => !a.achieved);
-    if (settings?.customAchievement && !settings?.customAchievementEarned) {
-      list.unshift({
-        id: 'custom-achievement' as any,
-        name: 'Personal Goal',
-        description: settings.customAchievement,
-        achieved: false,
-        icon: 'star'
-      });
-    }
-    return list;
+    return [achieved, pending];
   }, [achievements, settings?.customAchievement, settings?.customAchievementEarned]);
 
   const totalAchievements = achievements.length + (settings?.customAchievement ? 1 : 0);
