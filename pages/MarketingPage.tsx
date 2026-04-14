@@ -648,7 +648,7 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
                 { title: "No Subscriptions", desc: "Most tutoring software costs $30+ a month. Vellor is 100% free forever.", icon: "currency-dollar" },
                 { title: "Lightning Fast", desc: "Built on React 19 and Vite. Feel the 60fps animations and instant interactions.", icon: "rocket" },
                 { title: "Offline First", desc: "No internet? No problem. Install as a native app and manage your business anywhere.", icon: "bolt" }
-              ] as const
+              ] as Array<{ title: string; desc: string; icon: IconName }>
             ).map((item, i) => (
               <motion.div 
                 key={item.title}
@@ -693,7 +693,7 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
                   { step: 2, title: "Log Lessons", desc: "Track hours, topics, and performance with a single click.", icon: "clock" },
                   { step: 3, title: "Auto-Invoice", desc: "Generate PDFs and send WhatsApp reminders effortlessly.", icon: "document-text" },
                   { step: 4, title: "Track Growth", desc: "Monitor revenue and earn gamified achievements.", icon: "trending-up" }
-                ] as const
+                ] as Array<{ step: number; title: string; desc: string; icon: IconName }>
               ).map((item, i) => (
                 <motion.div
                   key={item.step}
@@ -1461,7 +1461,7 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
                     { label: 'Privacy', id: 'privacy', icon: 'lock-closed' },
                     { label: 'Open Source', id: 'open-source', icon: 'code' },
                     { label: 'FAQ', id: 'faq', icon: 'question-mark-circle' },
-                  ] as const
+                  ] as Array<{ label: string; id: string; icon: IconName }>
                 ).map((item) => (
                   <button
                     key={item.id}
