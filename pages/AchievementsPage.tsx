@@ -30,11 +30,12 @@ export const AchievementsPage: React.FC = () => {
     }
 
     // ⚡ Bolt Performance: Use direct string comparison for ISO 8601 dates to eliminate Date.parse() overhead and intermediate mapping
-    achieved.sort((a, b) => {
+    return list.sort((a, b) => {
       const dateA = a.dateAchieved || "1970-01-01T00:00:00Z";
       const dateB = b.dateAchieved || "1970-01-01T00:00:00Z";
       return dateB < dateA ? -1 : (dateB > dateA ? 1 : 0);
     });
+  }, [achievements, settings?.customAchievement, settings?.customAchievementEarned]);
 
   const pendingList = useMemo(() => {
     const list = achievements.filter(a => !a.achieved);
