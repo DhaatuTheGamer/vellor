@@ -102,17 +102,13 @@ describe('createDataManagementSlice', () => {
       expect(addToastMock).toHaveBeenCalledWith('Failed to export data.', 'error');
     });
 
-    it('returns early when password prompt is cancelled', () => {
+    it('returns early when password prompt is cancelled', async () => {
       const addToastMock = useStore.getState().addToast;
-      const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue(null);
 
-      useStore.getState().exportData();
+      await useStore.getState().exportData(null);
 
-      expect(promptSpy).toHaveBeenCalled();
       expect(createObjectURLMock).not.toHaveBeenCalled();
       expect(addToastMock).not.toHaveBeenCalled();
-
-      promptSpy.mockRestore();
     });
   });
 });
