@@ -1,30 +1,45 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { 
-  setHoveredTransaction, 
-  setHoveredStudent, 
-  currentHoveredTransactionId, 
-  currentHoveredStudentId 
+import {
+  currentHoveredTransactionId,
+  currentHoveredStudentId,
+  setHoveredTransaction,
+  setHoveredStudent,
 } from '../../helpers/globalHover';
 
-describe('Global Hover Helper', () => {
+describe('globalHover', () => {
   beforeEach(() => {
+    // Reset global state before each test
     setHoveredTransaction(null);
     setHoveredStudent(null);
   });
 
-  it('updates currentHoveredTransactionId correctly', () => {
-    expect(currentHoveredTransactionId).toBe(null);
-    setHoveredTransaction('tx-123');
-    expect(currentHoveredTransactionId).toBe('tx-123');
-    setHoveredTransaction(null);
-    expect(currentHoveredTransactionId).toBe(null);
+  describe('setHoveredTransaction', () => {
+    it('should set currentHoveredTransactionId to the given id', () => {
+      expect(currentHoveredTransactionId).toBeNull();
+      setHoveredTransaction('tx-123');
+      expect(currentHoveredTransactionId).toBe('tx-123');
+    });
+
+    it('should set currentHoveredTransactionId to null', () => {
+      setHoveredTransaction('tx-123');
+      expect(currentHoveredTransactionId).toBe('tx-123');
+      setHoveredTransaction(null);
+      expect(currentHoveredTransactionId).toBeNull();
+    });
   });
 
-  it('updates currentHoveredStudentId correctly', () => {
-    expect(currentHoveredStudentId).toBe(null);
-    setHoveredStudent('student-456');
-    expect(currentHoveredStudentId).toBe('student-456');
-    setHoveredStudent(null);
-    expect(currentHoveredStudentId).toBe(null);
+  describe('setHoveredStudent', () => {
+    it('should set currentHoveredStudentId to the given id', () => {
+      expect(currentHoveredStudentId).toBeNull();
+      setHoveredStudent('student-456');
+      expect(currentHoveredStudentId).toBe('student-456');
+    });
+
+    it('should set currentHoveredStudentId to null', () => {
+      setHoveredStudent('student-456');
+      expect(currentHoveredStudentId).toBe('student-456');
+      setHoveredStudent(null);
+      expect(currentHoveredStudentId).toBeNull();
+    });
   });
 });

@@ -6,8 +6,8 @@
 
 **Manage your tutoring business like a pro.**
 
-[![CI](https://github.com/DhaatuTheGamer/Vellor/actions/workflows/ci.yml/badge.svg)](https://github.com/DhaatuTheGamer/Vellor/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-4.0.0-8b5cf6)](https://github.com/DhaatuTheGamer/Vellor)
+[![CI](https://github.com/dhaatrik/vellor/actions/workflows/ci.yml/badge.svg)](https://github.com/dhaatrik/vellor/actions/workflows/ci.yml)
+[![Version](https://img.shields.io/badge/version-4.0.0-8b5cf6)](https://github.com/dhaatrik/vellor)
 [![License: MIT](https://img.shields.io/badge/License-MIT-10b981.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)](https://react.dev/)
@@ -121,7 +121,7 @@ Vellor was recently supercharged with these high-impact features:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/DhaatuTheGamer/Vellor.git
+git clone https://github.com/dhaatrik/vellor.git
 
 # 2. Navigate into the project
 cd Vellor
