@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
 // Mock matchMedia to fix Dialog errors in test environments
