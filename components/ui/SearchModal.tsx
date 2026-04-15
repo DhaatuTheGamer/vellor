@@ -62,8 +62,16 @@ export const SearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = (
             {filteredStudents.map(s => (
               <div
                 key={s.id} 
+                role="button"
+                tabIndex={0}
                 onClick={() => handleSelectStudent(s.id)}
-                className="p-3 bg-gray-50 dark:bg-primary-light rounded-xl cursor-pointer hover:bg-accent/10 hover:text-accent transition-colors flex items-center gap-3"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleSelectStudent(s.id);
+                  }
+                }}
+                className="p-3 bg-gray-50 dark:bg-primary-light rounded-xl cursor-pointer hover:bg-accent/10 hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary transition-colors flex items-center gap-3"
               >
                 <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
                   <span className="font-bold text-accent text-sm">{s.firstName[0]}</span>
