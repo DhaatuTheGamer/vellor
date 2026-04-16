@@ -152,8 +152,16 @@ export const AppLayout: React.FC = () => {
         {/* Sidebar Footer: Gamification Stats */}
         {settings.gamificationEnabled !== false && (
           <div
-            className="p-6 m-4 mt-auto bg-gray-50 dark:bg-primary-light rounded-3xl border border-gray-100 dark:border-white/5 cursor-pointer hover:border-accent/30 transition-colors"
+            className="p-6 m-4 mt-auto bg-gray-50 dark:bg-primary-light rounded-3xl border border-gray-100 dark:border-white/5 cursor-pointer hover:border-accent/30 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary"
             onClick={() => setRankModalOpen(true)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setRankModalOpen(true);
+              }
+            }}
           >
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
