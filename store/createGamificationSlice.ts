@@ -4,18 +4,16 @@ import { TUTOR_RANK_LEVELS, INITIAL_GAMIFICATION_STATS, ACHIEVEMENTS_DEFINITIONS
 import { AchievementId, PaymentStatus, Transaction } from '../types';
 import confetti from 'canvas-confetti';
 
-const isTransactionOverdue = (t: Transaction, now: number, amountPaid: number): boolean => {
+const isTransactionOverdue = (t: Transaction, nowString: string, amountPaid: number): boolean => {
     const isDue = t.status === PaymentStatus.Due || (t.status === PaymentStatus.PartiallyPaid && amountPaid < (t.lessonFee || 0));
     if (!isDue) return false;
 
-    try {
-        const txDateMs = typeof t.date === 'number' ? t.date : (typeof t.date === 'string' ? Date.parse(t.date) : new Date(t.date).getTime());
-        if (!isNaN(txDateMs) && (now - txDateMs) > 24 * 60 * 60 * 1000) {
-            return true;
-        }
-    } catch (e) {
-        console.error('Failed to parse transaction date for overdue check:', e);
+    // ⚡ Bolt Performance: Use direct string comparison for ISO 8601 dates to eliminate Date.parse()
+    // overhead and intermediate object allocation during high-frequency loop checks.
+    if (typeof t.date === 'string' && t.date < nowString) {
+      return true;
     }
+
     return false;
 };
 
@@ -69,8 +67,12 @@ export const createGamificationSlice: StateCreator<AppState, [], [], Gamificatio
       let hasLoyalScholar = false;
 
       const now = Date.now();
+      const nowString = new Date(now - 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // One day ago
       const currentMonth = new Date().getMonth();
       const currentYear = new Date().getFullYear();
+
+      // ⚡ Bolt Performance: Pre-calculate current year/month strings for fast prefix matching
+      const currentMonthStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
       const dateCounts: Record<string, number> = {};
       const studentTxCounts: Record<string, number> = {};
 
@@ -81,20 +83,16 @@ export const createGamificationSlice: StateCreator<AppState, [], [], Gamificatio
 
           if (status === PaymentStatus.Paid || status === PaymentStatus.Overpaid || status === PaymentStatus.PartiallyPaid) {
               totalEarnedOverall += amountPaid;
-              try {
-                  const d = new Date(t.date);
-                  if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
-                      paidThisMonth += amountPaid;
-                  }
-              } catch (e) {
-                  console.error('Failed to parse transaction date for monthly stats:', e);
+              // ⚡ Bolt Performance: Use string prefix matching to avoid `new Date()` parsing inside the loop
+              if (typeof t.date === 'string' && t.date.startsWith(currentMonthStr)) {
+                  paidThisMonth += amountPaid;
               }
           }
 
           if (status === PaymentStatus.Paid) hasPaid = true;
           if (status === PaymentStatus.Overpaid) hasBonusEarned = true;
 
-          if (!hasOverdue && isTransactionOverdue(t, now, amountPaid)) {
+          if (!hasOverdue && isTransactionOverdue(t, nowString, amountPaid)) {
               hasOverdue = true;
           }
 
@@ -102,13 +100,12 @@ export const createGamificationSlice: StateCreator<AppState, [], [], Gamificatio
           if (!hasHighTicket && amountPaid >= 150) hasHighTicket = true;
 
           if (!hasBusyBee) {
-              try {
-                  const dateStr = typeof t.date === 'string' ? t.date.split('T')[0] : new Date(t.date).toISOString().split('T')[0];
+              // ⚡ Bolt Performance: Extract date prefix using substring rather than full parsing/splitting
+              const dateStr = typeof t.date === 'string' ? t.date.substring(0, 10) : '';
+              if (dateStr) {
                   const count = (dateCounts[dateStr] || 0) + 1;
                   dateCounts[dateStr] = count;
                   if (count >= 3) hasBusyBee = true;
-              } catch (e) {
-                  console.error('Failed to parse transaction date for BusyBee check:', e);
               }
           }
 
