@@ -84,7 +84,7 @@ export const SetupEncryption: React.FC<{ onUnlocked: () => void }> = ({ onUnlock
                 </Button>
             </div>
             <button
-              className="w-full py-3 bg-accent text-primary-dark font-bold rounded-xl hover:opacity-90 transition-opacity"
+              className="w-full py-3 bg-accent text-primary-dark font-bold rounded-xl hover:opacity-90 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary"
               onClick={completeFirstTimeSetup}
             >
               I have safely stored my recovery key
@@ -131,7 +131,7 @@ export const SetupEncryption: React.FC<{ onUnlocked: () => void }> = ({ onUnlock
            )}
            {error && <p className="text-danger text-sm">{error}</p>}
            <button
-             className="w-full py-3 bg-accent text-primary-dark font-bold rounded-xl hover:opacity-90 transition-opacity"
+             className="w-full py-3 bg-accent text-primary-dark font-bold rounded-xl hover:opacity-90 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary"
              onClick={handleUnlock}
            >
              {isFirstTime ? 'Set Password & Start' : 'Unlock'}
@@ -139,7 +139,7 @@ export const SetupEncryption: React.FC<{ onUnlocked: () => void }> = ({ onUnlock
 
            {!isFirstTime && (
               <div className="text-center mt-4">
-                 <button onClick={() => { setUseRecovery(!useRecovery); setError(''); setPassword(''); setRecoveryInput(''); }} className="text-sm text-gray-500 hover:text-accent transition-colors">
+                 <button onClick={() => { setUseRecovery(!useRecovery); setError(''); setPassword(''); setRecoveryInput(''); }} className="text-sm text-gray-500 hover:text-accent transition-colors rounded px-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 dark:focus-visible:ring-offset-primary-dark">
                     {useRecovery ? 'Use Master Password Instead' : 'Forgot Password? Use Recovery Key'}
                  </button>
               </div>
