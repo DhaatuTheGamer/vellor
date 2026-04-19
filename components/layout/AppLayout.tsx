@@ -127,6 +127,7 @@ export const AppLayout: React.FC = () => {
               variant="ghost"
               size="sm"
               aria-label="Close navigation"
+              title="Close navigation"
             >
               <Icon iconName="x-mark" className="w-5 h-5"/>
             </Button>
@@ -210,6 +211,7 @@ export const AppLayout: React.FC = () => {
               onClick={() => setIsMobileSidebarOpen(true)}
               className="md:hidden mr-4 !p-2 rounded-full"
               aria-label="Open navigation"
+              title="Open navigation"
               variant="ghost"
               size="sm"
             >

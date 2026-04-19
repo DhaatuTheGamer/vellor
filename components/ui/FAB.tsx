@@ -61,6 +61,7 @@ export const FAB: React.FC = () => {
           onClick={toggleOpen}
           className="w-14 h-14 rounded-full bg-accent text-primary-dark shadow-xl shadow-accent/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-accent/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary"
           aria-label="Quick actions"
+          title="Quick actions"
         >
           <motion.div
             animate={{ rotate: isOpen ? 45 : 0 }}
