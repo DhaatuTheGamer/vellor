@@ -230,6 +230,7 @@ export const AppLayout: React.FC = () => {
                 variant="ghost"
                 size="sm"
                 aria-label={`Switch to ${settings.theme === Theme.Dark ? 'Light' : 'Dark'} Mode`}
+                title={`Switch to ${settings.theme === Theme.Dark ? 'Light' : 'Dark'} Mode`}
                 className="!p-2 rounded-full"
             >
                 <Icon iconName={settings.theme === Theme.Dark ? 'sun' : 'moon'} className="w-5 h-5 text-gray-500 dark:text-gray-400" />

@@ -10,6 +10,7 @@ export const SetupEncryption: React.FC<{ onUnlocked: () => void }> = ({ onUnlock
   const [recoveryKey, setRecoveryKey] = useState<string | null>(null);
   const [useRecovery, setUseRecovery] = useState(false);
   const [recoveryInput, setRecoveryInput] = useState('');
+  const [isCopied, setIsCopied] = useState(false);
 
   useEffect(() => {
     const saltString = localStorage.getItem('vellor-salt');
@@ -79,8 +80,23 @@ export const SetupEncryption: React.FC<{ onUnlocked: () => void }> = ({ onUnlock
             </div>
             <div className="bg-gray-100 dark:bg-primary-dark p-4 rounded-xl flex items-center gap-3 mb-6">
                 <code className="text-xs break-all text-gray-900 dark:text-white font-mono flex-1 select-all">{recoveryKey}</code>
-                <Button variant="ghost" size="sm" onClick={() => navigator.clipboard.writeText(recoveryKey)} className="flex-shrink-0 !p-2" aria-label="Copy recovery key">
-                   <Icon iconName="document-text" className="w-5 h-5 text-accent" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(recoveryKey);
+                    setIsCopied(true);
+                    setTimeout(() => setIsCopied(false), 2000);
+                  }}
+                  className="flex-shrink-0 !p-2"
+                  aria-label="Copy recovery key"
+                  title="Copy recovery key"
+                >
+                   {isCopied ? (
+                     <Icon iconName="check-circle" className="w-5 h-5 text-success" />
+                   ) : (
+                     <Icon iconName="document-text" className="w-5 h-5 text-accent" />
+                   )}
                 </Button>
             </div>
             <button
