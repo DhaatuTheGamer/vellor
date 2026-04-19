@@ -192,11 +192,11 @@ export const AppLayout: React.FC = () => {
           <img src="/logo.png" alt="Vellor" className="w-8 h-8 object-contain rounded-md dark:p-1 dark:bg-white/90" style={{ filter: 'grayscale(1) opacity(0.4)' }} />
         </div>
         <div className="px-6 pb-6 text-xs text-center text-gray-500 dark:text-gray-400 space-x-3">
-          <button onClick={() => setAboutOpen(true)} className="hover:text-accent transition-colors">About</button>
+          <button onClick={() => setAboutOpen(true)} className="hover:text-accent transition-colors rounded px-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary-dark">About</button>
           <span>&middot;</span>
-          <button onClick={() => setPrivacyOpen(true)} className="hover:text-accent transition-colors">Privacy</button>
+          <button onClick={() => setPrivacyOpen(true)} className="hover:text-accent transition-colors rounded px-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary-dark">Privacy</button>
           <span>&middot;</span>
-          <button onClick={() => setTermsOpen(true)} className="hover:text-accent transition-colors">Terms</button>
+          <button onClick={() => setTermsOpen(true)} className="hover:text-accent transition-colors rounded px-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary-dark">Terms</button>
         </div>
       </aside>
 
