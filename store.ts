@@ -204,8 +204,7 @@ export const useDerivedData = () => {
     const today = new Date();
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth();
-    today.setHours(0, 0, 0, 0);
-    const todayTime = today.getTime();
+    const todayDateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
     let unpaid = 0;
     let paidThisMonth = 0;
@@ -217,13 +216,15 @@ export const useDerivedData = () => {
 
       if (t.status === PaymentStatus.Due) {
         unpaid += t.lessonFee;
-        if (Date.parse(t.date) < todayTime) {
+        // ⚡ Bolt Performance: Direct string comparison for ISO dates to eliminate Date.parse() overhead
+        if (t.date < todayDateStr) {
           overdue.push(t);
         }
       } else if (t.status === PaymentStatus.PartiallyPaid) {
         unpaid += (t.lessonFee - t.amountPaid);
 
-        if (t.amountPaid < t.lessonFee && Date.parse(t.date) < todayTime) {
+        // ⚡ Bolt Performance: Direct string comparison for ISO dates to eliminate Date.parse() overhead
+        if (t.amountPaid < t.lessonFee && t.date < todayDateStr) {
           overdue.push(t);
         }
 
