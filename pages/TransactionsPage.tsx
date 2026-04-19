@@ -158,27 +158,37 @@ export const TransactionsPage: React.FC = () => {
       ? statusMap[activeFilter as keyof typeof statusMap]
       : null;
 
-    return sortedTransactions.filter(t => {
+    // ⚡ Bolt Performance: Replace Array.prototype.filter() with a pre-allocated/direct for loop
+    // to eliminate the overhead of intermediate allocations and callback execution for large arrays.
+    const results = [];
+    for (let i = 0, len = sortedTransactions.length; i < len; i++) {
+      const t = sortedTransactions[i];
+      let matches = true;
+
       // Apply status filter
       if (activeFilter === 'unpaid') {
-        if (t.status !== PaymentStatus.Due && t.status !== PaymentStatus.PartiallyPaid) return false;
+        if (t.status !== PaymentStatus.Due && t.status !== PaymentStatus.PartiallyPaid) matches = false;
       } else if (targetStatus && t.status !== targetStatus) {
-        return false;
+        matches = false;
       }
 
       // Apply date filter
-      if (dateRange.start && t.date < dateRange.start) return false;
-      if (dateRange.end && t.date > dateRange.end) return false;
+      if (matches && dateRange.start && t.date < dateRange.start) matches = false;
+      if (matches && dateRange.end && t.date > dateRange.end) matches = false;
 
       // Apply search filter
-      if (query) {
+      if (matches && query) {
         const entry = studentsMap[t.studentId];
-        if (!entry) return false;
-        if (!entry.searchName.includes(query)) return false;
+        if (!entry || !entry.searchName.includes(query)) {
+           matches = false;
+        }
       }
 
-      return true;
-    });
+      if (matches) {
+        results.push(t);
+      }
+    }
+    return results;
   }, [sortedTransactions, activeFilter, searchQuery, dateRange, studentsMap]);
 
   const parentRef = React.useRef<HTMLDivElement | null>(null);
