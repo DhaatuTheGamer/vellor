@@ -82,11 +82,22 @@ export const generateWhatsAppLink = (phone: PhoneNumber | undefined, message: st
   if (!phone || !phone.number) {
     return '#';
   }
+
+  // Check for malicious schemes in inputs before processing to prevent XSS
+  const rawInput = `${phone.countryCode || ''}${phone.number}`.trim().toLowerCase();
+  if (/^(javascript|data|vbscript):/.test(rawInput) || rawInput.includes('javascript:') || rawInput.includes('data:') || rawInput.includes('vbscript:')) {
+    return '#';
+  }
+
   // Remove all non-numeric characters from the country code and number
-  const cleanCountryCode = phone.countryCode.replace(/\D/g, '');
+  const cleanCountryCode = (phone.countryCode || '').replace(/\D/g, '');
   const cleanNumber = phone.number.replace(/\D/g, '');
   const waNumber = `${cleanCountryCode}${cleanNumber}`;
   
+  if (!waNumber) {
+    return '#';
+  }
+
   if (!message) {
     return `https://wa.me/${waNumber}`;
   }
