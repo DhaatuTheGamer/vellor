@@ -17,10 +17,16 @@ export const SearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = (
   }, [isOpen]);
 
   const searchableStudents = useMemo(() => {
-    return students.map(s => ({
-      ...s,
-      _searchableName: (s.firstName + ' ' + s.lastName).toLowerCase()
-    }));
+    const len = students.length;
+    const result = new Array(len);
+    for (let i = 0; i < len; i++) {
+      const s = students[i];
+      result[i] = {
+        ...s,
+        _searchableName: (s.firstName + ' ' + s.lastName).toLowerCase()
+      };
+    }
+    return result;
   }, [students]);
 
   // ⚡ Bolt Performance: Hoist query.toLowerCase() outside the filter loop
