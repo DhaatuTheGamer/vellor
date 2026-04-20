@@ -5,8 +5,14 @@ import { Button, Card, Icon } from '../ui';
 import { formatDate } from '../../helpers';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
+export interface GradeChartDataPoint {
+  date: string;
+  val: number;
+  grade?: string;
+}
+
 interface StudentProgressTabProps {
-  gradeChartData: any[];
+  gradeChartData: GradeChartDataPoint[];
   progressTransactions: Transaction[];
   setShowReportModal: (show: boolean) => void;
   formatGrade: (val: number) => string;
