@@ -49,10 +49,18 @@ export const StudentListItem: React.FC<StudentListItemProps> = React.memo(({ stu
 
   return (
     <Card
-      className={`h-full flex flex-col hover:border-accent/50 transition-colors duration-300 cursor-pointer group border shadow-xl shadow-black/5 bg-white/60 dark:bg-primary-light/60 backdrop-blur-xl relative ${isSelected ? 'border-accent ring-2 ring-accent/50' : 'border-white/20 dark:border-white/5'}`}
+      className={`h-full flex flex-col hover:border-accent/50 transition-colors duration-300 cursor-pointer group border shadow-xl shadow-black/5 bg-white/60 dark:bg-primary-light/60 backdrop-blur-xl relative focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary ${isSelected ? 'border-accent ring-2 ring-accent/50' : 'border-white/20 dark:border-white/5'}`}
       onClick={() => onSelect(student)}
       onMouseEnter={() => setHoveredStudent(student.id)}
       onMouseLeave={() => setHoveredStudent(null)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect(student);
+        }
+      }}
     >
         {onToggleSelect && (
             <button
