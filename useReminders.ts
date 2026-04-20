@@ -37,10 +37,11 @@ export const useReminders = () => {
         studentMap[students[i].id] = students[i];
       }
 
-      transactions.forEach(t => {
-        if (notified.has(t.id)) return;
+      for (let i = 0; i < transactions.length; i++) {
+        const t = transactions[i];
+        if (notified.has(t.id)) continue;
         const student = studentMap[t.studentId];
-        if (!student) return;
+        if (!student) continue;
 
         const tDate = new Date(t.date);
 
@@ -63,7 +64,7 @@ export const useReminders = () => {
           notified.add(t.id);
           newNotified = true;
         }
-      });
+      }
 
       if (newNotified) {
         sessionStorage.setItem('notified_reminders', JSON.stringify(Array.from(notified)));

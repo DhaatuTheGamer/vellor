@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { importKeyFromBase64, exportKeyToBase64, generateSalt, decryptObject, encryptObject, jsonReviver } from '../../src/crypto';
+import { importKeyFromBase64, exportKeyToBase64, generateSalt, decryptObject, encryptObject, jsonReviver, deriveKey } from '../../src/crypto';
 
 // Polyfill for crypto.subtle in jsdom environment if needed, but vitest globals=true with jsdom usually provides it, or we can use Node's crypto
 import { webcrypto } from 'crypto';
@@ -138,6 +138,47 @@ describe('jsonReviver', () => {
   });
 });
 
+describe('encryptObject', () => {
+  let validKey: CryptoKey;
+
+  beforeAll(async () => {
+    if (typeof globalThis.crypto === 'undefined' || !globalThis.crypto.subtle) {
+      Object.defineProperty(globalThis, 'crypto', {
+        value: webcrypto,
+      });
+    }
+    validKey = await crypto.subtle.generateKey(
+      { name: 'AES-GCM', length: 256 },
+      true,
+      ['encrypt', 'decrypt']
+    );
+  });
+
+  it('successfully encrypts an object into a base64 wrapper', async () => {
+    const testObj = { message: 'hello world', num: 42 };
+    const encryptedStr = await encryptObject(testObj, validKey);
+
+    expect(typeof encryptedStr).toBe('string');
+    expect(encryptedStr.length).toBeGreaterThan(0);
+
+    const parsed = JSON.parse(atob(encryptedStr));
+    expect(parsed).toHaveProperty('iv');
+    expect(parsed).toHaveProperty('ct');
+
+    expect(Array.isArray(parsed.iv)).toBe(true);
+    expect(parsed.iv.length).toBe(12);
+
+    expect(Array.isArray(parsed.ct)).toBe(true);
+    expect(parsed.ct.length).toBeGreaterThan(0);
+  });
+
+  it('throws an error if an invalid key is provided', async () => {
+    const testObj = { message: 'hello world' };
+    await expect(encryptObject(testObj, {} as any)).rejects.toThrow();
+    await expect(encryptObject(testObj, null as any)).rejects.toThrow();
+  });
+});
+
 describe('decryptObject', () => {
   let validKey: CryptoKey;
   let anotherKey: CryptoKey;
@@ -160,9 +201,11 @@ describe('decryptObject', () => {
   it('throws an error when iv or ct is missing in the decrypted wrapper', async () => {
     const missingIv = btoa(JSON.stringify({ ct: [] }));
     const missingCt = btoa(JSON.stringify({ iv: [] }));
+    const validJsonButNoWrapper = btoa(JSON.stringify({ someData: "value", noIvOrCt: true }));
 
     await expect(decryptObject(missingIv, validKey)).rejects.toThrow('Invalid encrypted wrapper');
     await expect(decryptObject(missingCt, validKey)).rejects.toThrow('Invalid encrypted wrapper');
+    await expect(decryptObject(validJsonButNoWrapper, validKey)).rejects.toThrow('Invalid encrypted wrapper');
   });
 
   it('throws an error when decrypted with an invalid key', async () => {
@@ -171,5 +214,70 @@ describe('decryptObject', () => {
 
     // Decrypting with anotherKey should fail
     await expect(decryptObject(encrypted, anotherKey)).rejects.toThrow();
+  });
+});
+
+describe('deriveKey', () => {
+  beforeAll(() => {
+    if (typeof globalThis.crypto === 'undefined' || !globalThis.crypto.subtle) {
+      const { webcrypto } = require('crypto');
+      Object.defineProperty(globalThis, 'crypto', {
+        value: webcrypto,
+      });
+    }
+  });
+
+  it('successfully derives a CryptoKey from password and salt', async () => {
+    const password = 'test-password';
+    const salt = generateSalt();
+
+    const key = await deriveKey(password, salt);
+
+    expect(key).toBeDefined();
+    expect(key.type).toBe('secret');
+    expect(key.algorithm.name).toBe('AES-GCM');
+    expect((key.algorithm as any).length).toBe(256);
+    expect(key.usages).toContain('encrypt');
+    expect(key.usages).toContain('decrypt');
+    expect(key.extractable).toBe(true);
+  });
+
+  it('derives the same key for the same password and salt', async () => {
+    const password = 'constant-password';
+    const salt = new Uint8Array(16).fill(1);
+
+    const key1 = await deriveKey(password, salt);
+    const key2 = await deriveKey(password, salt);
+
+    const exported1 = await crypto.subtle.exportKey('raw', key1);
+    const exported2 = await crypto.subtle.exportKey('raw', key2);
+
+    expect(new Uint8Array(exported1)).toEqual(new Uint8Array(exported2));
+  });
+
+  it('derives different keys for different passwords', async () => {
+    const salt = new Uint8Array(16).fill(1);
+
+    const key1 = await deriveKey('password-one', salt);
+    const key2 = await deriveKey('password-two', salt);
+
+    const exported1 = await crypto.subtle.exportKey('raw', key1);
+    const exported2 = await crypto.subtle.exportKey('raw', key2);
+
+    expect(new Uint8Array(exported1)).not.toEqual(new Uint8Array(exported2));
+  });
+
+  it('derives different keys for different salts', async () => {
+    const password = 'constant-password';
+    const salt1 = new Uint8Array(16).fill(1);
+    const salt2 = new Uint8Array(16).fill(2);
+
+    const key1 = await deriveKey(password, salt1);
+    const key2 = await deriveKey(password, salt2);
+
+    const exported1 = await crypto.subtle.exportKey('raw', key1);
+    const exported2 = await crypto.subtle.exportKey('raw', key2);
+
+    expect(new Uint8Array(exported1)).not.toEqual(new Uint8Array(exported2));
   });
 });

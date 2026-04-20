@@ -114,11 +114,14 @@ export const StudentDetailView: React.FC<StudentDetailViewProps> = ({ student, o
      for (let i = progressTransactions.length - 1; i >= 0; i--) {
         const t = progressTransactions[i];
         if (t.grade === 'A' || t.grade === 'B' || t.grade === 'C' || t.grade === 'D' || t.grade === 'F') {
-           result.push({
-              date: formatDate(t.date),
-              val: gradeToNumber(t.grade as string),
-              grade: t.grade
-           });
+           const numValue = gradeToNumber(t.grade as string);
+           if (numValue !== null) {
+              result.push({
+                 date: formatDate(t.date),
+                 val: numValue,
+                 grade: t.grade
+              });
+           }
         }
      }
      return result;
