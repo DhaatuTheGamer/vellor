@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { importKeyFromBase64, exportKeyToBase64, generateSalt, decryptObject, encryptObject, jsonReviver } from '../../src/crypto';
+import { importKeyFromBase64, exportKeyToBase64, generateSalt, decryptObject, encryptObject, jsonReviver, deriveKey } from '../../src/crypto';
 
 // Polyfill for crypto.subtle in jsdom environment if needed, but vitest globals=true with jsdom usually provides it, or we can use Node's crypto
 import { webcrypto } from 'crypto';
@@ -171,5 +171,70 @@ describe('decryptObject', () => {
 
     // Decrypting with anotherKey should fail
     await expect(decryptObject(encrypted, anotherKey)).rejects.toThrow();
+  });
+});
+
+describe('deriveKey', () => {
+  beforeAll(() => {
+    if (typeof globalThis.crypto === 'undefined' || !globalThis.crypto.subtle) {
+      const { webcrypto } = require('crypto');
+      Object.defineProperty(globalThis, 'crypto', {
+        value: webcrypto,
+      });
+    }
+  });
+
+  it('successfully derives a CryptoKey from password and salt', async () => {
+    const password = 'test-password';
+    const salt = generateSalt();
+
+    const key = await deriveKey(password, salt);
+
+    expect(key).toBeDefined();
+    expect(key.type).toBe('secret');
+    expect(key.algorithm.name).toBe('AES-GCM');
+    expect((key.algorithm as any).length).toBe(256);
+    expect(key.usages).toContain('encrypt');
+    expect(key.usages).toContain('decrypt');
+    expect(key.extractable).toBe(true);
+  });
+
+  it('derives the same key for the same password and salt', async () => {
+    const password = 'constant-password';
+    const salt = new Uint8Array(16).fill(1);
+
+    const key1 = await deriveKey(password, salt);
+    const key2 = await deriveKey(password, salt);
+
+    const exported1 = await crypto.subtle.exportKey('raw', key1);
+    const exported2 = await crypto.subtle.exportKey('raw', key2);
+
+    expect(new Uint8Array(exported1)).toEqual(new Uint8Array(exported2));
+  });
+
+  it('derives different keys for different passwords', async () => {
+    const salt = new Uint8Array(16).fill(1);
+
+    const key1 = await deriveKey('password-one', salt);
+    const key2 = await deriveKey('password-two', salt);
+
+    const exported1 = await crypto.subtle.exportKey('raw', key1);
+    const exported2 = await crypto.subtle.exportKey('raw', key2);
+
+    expect(new Uint8Array(exported1)).not.toEqual(new Uint8Array(exported2));
+  });
+
+  it('derives different keys for different salts', async () => {
+    const password = 'constant-password';
+    const salt1 = new Uint8Array(16).fill(1);
+    const salt2 = new Uint8Array(16).fill(2);
+
+    const key1 = await deriveKey(password, salt1);
+    const key2 = await deriveKey(password, salt2);
+
+    const exported1 = await crypto.subtle.exportKey('raw', key1);
+    const exported2 = await crypto.subtle.exportKey('raw', key2);
+
+    expect(new Uint8Array(exported1)).not.toEqual(new Uint8Array(exported2));
   });
 });
