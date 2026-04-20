@@ -126,6 +126,6 @@ export const generatePortalLink = (student: Student, transactions: Transaction[]
   // or exposed to backend vulnerabilities. Using `btoa`/`atob` here provides a stateless,
   // offline-friendly mechanism for sharing snapshots without needing a centralized database.
   const base64 = btoa(encodeURIComponent(JSON.stringify(payload)));
-  const baseUrl = window.location.href.split('#')[0];
+  const baseUrl = window.location.origin + window.location.pathname;
   return `${baseUrl}#/portal?data=${base64}`;
 };
