@@ -9,6 +9,6 @@
 **Learning:** When attempting to optimize date comparisons by replacing `Date.parse()` with string comparisons, be extremely careful about the format and timezone of the strings being compared. In this codebase, transaction dates (`t.date`) are often local `YYYY-MM-DD` strings. Generating a "today" string using `new Date().toISOString()` creates a UTC string, which can represent a different day than local time depending on the user's timezone (e.g. UTC+9 users will get "yesterday's" UTC date at local midnight). Comparing a local date string to a UTC ISO string causes critical timezone regressions in the application logic.
 **Action:** Always ensure string dates are in exactly the same format and timezone before comparing them lexicographically. Construct the "today" string using local Date methods (`getFullYear`, `getMonth`, `getDate` with padding) rather than `.toISOString()` when comparing against local date strings.
 
-## 2024-05-24 - Array.prototype.filter vs For Loop Optimization
+## 2026-04-20 - Array.prototype.filter vs For Loop Optimization
 **Learning:** `Array.prototype.filter` creates intermediate arrays and has callback function overhead which can be avoided by constructing arrays directly with a standard `for` loop.
 **Action:** When working on performance-critical loops filtering arrays (such as the `activityLog` in zustand), prefer using a standard `for` loop pushing to a pre-allocated array instead of `.filter` to avoid intermediate allocations and function invocation overhead.
