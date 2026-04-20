@@ -138,6 +138,47 @@ describe('jsonReviver', () => {
   });
 });
 
+describe('encryptObject', () => {
+  let validKey: CryptoKey;
+
+  beforeAll(async () => {
+    if (typeof globalThis.crypto === 'undefined' || !globalThis.crypto.subtle) {
+      Object.defineProperty(globalThis, 'crypto', {
+        value: webcrypto,
+      });
+    }
+    validKey = await crypto.subtle.generateKey(
+      { name: 'AES-GCM', length: 256 },
+      true,
+      ['encrypt', 'decrypt']
+    );
+  });
+
+  it('successfully encrypts an object into a base64 wrapper', async () => {
+    const testObj = { message: 'hello world', num: 42 };
+    const encryptedStr = await encryptObject(testObj, validKey);
+
+    expect(typeof encryptedStr).toBe('string');
+    expect(encryptedStr.length).toBeGreaterThan(0);
+
+    const parsed = JSON.parse(atob(encryptedStr));
+    expect(parsed).toHaveProperty('iv');
+    expect(parsed).toHaveProperty('ct');
+
+    expect(Array.isArray(parsed.iv)).toBe(true);
+    expect(parsed.iv.length).toBe(12);
+
+    expect(Array.isArray(parsed.ct)).toBe(true);
+    expect(parsed.ct.length).toBeGreaterThan(0);
+  });
+
+  it('throws an error if an invalid key is provided', async () => {
+    const testObj = { message: 'hello world' };
+    await expect(encryptObject(testObj, {} as any)).rejects.toThrow();
+    await expect(encryptObject(testObj, null as any)).rejects.toThrow();
+  });
+});
+
 describe('decryptObject', () => {
   let validKey: CryptoKey;
   let anotherKey: CryptoKey;
