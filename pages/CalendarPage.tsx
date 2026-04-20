@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { Calendar, dateFnsLocalizer, Event } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { enUS } from 'date-fns/locale/en-US';
@@ -35,6 +35,26 @@ interface CalendarEvent extends Event {
   resource: Transaction;
 }
 
+const DraggableStudentItem = React.memo(({
+  student,
+  onDragStart
+}: {
+  student: import('../types').Student;
+  onDragStart: (e: React.DragEvent<HTMLDivElement>, studentId: string) => void
+}) => {
+  return (
+    <div
+      draggable
+      onDragStart={(e) => onDragStart(e, student.id)}
+      className="p-3 bg-gray-50 dark:bg-primary-light rounded-xl cursor-grab active:cursor-grabbing border border-gray-200 dark:border-white/10 hover:border-accent hover:shadow-sm transition-colors group"
+    >
+      <p className="font-semibold text-sm select-none dark:text-gray-200 group-hover:text-accent transition-colors">
+        {student.firstName} {student.lastName}
+      </p>
+    </div>
+  );
+});
+
 export const CalendarPage: React.FC = () => {
   const transactions = useStore(s => s.transactions);
   const students = useStore(s => s.students);
@@ -44,6 +64,11 @@ export const CalendarPage: React.FC = () => {
   const addToast = useStore(s => s.addToast);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [draggedStudentId, setDraggedStudentId] = useState<string | null>(null);
+
+  const handleDragStart = useCallback((e: React.DragEvent<HTMLDivElement>, studentId: string) => {
+    setDraggedStudentId(studentId);
+    e.dataTransfer.setData('text/plain', studentId);
+  }, []);
 
   const studentMap = useMemo(() => {
     // Create a dict for O(1) student lookups
@@ -172,18 +197,11 @@ export const CalendarPage: React.FC = () => {
            </h3>
            <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
               {students.map(student => (
-                 <div
-                    key={student.id}
-                    draggable
-                    onDragStart={(e) => {
-                       setDraggedStudentId(student.id);
-                       // HTML5 API requires setting some data
-                       e.dataTransfer.setData('text/plain', student.id);
-                    }}
-                    className="p-3 bg-gray-50 dark:bg-primary-light rounded-xl cursor-grab active:cursor-grabbing border border-gray-200 dark:border-white/10 hover:border-accent hover:shadow-sm transition-colors group"
-                 >
-                    <p className="font-semibold text-sm select-none dark:text-gray-200 group-hover:text-accent transition-colors">{student.firstName} {student.lastName}</p>
-                 </div>
+                 <DraggableStudentItem
+                   key={student.id}
+                   student={student}
+                   onDragStart={handleDragStart}
+                 />
               ))}
               {students.length === 0 && <p className="text-sm text-gray-500 text-center py-4">No students available.</p>}
            </div>
