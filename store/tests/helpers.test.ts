@@ -93,6 +93,17 @@ describe('Helpers', () => {
             expect(generateWhatsAppLink({ countryCode: '+1', number: '(123) 456-7890' })).toBe('https://wa.me/11234567890');
             expect(generateWhatsAppLink({ countryCode: '+44 (0)', number: '7700 900 123' })).toBe('https://wa.me/4407700900123');
         });
+
+        it('blocks malicious schemes and inputs', () => {
+            expect(generateWhatsAppLink({ countryCode: '', number: 'javascript:alert(1)' })).toBe('#');
+            expect(generateWhatsAppLink({ countryCode: 'javascript:', number: 'alert(1)' })).toBe('#');
+            expect(generateWhatsAppLink({ countryCode: '+1', number: 'data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==' })).toBe('#');
+        });
+
+        it('handles undefined countryCode gracefully', () => {
+            // @ts-ignore: Intentionally testing missing countryCode which might bypass types at runtime
+            expect(generateWhatsAppLink({ number: '1234567890' })).toBe('https://wa.me/1234567890');
+        });
     });
 });
 
@@ -145,7 +156,7 @@ describe('generatePortalLink', () => {
     it('generates a valid portal link with encoded payload', () => {
         const link = generatePortalLink(mockStudent, mockTransactions, mockSettings);
 
-        const baseUrl = window.location.href.split('#')[0];
+        const baseUrl = window.location.origin + window.location.pathname;
         expect(link.startsWith(baseUrl)).toBe(true);
         expect(link).toContain('#/portal?data=');
 

@@ -65,8 +65,7 @@ export const StudentsPage: React.FC = () => {
     } else {
         setSelectedStudent(undefined); 
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [studentId, getStudentById, navigate, students.length, showStudentForm, showTransactionFormForStudent]);
+  }, [studentId, getStudentById, navigate, students.length, showStudentForm, showTransactionFormForStudent, setSelectedStudent]);
 
   const handleSaveStudent = (studentData: Student) => {
     if (editingStudent) {
@@ -216,7 +215,7 @@ export const StudentsPage: React.FC = () => {
 
   const submitBulkLog = () => {
       let count = 0;
-      selectedStudentIds.forEach(id => {
+      for (const id of selectedStudentIds) {
           addTransaction({
               studentId: id,
               date: bulkLogData.date,
@@ -226,7 +225,7 @@ export const StudentsPage: React.FC = () => {
               notes: bulkLogData.notes
           } as Omit<Transaction, 'status'>);
           count++;
-      });
+      }
       addToast(`Logged same lesson for ${count} students!`, 'success');
       setShowBulkLogModal(false);
       setSelectedStudentIds(new Set());

@@ -230,7 +230,6 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
         
         get().addToast('CSV exported successfully!', 'success');
     } catch (error) {
-        console.error("Failed to export CSV:", error);
         get().addToast('Failed to export CSV.', 'error');
     }
   },

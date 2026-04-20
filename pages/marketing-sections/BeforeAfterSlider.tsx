@@ -1,5 +1,7 @@
 import React, { useRef } from 'react';
 
+const CELLS = Array.from({ length: 48 }, (_, i) => i);
+
 export const BeforeAfterSlider = () => {
   const [sliderPos, setSliderPos] = React.useState(50);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -40,7 +42,7 @@ export const BeforeAfterSlider = () => {
                {['File', 'Edit', 'View', 'Insert', 'Format', 'Data'].map(m => <div key={m} className="px-2 py-0.5 text-[10px] text-gray-600 dark:text-gray-400">{m}</div>)}
             </div>
             <div className="flex-1 grid grid-cols-6 grid-rows-8 gap-px bg-gray-300 dark:bg-gray-700 p-px">
-               {Array.from({length: 48}).map((_, i) => (
+               {CELLS.map((i) => (
                   <div key={i} className={`bg-white dark:bg-gray-900 p-1 md:p-2 text-[8px] md:text-[10px] text-gray-500 font-mono truncate ${i%6===0 ? 'font-bold bg-gray-50 dark:bg-gray-800' : ''}`}>
                      {i===0?'ID' : i===1?'Student' : i===2?'Date' : i===3?'Hours' : i===4?'Rate' : i===5?'Paid?' : (i%6===0 ? i/6 : i%6===5 ? (i%3===0 ? 'NO' : 'YES') : `Data ${i}`)}
                   </div>

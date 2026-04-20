@@ -4,6 +4,7 @@ import { Card, Icon } from '../components/ui';
 import { formatCurrency, formatDate } from '../helpers';
 import { TransactionStatusBadge } from '../components/transactions/TransactionStatusBadge';
 import { jsonReviver } from '../src/crypto';
+import { Transaction } from '../types';
 
 export const PortalPage: React.FC = () => {
   const location = useLocation();
@@ -23,8 +24,7 @@ export const PortalPage: React.FC = () => {
       // offline-friendly mechanism for sharing snapshots without needing a centralized database.
       const decodedStr = decodeURIComponent(atob(dataParam));
       return JSON.parse(decodedStr, jsonReviver);
-    } catch (e) {
-      console.error("Failed to parse portal data", e);
+    } catch {
       return null;
     }
   }, [location.search]);
@@ -108,7 +108,7 @@ export const PortalPage: React.FC = () => {
            
            {transactions.length > 0 ? (
              <div className="space-y-4">
-                {transactions.slice(0, 10).map((t: any) => (
+                {transactions.slice(0, 10).map((t: Transaction) => (
                    <div key={t.id} className="p-4 bg-gray-50 rounded-xl border border-gray-100">
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                          <div>
