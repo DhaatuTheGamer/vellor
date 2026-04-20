@@ -25,7 +25,15 @@ export const createUISlice: StateCreator<AppState, [], [], UISlice> = (set) => (
   },
 
   deleteActivity: (id) => {
-    set(state => ({ activityLog: state.activityLog.filter(a => a.id !== id) }));
+    set((state) => {
+      const nextActivityLog: Activity[] = [];
+      for (let i = 0; i < state.activityLog.length; i++) {
+        if (state.activityLog[i].id !== id) {
+          nextActivityLog.push(state.activityLog[i]);
+        }
+      }
+      return { activityLog: nextActivityLog };
+    });
   },
 
   clearActivityLog: () => set({ activityLog: [] }),
