@@ -50,7 +50,7 @@ export const encryptObject = async (obj: any, key: CryptoKey): Promise<string> =
   return btoa(JSON.stringify({ iv: ivArray, ct: cipherArray }));
 };
 
-export const jsonReviver = (key: string, value: any) => {
+export const jsonReviver = (key: string, value: unknown) => {
   const dateFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/;
   if (typeof value === 'string' && dateFormat.test(value)) {
     return new Date(value);
