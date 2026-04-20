@@ -65,8 +65,7 @@ export const StudentsPage: React.FC = () => {
     } else {
         setSelectedStudent(undefined); 
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [studentId, getStudentById, navigate, students.length, showStudentForm, showTransactionFormForStudent]);
+  }, [studentId, getStudentById, navigate, students.length, showStudentForm, showTransactionFormForStudent, setSelectedStudent]);
 
   const handleSaveStudent = (studentData: Student) => {
     if (editingStudent) {
