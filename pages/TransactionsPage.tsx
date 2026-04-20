@@ -78,10 +78,11 @@ export const TransactionsPage: React.FC = () => {
   const studentsMap = useMemo(() => {
     // ⚡ Bolt Performance: Pre-compute searchName for faster filtering
     const map: Record<string, { student: typeof students[0], searchName: string }> = Object.create(null);
-    for (const student of students) {
+    for (let i = 0, len = students.length; i < len; i++) {
+      const student = students[i];
       map[student.id] = {
         student,
-        searchName: `${student.firstName} ${student.lastName}`.toLowerCase()
+        searchName: (student.firstName + ' ' + student.lastName).toLowerCase()
       };
     }
     return map;
