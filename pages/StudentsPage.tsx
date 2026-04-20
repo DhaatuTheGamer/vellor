@@ -216,7 +216,7 @@ export const StudentsPage: React.FC = () => {
 
   const submitBulkLog = () => {
       let count = 0;
-      selectedStudentIds.forEach(id => {
+      for (const id of selectedStudentIds) {
           addTransaction({
               studentId: id,
               date: bulkLogData.date,
@@ -226,7 +226,7 @@ export const StudentsPage: React.FC = () => {
               notes: bulkLogData.notes
           } as Omit<Transaction, 'status'>);
           count++;
-      });
+      }
       addToast(`Logged same lesson for ${count} students!`, 'success');
       setShowBulkLogModal(false);
       setSelectedStudentIds(new Set());
