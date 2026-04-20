@@ -23,8 +23,7 @@ export const PortalPage: React.FC = () => {
       // offline-friendly mechanism for sharing snapshots without needing a centralized database.
       const decodedStr = decodeURIComponent(atob(dataParam));
       return JSON.parse(decodedStr, jsonReviver);
-    } catch (e) {
-      console.error("Failed to parse portal data", e);
+    } catch {
       return null;
     }
   }, [location.search]);
