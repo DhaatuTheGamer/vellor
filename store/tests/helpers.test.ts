@@ -145,7 +145,7 @@ describe('generatePortalLink', () => {
     it('generates a valid portal link with encoded payload', () => {
         const link = generatePortalLink(mockStudent, mockTransactions, mockSettings);
 
-        const baseUrl = window.location.href.split('#')[0];
+        const baseUrl = window.location.origin + window.location.pathname;
         expect(link.startsWith(baseUrl)).toBe(true);
         expect(link).toContain('#/portal?data=');
 
