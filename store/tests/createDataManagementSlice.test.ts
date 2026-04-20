@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { useStore } from '../../store';
 import { Theme } from '../../types';
+import * as crypto from '../../src/crypto';
 
 describe('createDataManagementSlice', () => {
   let createObjectURLMock: any;
@@ -109,6 +110,32 @@ describe('createDataManagementSlice', () => {
 
       expect(createObjectURLMock).not.toHaveBeenCalled();
       expect(addToastMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('importData', () => {
+    it('shows error toast on incorrect password during import', async () => {
+      const addToastMock = useStore.getState().addToast;
+
+      const mockFileContent = JSON.stringify({
+        __vellor_encrypted: true,
+        salt: [1, 2, 3],
+        data: 'encrypted-data'
+      });
+
+      const mockFile = new File([mockFileContent], 'backup.json', { type: 'application/json' });
+
+      const decryptSpy = vi.spyOn(crypto, 'decryptObject').mockRejectedValueOnce(new Error('Decryption failed'));
+      const deriveSpy = vi.spyOn(crypto, 'deriveKey').mockResolvedValueOnce('mock-key' as any);
+
+      await useStore.getState().importData(mockFile, 'wrong-password');
+
+      expect(deriveSpy).toHaveBeenCalled();
+      expect(decryptSpy).toHaveBeenCalled();
+      expect(addToastMock).toHaveBeenCalledWith(
+        expect.stringContaining('Incorrect password or corrupted encrypted data'),
+        'error'
+      );
     });
   });
 });

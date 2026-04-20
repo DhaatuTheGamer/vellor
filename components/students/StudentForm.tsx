@@ -245,12 +245,20 @@ export const StudentForm: React.FC<StudentFormProps> = ({ student, onSave, onClo
               helperText="For more than one use comma" 
               value={subjectsInput}
               onChange={(e) => {
-                setSubjectsInput(e.target.value);
-                setValue('tuition.subjects', e.target.value.split(',').reduce<string[]>((acc, s) => {
-                  const trimmed = s.trim();
-                  if (trimmed) acc.push(trimmed);
-                  return acc;
-                }, []), { shouldValidate: true });
+                const val = e.target.value;
+                setSubjectsInput(val);
+
+                const subjects: string[] = [];
+                let start = 0;
+                while (start <= val.length) {
+                  let comma = val.indexOf(',', start);
+                  if (comma === -1) comma = val.length;
+                  const trimmed = val.slice(start, comma).trim();
+                  if (trimmed) subjects.push(trimmed);
+                  start = comma + 1;
+                }
+
+                setValue('tuition.subjects', subjects, { shouldValidate: true });
               }}
               placeholder="e.g. Math, Science"
             />

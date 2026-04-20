@@ -10,7 +10,16 @@ export const createUISlice: StateCreator<AppState, [], [], UISlice> = (set) => (
     const id = crypto.randomUUID();
     set(state => ({ toasts: [...state.toasts, { id, message, type }] }));
     setTimeout(() => {
-      set(state => ({ toasts: state.toasts.filter(toast => toast.id !== id) }));
+      set(state => {
+        const nextToasts: AppState['toasts'] = [];
+        for (let i = 0; i < state.toasts.length; i++) {
+          const toast = state.toasts[i];
+          if (toast.id !== id) {
+            nextToasts.push(toast);
+          }
+        }
+        return { toasts: nextToasts };
+      });
     }, 4000);
   },
 
@@ -25,7 +34,15 @@ export const createUISlice: StateCreator<AppState, [], [], UISlice> = (set) => (
   },
 
   deleteActivity: (id) => {
-    set(state => ({ activityLog: state.activityLog.filter(a => a.id !== id) }));
+    set((state) => {
+      const nextActivityLog: Activity[] = [];
+      for (let i = 0; i < state.activityLog.length; i++) {
+        if (state.activityLog[i].id !== id) {
+          nextActivityLog.push(state.activityLog[i]);
+        }
+      }
+      return { activityLog: nextActivityLog };
+    });
   },
 
   clearActivityLog: () => set({ activityLog: [] }),

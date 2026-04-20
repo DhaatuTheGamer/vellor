@@ -4,6 +4,7 @@ import { Card, Icon } from '../ui';
 import { formatCurrency } from '../../helpers';
 import { motion, Variants } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import type { ValueType } from 'recharts/types/component/DefaultTooltipContent';
 import { PaymentStatus } from '../../types';
 
 interface DashboardChartsProps {
@@ -120,7 +121,7 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({ itemVariants }
                   <Tooltip
                     contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)' }}
                     itemStyle={{ color: activeChart === 'income' ? '#8b5cf6' : '#3b82f6', fontWeight: 'bold' }}
-                    formatter={(value: any) => activeChart === 'income' ? [formatCurrency(Number(value), settings.currencySymbol), 'Income'] : [value, 'Students']}
+                    formatter={(value: ValueType | undefined) => activeChart === 'income' ? [formatCurrency(Number(value), settings.currencySymbol), 'Income'] : [value, 'Students']}
                   />
                   <Area type="monotone" dataKey={activeChart} stroke={activeChart === 'income' ? '#8b5cf6' : '#3b82f6'} strokeWidth={3} fillOpacity={1} fill={`url(#color${activeChart === 'income' ? 'Income' : 'Students'})`} />
                 </AreaChart>

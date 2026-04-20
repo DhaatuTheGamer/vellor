@@ -73,7 +73,8 @@ export const DashboardPage: React.FC = () => {
   // ⚡ Bolt Performance: Pre-calculate student lookup map to avoid O(N*M) lookups in virtualized lists
   const studentMap = useMemo(() => {
     const map: Record<string, typeof students[0]> = Object.create(null);
-    for (const student of students) {
+    for (let i = 0; i < students.length; i++) {
+      const student = students[i];
       map[student.id] = student;
     }
     return map;

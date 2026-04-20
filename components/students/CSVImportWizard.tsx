@@ -146,15 +146,33 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
              
              // Basic Auto-Map logic
              const newMap: { [key: string]: string } = {};
-             headers.forEach(h => {
+             for (const h of headers) {
                  const hl = h.toLowerCase();
-                 if (!newMap.firstName && (hl.includes('first') || hl === 'name')) newMap.firstName = h;
-                 if (!newMap.lastName && hl.includes('last')) newMap.lastName = h;
-                 if (!newMap.email && hl.includes('email')) newMap.email = h;
-                 if (!newMap.studentPhone && (hl.includes('phone') || hl.includes('mobile'))) newMap.studentPhone = h;
-                 if (!newMap.defaultRate && (hl.includes('rate') || hl.includes('fee') || hl.includes('price'))) newMap.defaultRate = h;
-                 if (!newMap.subjects && hl.includes('subject')) newMap.subjects = h;
-             });
+                 if (!newMap.firstName && (hl.includes('first') || hl === 'name')) {
+                     newMap.firstName = h;
+                     continue;
+                 }
+                 if (!newMap.lastName && hl.includes('last')) {
+                     newMap.lastName = h;
+                     continue;
+                 }
+                 if (!newMap.email && hl.includes('email')) {
+                     newMap.email = h;
+                     continue;
+                 }
+                 if (!newMap.studentPhone && (hl.includes('phone') || hl.includes('mobile'))) {
+                     newMap.studentPhone = h;
+                     continue;
+                 }
+                 if (!newMap.defaultRate && (hl.includes('rate') || hl.includes('fee') || hl.includes('price'))) {
+                     newMap.defaultRate = h;
+                     continue;
+                 }
+                 if (!newMap.subjects && hl.includes('subject')) {
+                     newMap.subjects = h;
+                     continue;
+                 }
+             }
              setMapping(newMap);
              setStep(2);
         };

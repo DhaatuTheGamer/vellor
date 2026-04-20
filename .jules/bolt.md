@@ -15,3 +15,14 @@
 ## 2026-05-15 - React inline drag handlers
 **Learning:** In heavy list components like `CalendarPage.tsx`, rendering inline lists of draggable items with inline `onDragStart` handlers creates new closures on every render, causing unnecessary reconciliations of DOM elements.
 **Action:** Extract inline lists into `React.memo` components and use `useCallback` for event handlers to prevent unnecessary re-renders of list items during parent component updates.
+
+## 2026-04-20 - Index-based array loops and string concatenation over `for...of` and template literals
+**Learning:** For high-frequency array iteration, converting a `for...of` loop to an index-based `for` loop (`for (let i = 0, len = arr.length; i < len; i++)`) combined with avoiding template literals in favor of standard string concatenation (`str1 + ' ' + str2`) can improve execution time significantly by reducing allocation and iteration overhead.
+**Action:** When working on performance-critical mapping loops, replace `for...of` and template literals with index-based loops and string concatenation to save CPU cycles.
+## 2026-04-20 - Avoid intermediate mapping for searchableName computation
+**Learning:** Replacing `.map()` with a pre-allocated `for` loop (e.g., `const result = new Array(len)`) eliminates intermediate array allocations and provides measurable performance improvements for large data sets.
+**Action:** When working on array transformations in performance-critical paths, consider using pre-allocated `for` loops instead of native higher-order functions like `.map()`.
+
+## 2026-04-20 - Array.prototype.filter vs For Loop Optimization
+**Learning:** `Array.prototype.filter` creates intermediate arrays and has callback function overhead which can be avoided by constructing arrays directly with a standard `for` loop.
+**Action:** When working on performance-critical loops filtering arrays (such as the `activityLog` in zustand), prefer using a standard `for` loop pushing to a pre-allocated array instead of `.filter` to avoid intermediate allocations and function invocation overhead.
