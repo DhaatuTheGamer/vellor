@@ -160,9 +160,11 @@ describe('decryptObject', () => {
   it('throws an error when iv or ct is missing in the decrypted wrapper', async () => {
     const missingIv = btoa(JSON.stringify({ ct: [] }));
     const missingCt = btoa(JSON.stringify({ iv: [] }));
+    const validJsonButNoWrapper = btoa(JSON.stringify({ someData: "value", noIvOrCt: true }));
 
     await expect(decryptObject(missingIv, validKey)).rejects.toThrow('Invalid encrypted wrapper');
     await expect(decryptObject(missingCt, validKey)).rejects.toThrow('Invalid encrypted wrapper');
+    await expect(decryptObject(validJsonButNoWrapper, validKey)).rejects.toThrow('Invalid encrypted wrapper');
   });
 
   it('throws an error when decrypted with an invalid key', async () => {
