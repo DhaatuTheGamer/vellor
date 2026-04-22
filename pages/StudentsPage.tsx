@@ -236,10 +236,17 @@ export const StudentsPage: React.FC = () => {
     // to avoid redundant O(N) recalculations on every render where search occurs.
     if (!searchTerm) return students;
     const lowerSearchTerm = searchTerm.toLowerCase();
-    return students.filter(student => {
+
+    // ⚡ Bolt Performance: Use standard for loop instead of .filter() to avoid intermediate array allocations and callback overhead
+    const result = [];
+    for (let i = 0, len = students.length; i < len; i++) {
+      const student = students[i];
       const searchStr = student.searchName || `${student.firstName} ${student.lastName}`.toLowerCase();
-      return searchStr.includes(lowerSearchTerm);
-    });
+      if (searchStr.includes(lowerSearchTerm)) {
+        result.push(student);
+      }
+    }
+    return result;
   }, [students, searchTerm]);
 
   const outstandingBalances = useMemo(() => {

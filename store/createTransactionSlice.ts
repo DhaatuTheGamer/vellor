@@ -95,10 +95,11 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
 
      set(state => {
        // ⚡ Bolt Performance: Use an early-breaking for loop instead of .map() to avoid full array iterations when updating a single item
-       const newTransactions = [...state.transactions];
-       for (let i = 0, len = newTransactions.length; i < len; i++) {
-        const t = newTransactions[i];
+       // Only copy the array if a match is actually found to save allocation overhead
+       for (let i = 0, len = state.transactions.length; i < len; i++) {
+        const t = state.transactions[i];
         if (t.id === transactionId) {
+            const newTransactions = [...state.transactions];
             const originalStatus = t.status;
             const potentiallyUpdated = { ...t, ...sanitizedTransactionData };
             let newStatus = t.status;
@@ -125,10 +126,10 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
             }
 
             newTransactions[i] = updatedTransaction;
-            break;
+            return { transactions: newTransactions };
         }
        }
-       return { transactions: newTransactions };
+       return state;
      });
 
      if (updatedTransaction) {
