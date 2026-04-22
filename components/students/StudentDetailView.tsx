@@ -104,19 +104,27 @@ export const StudentDetailView: React.FC<StudentDetailViewProps> = ({ student, o
      return '';
   };
 
-  const progressTransactions = useMemo(() => {
-     // ⚡ Bolt Performance: Memoize the filtered array to avoid O(N) re-calculation during render
-     return studentTransactions.filter(t => t.grade || t.progressRemark);
-  }, [studentTransactions]);
+  const { progressTransactions, gradeChartData } = useMemo(() => {
+     // ⚡ Bolt Performance: Consolidate data extraction into a single pass block
+     // to eliminate Array.prototype.filter() allocations and redundant iterations.
+     const progressList = [];
+     const chartData = [];
 
-  const gradeChartData = useMemo(() => {
-     const result = [];
-     for (let i = progressTransactions.length - 1; i >= 0; i--) {
-        const t = progressTransactions[i];
+     // Build progress list (newest first, preserving studentTransactions order)
+     for (let i = 0, len = studentTransactions.length; i < len; i++) {
+         const t = studentTransactions[i];
+         if (t.grade || t.progressRemark) {
+             progressList.push(t);
+         }
+     }
+
+     // Build chart data (oldest first, iterating backwards over progressList)
+     for (let i = progressList.length - 1; i >= 0; i--) {
+        const t = progressList[i];
         if (t.grade === 'A' || t.grade === 'B' || t.grade === 'C' || t.grade === 'D' || t.grade === 'F') {
            const numValue = gradeToNumber(t.grade as string);
            if (numValue !== null) {
-              result.push({
+              chartData.push({
                  date: formatDate(t.date),
                  val: numValue,
                  grade: t.grade
@@ -124,8 +132,9 @@ export const StudentDetailView: React.FC<StudentDetailViewProps> = ({ student, o
            }
         }
      }
-     return result;
-  }, [progressTransactions]);
+
+     return { progressTransactions: progressList, gradeChartData: chartData };
+  }, [studentTransactions]);
 
   const handleExportReport = () => {
       generateProgressReportPDF(student, transactions, settings, parentNote);
