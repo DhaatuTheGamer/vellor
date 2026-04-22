@@ -26,3 +26,6 @@
 ## 2026-04-20 - Array.prototype.filter vs For Loop Optimization
 **Learning:** `Array.prototype.filter` creates intermediate arrays and has callback function overhead which can be avoided by constructing arrays directly with a standard `for` loop.
 **Action:** When working on performance-critical loops filtering arrays (such as the `activityLog` in zustand), prefer using a standard `for` loop pushing to a pre-allocated array instead of `.filter` to avoid intermediate allocations and function invocation overhead.
+## 2026-04-22 - Array processing loops optimization
+**Learning:** When processing arrays, replace sequential functional calls like `.filter()` followed by another loop with a single-pass or optimized index-based `for` loops. This eliminates intermediate array allocations and reduces garbage collection overhead significantly, especially on large data structures over time.
+**Action:** When filtering and iterating over data to prepare UI elements, favor standard `for` loops to extract precisely the required values into predefined or minimal intermediate arrays.

@@ -9,3 +9,7 @@
 ## 2026-04-20 - Interactive List Items Keyboard Accessibility
 **Learning:** Interactive custom components (like `<Card>`) used as clickable list items must have explicit keyboard accessibility attributes (e.g., `role="button"`, `tabIndex={0}`, `onKeyDown`) and visible focus styles to ensure they are accessible to keyboard users.
 **Action:** When adding `onClick` to non-button components or creating clickable cards, always include `role="button"`, `tabIndex={0}`, `onKeyDown` handlers for 'Enter' and 'Space', and Tailwind focus classes (`focus:outline-none focus-visible:ring-2 ...`).
+
+## 2026-04-22 - Icon-Only Button Tooltips
+**Learning:** While `aria-label` ensures screen readers announce the purpose of an icon-only button, sighted users without screen readers rely on native browser tooltips to understand ambiguous icons. Buttons like the close modals in `MarketingPage` had `aria-label` but lacked `title`, while the WhatsApp share buttons in `StudentDetailView` had `title` but lacked `aria-label`.
+**Action:** For optimal UX and accessibility on icon-only buttons, always include both an `aria-label` attribute (for screen readers) and a `title` attribute (to display a browser tooltip on hover). Keep their values identical for consistency.
