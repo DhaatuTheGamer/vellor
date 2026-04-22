@@ -105,8 +105,15 @@ export const StudentDetailView: React.FC<StudentDetailViewProps> = ({ student, o
   };
 
   const progressTransactions = useMemo(() => {
-     // ⚡ Bolt Performance: Memoize the filtered array to avoid O(N) re-calculation during render
-     return studentTransactions.filter(t => t.grade || t.progressRemark);
+     // ⚡ Bolt Performance: Memoize the filtered array and use a for loop to avoid O(N) re-calculation and callback overhead during render
+     const result = [];
+     for (let i = 0, len = studentTransactions.length; i < len; i++) {
+       const t = studentTransactions[i];
+       if (t.grade || t.progressRemark) {
+         result.push(t);
+       }
+     }
+     return result;
   }, [studentTransactions]);
 
   const gradeChartData = useMemo(() => {

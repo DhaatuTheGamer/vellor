@@ -17,14 +17,21 @@ export const AchievementsPage: React.FC = () => {
   const settings = useStore(s => s.settings);
   
   const achievedList = useMemo(() => {
-    const list = achievements.filter(a => a.achieved);
+    // ⚡ Bolt Performance: Replace .filter() with a standard for loop to avoid intermediate array allocations and callback overhead
+    const list = [];
+    for (let i = 0, len = achievements.length; i < len; i++) {
+      if (achievements[i].achieved) {
+        list.push(achievements[i]);
+      }
+    }
+
     if (settings?.customAchievement && settings?.customAchievementEarned) {
       list.push({
         id: AchievementId.CustomAchievement,
         name: 'Personal Goal',
         description: settings.customAchievement,
         achieved: true,
-        icon: 'star',
+        icon: 'star' as any,
         dateAchieved: new Date().toISOString() // Assuming earned today for sorting purposes if not stored
       });
     }
@@ -38,14 +45,21 @@ export const AchievementsPage: React.FC = () => {
   }, [achievements, settings?.customAchievement, settings?.customAchievementEarned]);
 
   const pendingList = useMemo(() => {
-    const list = achievements.filter(a => !a.achieved);
+    // ⚡ Bolt Performance: Replace .filter() with a standard for loop to avoid intermediate array allocations and callback overhead
+    const list = [];
+    for (let i = 0, len = achievements.length; i < len; i++) {
+      if (!achievements[i].achieved) {
+        list.push(achievements[i]);
+      }
+    }
+
     if (settings?.customAchievement && !settings?.customAchievementEarned) {
       list.unshift({
         id: AchievementId.CustomAchievement,
         name: 'Personal Goal',
         description: settings.customAchievement,
         achieved: false,
-        icon: 'star'
+        icon: 'star' as any
       });
     }
     return list;
