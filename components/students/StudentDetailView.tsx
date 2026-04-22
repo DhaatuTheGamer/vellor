@@ -116,13 +116,14 @@ export const StudentDetailView: React.FC<StudentDetailViewProps> = ({ student, o
      return result;
   }, [studentTransactions]);
 
-     // Build chart data (oldest first, iterating backwards over progressList)
-     for (let i = progressList.length - 1; i >= 0; i--) {
-        const t = progressList[i];
+  const gradeChartData = useMemo(() => {
+     const result = [];
+     for (let i = progressTransactions.length - 1; i >= 0; i--) {
+        const t = progressTransactions[i];
         if (t.grade === 'A' || t.grade === 'B' || t.grade === 'C' || t.grade === 'D' || t.grade === 'F') {
            const numValue = gradeToNumber(t.grade as string);
            if (numValue !== null) {
-              chartData.push({
+              result.push({
                  date: formatDate(t.date),
                  val: numValue,
                  grade: t.grade
@@ -130,9 +131,8 @@ export const StudentDetailView: React.FC<StudentDetailViewProps> = ({ student, o
            }
         }
      }
-
-     return { progressTransactions: progressList, gradeChartData: chartData };
-  }, [studentTransactions]);
+     return result;
+  }, [progressTransactions]);
 
   const handleExportReport = () => {
       generateProgressReportPDF(student, transactions, settings, parentNote);
@@ -217,7 +217,7 @@ export const StudentDetailView: React.FC<StudentDetailViewProps> = ({ student, o
                   <p className="text-gray-900 dark:text-white font-medium flex items-center gap-2">
                     {formatPhoneNumber(student.contact.studentPhone)}
                     {student.contact.studentPhone?.number && (
-                      <a href={generateWhatsAppLink(student.contact.studentPhone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600 outline-none p-1 rounded hover:bg-green-500/10 transition-colors" title="Message on WhatsApp" aria-label="Message on WhatsApp">
+                      <a href={generateWhatsAppLink(student.contact.studentPhone)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600 outline-none p-1 rounded hover:bg-green-500/10 transition-colors" title="Message on WhatsApp">
                         <Icon iconName="share" className="w-4 h-4" />
                       </a>
                     )}
@@ -233,7 +233,7 @@ export const StudentDetailView: React.FC<StudentDetailViewProps> = ({ student, o
                   <p className="text-gray-900 dark:text-white font-medium flex items-center gap-2">
                     {formatPhoneNumber(student.contact.parentPhone1)}
                     {student.contact.parentPhone1?.number && (
-                      <a href={generateWhatsAppLink(student.contact.parentPhone1)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600 outline-none p-1 rounded hover:bg-green-500/10 transition-colors" title="Message on WhatsApp" aria-label="Message on WhatsApp">
+                      <a href={generateWhatsAppLink(student.contact.parentPhone1)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600 outline-none p-1 rounded hover:bg-green-500/10 transition-colors" title="Message on WhatsApp">
                         <Icon iconName="share" className="w-4 h-4" />
                       </a>
                     )}
@@ -241,7 +241,7 @@ export const StudentDetailView: React.FC<StudentDetailViewProps> = ({ student, o
                   {student.contact.parentPhone2?.number && (
                     <p className="text-gray-900 dark:text-white font-medium mt-1 flex items-center gap-2">
                       {formatPhoneNumber(student.contact.parentPhone2)}
-                      <a href={generateWhatsAppLink(student.contact.parentPhone2)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600 outline-none p-1 rounded hover:bg-green-500/10 transition-colors" title="Message on WhatsApp" aria-label="Message on WhatsApp">
+                      <a href={generateWhatsAppLink(student.contact.parentPhone2)} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600 outline-none p-1 rounded hover:bg-green-500/10 transition-colors" title="Message on WhatsApp">
                         <Icon iconName="share" className="w-4 h-4" />
                       </a>
                     </p>
