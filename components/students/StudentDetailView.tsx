@@ -49,6 +49,8 @@ const getGradient = (name: string) => {
  * transaction history, along with actions to edit the profile or log a new payment.
  */
 export const StudentDetailView: React.FC<StudentDetailViewProps> = ({ student, onClose, onEdit, onLogPayment, transactions, currencySymbol }) => {
+  const [isPortalCopied, setIsPortalCopied] = useState(false);
+
   // Filter and sort transactions for the current student
   // ⚡ Bolt Performance: Consolidate multiple passes (.filter, .reduce) over the transactions array
   // into a single O(N) loop to eliminate intermediate allocations and iteration overhead.
@@ -144,6 +146,8 @@ export const StudentDetailView: React.FC<StudentDetailViewProps> = ({ student, o
      const link = generatePortalLink(student, studentTransactions, settings);
      navigator.clipboard.writeText(link);
      useStore.getState().addToast('Portal link copied to clipboard!', 'success');
+     setIsPortalCopied(true);
+     setTimeout(() => setIsPortalCopied(false), 2000);
   };
 
   const gradientClass = useMemo(() => getGradient(student.firstName + student.lastName), [student.firstName, student.lastName]);
@@ -193,7 +197,9 @@ export const StudentDetailView: React.FC<StudentDetailViewProps> = ({ student, o
             </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 relative z-10 w-full sm:w-auto">
-          <Button onClick={handleSharePortal} leftIcon="share" variant="outline" className="w-full sm:w-auto rounded-full hidden sm:flex border-gray-200 dark:border-white/10 hover:border-accent hover:text-accent">Portal</Button>
+          <Button onClick={handleSharePortal} leftIcon={isPortalCopied ? "check-circle" : "share"} variant="outline" className="w-full sm:w-auto rounded-full hidden sm:flex border-gray-200 dark:border-white/10 hover:border-accent hover:text-accent">
+            {isPortalCopied ? "Copied!" : "Portal"}
+          </Button>
           <Button onClick={() => onEdit(student)} leftIcon="pencil" variant="outline" className="w-full sm:w-auto rounded-full">Edit Profile</Button>
           <Button onClick={() => onLogPayment(student.id)} leftIcon="plus" variant="primary" className="w-full sm:w-auto rounded-full shadow-lg shadow-accent/20">Log Lesson</Button>
         </div>

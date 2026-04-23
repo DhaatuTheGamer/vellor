@@ -16,6 +16,7 @@ export const ProfilePage: React.FC = () => {
   const addToast = useStore(s => s.addToast);
   const [formData, setFormData] = useState<AppSettings>(settings);
   const [isCardVisible, setIsCardVisible] = useState(false);
+  const [isShareCopied, setIsShareCopied] = useState(false);
 
   useEffect(() => {
     setFormData(settings);
@@ -65,6 +66,8 @@ export const ProfilePage: React.FC = () => {
         try {
             await navigator.clipboard.writeText(shareText);
             addToast('Contact details copied to clipboard!', 'info');
+            setIsShareCopied(true);
+            setTimeout(() => setIsShareCopied(false), 2000);
         } catch (err) {
             addToast('Could not copy details. Please copy manually.', 'error');
         }
@@ -172,7 +175,9 @@ export const ProfilePage: React.FC = () => {
             </div>
           </div>
           <div className="mt-6 flex justify-end">
-              <Button onClick={handleShare} leftIcon="share" variant="primary" className="rounded-full shadow-lg shadow-accent/20">Share Card</Button>
+              <Button onClick={handleShare} leftIcon={isShareCopied ? "check-circle" : "share"} variant="primary" className="rounded-full shadow-lg shadow-accent/20">
+                {isShareCopied ? "Copied!" : "Share Card"}
+              </Button>
           </div>
       </Modal>
 
