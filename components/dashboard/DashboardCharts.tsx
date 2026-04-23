@@ -23,11 +23,11 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({ itemVariants }
     const today = new Date();
 
     // ⚡ Bolt Performance: Pre-compute the fallback date outside the loop
-    const fallbackDate = Date.now();
+    const fallbackDateStr = new Date().toISOString();
 
     // ⚡ Bolt Performance: Pre-calculate target months and related data
     const monthIncomes = new Float64Array(6);
-    const targetMonths: { name: string, thresholdDate: number }[] = [];
+    const targetMonths: { name: string, thresholdDateStr: string }[] = [];
     const monthLookup: Record<string, number> = Object.create(null);
 
     for (let i = 5; i >= 0; i--) {
@@ -36,11 +36,12 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({ itemVariants }
       const month = d.getMonth();
       const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
 
-      const thresholdDate = new Date(year, month + 1, 0).getTime();
+      // ⚡ Bolt Performance: Use ISO string for threshold to allow string comparison instead of parsing
+      const thresholdDateStr = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999)).toISOString();
       const monthName = d.toLocaleString('default', { month: 'short' });
 
       monthLookup[monthKey] = 5 - i;
-      targetMonths.push({ name: monthName, thresholdDate });
+      targetMonths.push({ name: monthName, thresholdDateStr });
     }
 
     // ⚡ Bolt Performance: Single pass over transactions with O(1) month lookup
@@ -55,18 +56,18 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({ itemVariants }
       }
     }
 
-    // ⚡ Bolt Performance: Pre-calculate student creation times
-    const studentTimes = new Float64Array(students.length);
+    // ⚡ Bolt Performance: Pre-extract student creation times as strings to avoid Date.parse overhead
+    const studentTimes = new Array(students.length);
     for (let j = 0; j < students.length; j++) {
       const s = students[j];
-      studentTimes[j] = s.createdAt ? Date.parse(s.createdAt) : fallbackDate;
+      studentTimes[j] = s.createdAt || fallbackDateStr;
     }
 
     for (let i = 0; i < 6; i++) {
-      const { name, thresholdDate } = targetMonths[i];
+      const { name, thresholdDateStr } = targetMonths[i];
       let studentsCount = 0;
       for (let j = 0; j < studentTimes.length; j++) {
-          if (studentTimes[j] <= thresholdDate) studentsCount++;
+          if (studentTimes[j] <= thresholdDateStr) studentsCount++;
       }
       data.push({ name, income: monthIncomes[i], students: studentsCount });
     }
