@@ -9,3 +9,7 @@
 ## 2026-04-20 - Interactive List Items Keyboard Accessibility
 **Learning:** Interactive custom components (like `<Card>`) used as clickable list items must have explicit keyboard accessibility attributes (e.g., `role="button"`, `tabIndex={0}`, `onKeyDown`) and visible focus styles to ensure they are accessible to keyboard users.
 **Action:** When adding `onClick` to non-button components or creating clickable cards, always include `role="button"`, `tabIndex={0}`, `onKeyDown` handlers for 'Enter' and 'Space', and Tailwind focus classes (`focus:outline-none focus-visible:ring-2 ...`).
+
+## 2026-04-23 - Visual Feedback for Clipboard Operations
+**Learning:** Users often copy important links or details (like Portal links or Contact cards) using navigator.clipboard.writeText, but the action happens silently without visual feedback. This leaves users unsure if the copy succeeded.
+**Action:** Always pair clipboard copy actions with temporary visual feedback, such as changing the button icon to a checkmark and displaying 'Copied!' for a few seconds.
