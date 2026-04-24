@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useStore, useDerivedData } from '../../store';
 import { PaymentStatus, AchievementId } from '../../types';
@@ -8,6 +8,10 @@ vi.mock('canvas-confetti', () => {
 });
 
 beforeEach(() => {
+  vi.useFakeTimers();
+  // Use a fixed date to ensure consistent behavior across timezones
+  vi.setSystemTime(new Date('2026-04-24T12:00:00Z'));
+
   // Reset store
   useStore.setState({
     students: [],
@@ -16,6 +20,10 @@ beforeEach(() => {
     gamification: { points: 0, level: 1, levelName: 'Novice Tutor', streak: 0, lastActiveDate: null }
   });
   useStore.getState().clearActivityLog();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe('useDerivedData Hook', () => {
@@ -56,25 +64,27 @@ describe('useDerivedData Hook', () => {
   });
 
   it('identifies overdue payments correctly (due date strictly before today)', () => {
-    const today = new Date();
-    today.setHours(0,0,0,0);
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     
-    const yesterday = new Date(today);
+    const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
     
-    const tomorrow = new Date(today);
+    const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
     useStore.setState({
       transactions: [
-        // Overdue
-        { id: 'ol1', studentId: 's1', date: yesterday.toISOString(), lessonDuration: 60, lessonFee: 50, amountPaid: 0, status: PaymentStatus.Due, paymentMethod: '', createdAt: '' },
-        { id: 'ol2', studentId: 's1', date: yesterday.toISOString(), lessonDuration: 60, lessonFee: 50, amountPaid: 20, status: PaymentStatus.PartiallyPaid, paymentMethod: '', createdAt: '' },
+        // Overdue (Date string < todayStr)
+        { id: 'ol1', studentId: 's1', date: yesterdayStr, lessonDuration: 60, lessonFee: 50, amountPaid: 0, status: PaymentStatus.Due, paymentMethod: '', createdAt: '' },
+        { id: 'ol2', studentId: 's1', date: yesterdayStr, lessonDuration: 60, lessonFee: 50, amountPaid: 20, status: PaymentStatus.PartiallyPaid, paymentMethod: '', createdAt: '' },
         // Not Overdue (Paid)
-        { id: 'no1', studentId: 's1', date: yesterday.toISOString(), lessonDuration: 60, lessonFee: 50, amountPaid: 50, status: PaymentStatus.Paid, paymentMethod: '', createdAt: '' },
+        { id: 'no1', studentId: 's1', date: yesterdayStr, lessonDuration: 60, lessonFee: 50, amountPaid: 50, status: PaymentStatus.Paid, paymentMethod: '', createdAt: '' },
         // Not Overdue (Due today or tomorrow)
-        { id: 'no2', studentId: 's1', date: today.toISOString(), lessonDuration: 60, lessonFee: 50, amountPaid: 0, status: PaymentStatus.Due, paymentMethod: '', createdAt: '' },
-        { id: 'no3', studentId: 's1', date: tomorrow.toISOString(), lessonDuration: 60, lessonFee: 50, amountPaid: 0, status: PaymentStatus.Due, paymentMethod: '', createdAt: '' },
+        { id: 'no2', studentId: 's1', date: todayStr, lessonDuration: 60, lessonFee: 50, amountPaid: 0, status: PaymentStatus.Due, paymentMethod: '', createdAt: '' },
+        { id: 'no3', studentId: 's1', date: tomorrowStr, lessonDuration: 60, lessonFee: 50, amountPaid: 0, status: PaymentStatus.Due, paymentMethod: '', createdAt: '' },
       ]
     });
     
