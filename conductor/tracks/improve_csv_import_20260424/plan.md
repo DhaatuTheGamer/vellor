@@ -1,11 +1,11 @@
 # Implementation Plan: Improve CSV Import Feature
 
 ## Phase 1: CSV Parser and Data Models
-- [ ] Task: Implement robust CSV parsing and data mapping logic
-    - [ ] Write tests for parsing basic student details, guardian details, and custom notes from CSV rows
-    - [ ] Write tests for parsing payments and lesson history from CSV rows
-    - [ ] Implement CSV parser utility with error handling (Lenient import strategy)
-    - [ ] Implement data mapping interfaces/types
+- [x] Task: Implement robust CSV parsing and data mapping logic bdc02dc
+    - [x] Write tests for parsing basic student details, guardian details, and custom notes from CSV rows
+    - [x] Write tests for parsing payments and lesson history from CSV rows
+    - [x] Implement CSV parser utility with error handling (Lenient import strategy)
+    - [x] Implement data mapping interfaces/types
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: CSV Parser and Data Models' (Protocol in workflow.md)
 
 ## Phase 2: Conflict Resolution Logic
