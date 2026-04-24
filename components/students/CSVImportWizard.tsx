@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Modal, Icon, Select } from '../ui';
 import { useStore } from '../../store';
-import { Student, PaymentStatus, Transaction } from '../../types';
+import { PaymentStatus } from '../../types';
 import { parseCSV, bulkMapCSVRows, ImportMapping, ImportResult } from '../../helpers/csvParser';
 import { findConflicts, resolveConflict, ConflictStrategy } from '../../helpers/conflictResolution';
 

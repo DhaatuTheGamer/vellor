@@ -54,6 +54,10 @@ export interface ContactInfo {
   parentPhone2?: PhoneNumber;
   /** The primary email address for communication. */
   email?: string;
+  /** The guardian's or parent's name (used during CSV import). */
+  guardianName?: string;
+  /** The guardian's or parent's email address (used during CSV import). */
+  guardianEmail?: string;
 }
 
 /**

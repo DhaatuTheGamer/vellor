@@ -77,7 +77,7 @@ describe('csvParser', () => {
                 'Parent': 'Jane Doe'
             };
             const entities = mapCSVRowToEntities(row, mapping);
-            expect(entities.student.contact.guardianName).toBe('Jane Doe');
+            expect(entities.student.contact!.guardianName).toBe('Jane Doe');
         });
 
         it('should map payment details if present', () => {
@@ -125,7 +125,7 @@ describe('csvParser', () => {
         });
 
         it('should handle rows with errors leniently', () => {
-            const rows = [
+            const rows: Record<string, string>[] = [
                 { 'First Name': 'John', 'Email': 'john@example.com' },
                 { 'Email': 'jane@example.com' }, // Missing first name
                 { 'First Name': 'Bob', 'Email': 'bob@example.com' }

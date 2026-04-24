@@ -53,12 +53,12 @@ export const resolveConflict = (
                 ...existing.contact,
                 ...(imported.contact || {}),
                 studentPhone: {
-                    ...existing.contact.studentPhone,
-                    ...(imported.contact?.studentPhone || {})
+                    countryCode: imported.contact?.studentPhone?.countryCode ?? existing.contact.studentPhone?.countryCode ?? '',
+                    number: imported.contact?.studentPhone?.number ?? existing.contact.studentPhone?.number ?? ''
                 },
                 parentPhone1: {
-                    ...existing.contact.parentPhone1,
-                    ...(imported.contact?.parentPhone1 || {})
+                    countryCode: imported.contact?.parentPhone1?.countryCode ?? existing.contact.parentPhone1?.countryCode ?? '',
+                    number: imported.contact?.parentPhone1?.number ?? existing.contact.parentPhone1?.number ?? ''
                 }
             },
             tuition: {
