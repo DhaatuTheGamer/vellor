@@ -24,8 +24,8 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Interactive Mapping UI' (Protocol in workflow.md) 403b2fa
 
 ## Phase 4: Import Summary and Integration
-- [ ] Task: Create Import Summary UI and integrate the entire flow
-    - [ ] Write tests for the final Import Summary report UI (successes, errors, skipped)
-    - [ ] Implement the Import Summary UI component
-    - [ ] Integrate the file upload, mapping UI, conflict resolution prompt, and summary view into the existing Students page
+- [x] Task: Create Import Summary UI and integrate the entire flow 050ec0e
+    - [x] Write tests for the final Import Summary report UI (successes, errors, skipped)
+    - [x] Implement the Import Summary UI component
+    - [x] Integrate the file upload, mapping UI, conflict resolution prompt, and summary view into the existing Students page
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: Import Summary and Integration' (Protocol in workflow.md)
