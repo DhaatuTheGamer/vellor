@@ -4,5 +4,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [ ] **Track: Improve the clientside portal**
+- [x] **Track: Improve the clientside portal**
   *Link: [./tracks/improve_clientside_portal_20260424/](./tracks/improve_clientside_portal_20260424/)*
