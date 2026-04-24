@@ -63,15 +63,27 @@ export const PortalPage: React.FC = () => {
   const student = typeof rawStudent === 'object' && rawStudent !== null ? rawStudent : {};
   const transactions = Array.isArray(rawTransactions) ? rawTransactions : [];
 
-  let totalOwed = 0;
-  for (let i = 0; i < transactions.length; i++) {
-    const t = transactions[i];
-    if (t?.status === 'Due') {
-      totalOwed += (t.lessonFee || 0);
-    } else if (t?.status === 'Partially Paid') {
-      totalOwed += ((t.lessonFee || 0) - (t.amountPaid || 0));
+  const { totalOwed, totalLessons, presentCount } = useMemo(() => {
+    let owed = 0;
+    let present = 0;
+    const total = transactions.length;
+
+    for (const t of transactions) {
+      if (t?.status === 'Due') {
+        owed += (t.lessonFee || 0);
+      } else if (t?.status === 'Partially Paid') {
+        owed += ((t.lessonFee || 0) - (t.amountPaid || 0));
+      }
+      
+      if (t?.attendance === 'Present') {
+        present++;
+      }
     }
-  }
+
+    return { totalOwed: owed, totalLessons: total, presentCount: present };
+  }, [transactions]);
+
+  const attendanceRate = totalLessons > 0 ? Math.round((presentCount / totalLessons) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-300">
@@ -129,6 +141,45 @@ export const PortalPage: React.FC = () => {
                </p>
              </Card>
            </motion.div>
+
+           <motion.div variants={itemVariants}>
+             <Card className="bg-white dark:bg-slate-900 border-none shadow-xl hover:shadow-2xl transition-shadow duration-300 rounded-[2rem] p-6 h-full">
+               <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 flex items-center justify-center">
+                     <Icon iconName="calendar" className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Total Lessons</h3>
+               </div>
+               <p className="text-4xl font-black font-mono tracking-tighter text-gray-900 dark:text-white">
+                  {totalLessons}
+               </p>
+               <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 font-medium">
+                 Lessons logged to date
+               </p>
+             </Card>
+           </motion.div>
+
+           <motion.div variants={itemVariants}>
+             <Card className="bg-white dark:bg-slate-900 border-none shadow-xl hover:shadow-2xl transition-shadow duration-300 rounded-[2rem] p-6 h-full">
+               <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-900/20 text-amber-500 flex items-center justify-center">
+                     <Icon iconName="chart-bar" className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Attendance Rate</h3>
+               </div>
+               <p className={`text-4xl font-black font-mono tracking-tighter ${attendanceRate >= 90 ? 'text-emerald-500' : attendanceRate >= 75 ? 'text-amber-500' : 'text-rose-500'}`}>
+                  {attendanceRate}%
+               </p>
+               <div className="w-full bg-gray-100 dark:bg-slate-800 h-1.5 rounded-full mt-3 overflow-hidden">
+                 <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${attendanceRate}%` }}
+                    transition={{ duration: 1, delay: 0.5 }}
+                    className={`h-full rounded-full ${attendanceRate >= 90 ? 'bg-emerald-500' : attendanceRate >= 75 ? 'bg-amber-500' : 'bg-rose-500'}`}
+                 />
+               </div>
+             </Card>
+           </motion.div>
         </div>
 
         {/* Transactions & Progress */}
@@ -137,7 +188,7 @@ export const PortalPage: React.FC = () => {
              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full -mr-16 -mt-16" />
              
              <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-8 flex items-center gap-3 relative">
-               <Icon iconName="calendar" className="w-7 h-7 text-indigo-500" />
+               <Icon iconName="bolt" className="w-7 h-7 text-indigo-500" />
                Recent Activity
              </h3>
              
@@ -165,7 +216,16 @@ export const PortalPage: React.FC = () => {
                                  </span>
                               </div>
                            </div>
-                           <div className="self-start sm:self-center scale-110 sm:scale-100 origin-left sm:origin-center">
+                           <div className="flex flex-wrap gap-2 self-start sm:self-center">
+                              {t.attendance && (
+                                <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${
+                                  t.attendance === 'Present' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' :
+                                  t.attendance === 'Absent' ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400' :
+                                  'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400'
+                                }`}>
+                                  {t.attendance}
+                                </span>
+                              )}
                               <TransactionStatusBadge status={t.status} />
                            </div>
                         </div>

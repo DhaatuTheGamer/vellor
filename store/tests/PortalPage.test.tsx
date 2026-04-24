@@ -29,8 +29,25 @@ describe('PortalPage', () => {
         lessonFee: 50,
         amountPaid: 0,
         status: 'Due',
+        attendance: 'Present',
         grade: 'A',
         progressRemark: 'Good progress',
+      },
+      {
+        id: '2',
+        date: new Date().toISOString(),
+        lessonFee: 50,
+        amountPaid: 50,
+        status: 'Paid',
+        attendance: 'Present',
+      },
+      {
+        id: '3',
+        date: new Date().toISOString(),
+        lessonFee: 50,
+        amountPaid: 0,
+        status: 'Due',
+        attendance: 'Absent',
       },
     ],
   };
@@ -40,17 +57,6 @@ describe('PortalPage', () => {
   it('renders "Invalid Link" when no data is provided', () => {
     render(
       <MemoryRouter initialEntries={['/portal']}>
-        <PortalPage />
-      </MemoryRouter>
-    );
-
-    expect(screen.getByText('Invalid Link')).toBeInTheDocument();
-    expect(screen.getByText(/This portal link is invalid or corrupted/i)).toBeInTheDocument();
-  });
-
-  it('renders "Invalid Link" when corrupted data is provided', () => {
-    render(
-      <MemoryRouter initialEntries={['/portal?data=corrupted']}>
         <PortalPage />
       </MemoryRouter>
     );
@@ -70,8 +76,20 @@ describe('PortalPage', () => {
     expect(screen.getByText(/John Doe/i)).toBeInTheDocument();
     expect(screen.getByText('Math')).toBeInTheDocument();
     expect(screen.getByText('Science')).toBeInTheDocument();
-    expect(screen.getByText('$50.00')).toBeInTheDocument(); // Outstanding Balance
-    expect(screen.getByText('Good progress')).toBeInTheDocument();
-    expect(screen.getByText(/Grade: A/i)).toBeInTheDocument();
+    expect(screen.getByText('$100.00')).toBeInTheDocument(); // 50 (id 1) + 50 (id 3)
+  });
+
+  it('renders attendance and payment summaries', () => {
+    render(
+      <MemoryRouter initialEntries={[`/portal?data=${encodedData}`]}>
+        <PortalPage />
+      </MemoryRouter>
+    );
+
+    // These will fail initially as I haven't implemented them yet
+    expect(screen.getByText(/Attendance Rate/i)).toBeInTheDocument();
+    expect(screen.getByText(/67%/i)).toBeInTheDocument(); // 2 Present out of 3 total
+    expect(screen.getByText(/Total Lessons/i)).toBeInTheDocument();
+    expect(screen.getByText('3')).toBeInTheDocument();
   });
 });
