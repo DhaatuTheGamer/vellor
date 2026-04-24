@@ -1,10 +1,28 @@
 import React, { useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Card, Icon } from '../components/ui';
 import { formatCurrency, formatDate } from '../helpers';
 import { TransactionStatusBadge } from '../components/transactions/TransactionStatusBadge';
 import { jsonReviver } from '../src/crypto';
 import { Transaction } from '../types';
+
+const containerVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: { opacity: 1, scale: 1 }
+};
 
 export const PortalPage: React.FC = () => {
   const location = useLocation();
@@ -15,13 +33,6 @@ export const PortalPage: React.FC = () => {
       const dataParam = searchParams.get('data');
       if (!dataParam) return null;
 
-      // 🛡️ SECURITY RATIONALE:
-      // Vellor is a 100% offline Progressive Web App (PWA) with no backend or database.
-      // The `data` parameter is passed entirely within the URL hash fragment (`#/portal?data=...`).
-      // Hash fragments are processed locally by the browser and are never sent to any server.
-      // Therefore, this data cannot be intercepted over the network, recorded in server logs,
-      // or exposed to backend vulnerabilities. Using `btoa`/`atob` here provides a stateless,
-      // offline-friendly mechanism for sharing snapshots without needing a centralized database.
       const decodedStr = decodeURIComponent(atob(dataParam));
       return JSON.parse(decodedStr, jsonReviver);
     } catch {
@@ -31,19 +42,24 @@ export const PortalPage: React.FC = () => {
 
   if (!parsedData) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-50 text-center p-4 font-sans">
-        <Card className="max-w-md w-full py-12 px-6">
-          <Icon iconName="warning" className="w-12 h-12 text-danger mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2 text-gray-900">Invalid Link</h2>
-          <p className="text-gray-500">This portal link is invalid or corrupted. Please request a new link from your tutor.</p>
-        </Card>
+      <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-slate-950 text-center p-4 font-sans transition-colors duration-300">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md w-full"
+        >
+          <Card className="py-12 px-6 shadow-2xl border-rose-100 dark:border-rose-900/30">
+            <Icon iconName="warning" className="w-16 h-16 text-danger mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">Invalid Link</h2>
+            <p className="text-gray-500 dark:text-gray-400">This portal link is invalid or corrupted. Please request a new link from your tutor.</p>
+          </Card>
+        </motion.div>
       </div>
     );
   }
 
   const { tutorName, currencySymbol, student: rawStudent, transactions: rawTransactions } = parsedData;
 
-  // Basic validation to prevent client-side DoS
   const student = typeof rawStudent === 'object' && rawStudent !== null ? rawStudent : {};
   const transactions = Array.isArray(rawTransactions) ? rawTransactions : [];
 
@@ -58,91 +74,146 @@ export const PortalPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-3xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-300">
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="max-w-3xl mx-auto space-y-8"
+      >
         
         {/* Header */}
-        <div className="text-center mb-8">
-           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white shadow-sm mb-4 overflow-hidden border border-gray-100">
+        <motion.div variants={itemVariants} className="text-center">
+           <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-white dark:bg-slate-900 shadow-xl mb-6 overflow-hidden border border-gray-100 dark:border-slate-800 transition-all hover:scale-105 duration-300">
              <img src="/logo.png" alt="Vellor" className="w-16 h-16 object-contain dark:bg-white/90 dark:rounded-2xl dark:p-2" />
            </div>
-           <h1 className="text-3xl font-bold text-gray-900 mb-1">{student?.firstName || 'Student'} {student?.lastName || ''}'s Dashboard</h1>
-           <p className="text-gray-500 font-medium">Prepared by {tutorName || 'Your Tutor'}</p>
-        </div>
+           <h1 className="text-4xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">
+             {student?.firstName || 'Student'}'s Portal
+           </h1>
+           <p className="text-gray-500 dark:text-gray-400 font-medium text-lg">
+             Managed by <span className="text-indigo-600 dark:text-indigo-400 font-bold">{tutorName || 'Your Tutor'}</span>
+           </p>
+        </motion.div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-           <Card className="bg-white border-gray-100 shadow-sm">
-             <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center">
-                   <Icon iconName="book-open" className="w-4 h-4" />
-                </div>
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Subjects</h3>
-             </div>
-             <div className="flex flex-wrap gap-1.5 mt-2">
-                {Array.isArray(student?.subjects) && student.subjects.length > 0 ? student.subjects.map((sub: string, i: number) => (
-                  <span key={i} className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-md">{sub}</span>
-                )) : <span className="text-gray-400 text-sm">Not specified</span>}
-             </div>
-           </Card>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+           <motion.div variants={itemVariants}>
+             <Card className="bg-white dark:bg-slate-900 border-none shadow-xl hover:shadow-2xl transition-shadow duration-300 rounded-[2rem] p-6 h-full">
+               <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 flex items-center justify-center">
+                     <Icon iconName="book-open" className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Subjects</h3>
+               </div>
+               <div className="flex flex-wrap gap-2">
+                  {Array.isArray(student?.subjects) && student.subjects.length > 0 ? student.subjects.map((sub: string, i: number) => (
+                    <span key={i} className="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 text-sm font-bold rounded-xl">{sub}</span>
+                  )) : <span className="text-gray-400 dark:text-gray-600 text-sm italic">No subjects listed</span>}
+               </div>
+             </Card>
+           </motion.div>
 
-           <Card className="bg-white border-gray-100 shadow-sm">
-             <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center">
-                   <Icon iconName="banknotes" className="w-4 h-4" />
-                </div>
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Outstanding Balance</h3>
-             </div>
-             <p className={`text-2xl font-bold font-mono ${totalOwed > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
-                {formatCurrency(totalOwed, currencySymbol)}
-             </p>
-           </Card>
+           <motion.div variants={itemVariants}>
+             <Card className="bg-white dark:bg-slate-900 border-none shadow-xl hover:shadow-2xl transition-shadow duration-300 rounded-[2rem] p-6 h-full">
+               <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-900/20 text-rose-500 flex items-center justify-center">
+                     <Icon iconName="banknotes" className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Balance</h3>
+               </div>
+               <p className={`text-4xl font-black font-mono tracking-tighter ${totalOwed > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                  {formatCurrency(totalOwed, currencySymbol)}
+               </p>
+               <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 font-medium">
+                 {totalOwed > 0 ? 'Outstanding amount' : 'Account fully paid'}
+               </p>
+             </Card>
+           </motion.div>
         </div>
 
         {/* Transactions & Progress */}
-        <Card className="bg-white border-gray-100 shadow-sm mt-6">
-           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-             <Icon iconName="calendar" className="w-5 h-5 text-gray-400" />
-             Recent Activity
-           </h3>
-           
-           {transactions.length > 0 ? (
-             <div className="space-y-4">
-                {transactions.slice(0, 10).map((t: Transaction) => (
-                   <div key={t.id} className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                         <div>
-                            <p className="font-semibold text-gray-900">{formatDate(t.date)}</p>
-                            <div className="text-sm text-gray-500 mt-1 flex gap-3">
-                               <span>Fee: {formatCurrency(t.lessonFee, currencySymbol)}</span>
-                               <span>Paid: {formatCurrency(t.amountPaid, currencySymbol)}</span>
-                            </div>
-                         </div>
-                         <div className="self-start sm:self-center">
-                            <TransactionStatusBadge status={t.status} />
-                         </div>
-                      </div>
-                      {(t.grade || t.progressRemark) && (
-                         <div className="mt-3 pt-3 border-t border-gray-200">
-                            {t.grade && <span className="inline-block px-2 py-0.5 bg-indigo-100 text-indigo-700 font-bold text-xs rounded mb-2 mr-2">Grade: {t.grade}</span>}
-                            {t.progressRemark && <p className="text-sm text-gray-700 bg-white p-2 border border-gray-200 rounded-lg">{t.progressRemark}</p>}
-                         </div>
-                      )}
-                   </div>
-                ))}
-                {transactions.length > 10 && (
-                  <p className="text-center text-sm text-gray-500 pt-2">Showing 10 most recent records.</p>
-                )}
-             </div>
-           ) : (
-             <p className="text-gray-500 text-center py-8">No activity recorded yet.</p>
-           )}
-        </Card>
+        <motion.div variants={itemVariants}>
+          <Card className="bg-white dark:bg-slate-900 border-none shadow-xl rounded-[2.5rem] p-8 overflow-hidden relative">
+             <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full -mr-16 -mt-16" />
+             
+             <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-8 flex items-center gap-3 relative">
+               <Icon iconName="calendar" className="w-7 h-7 text-indigo-500" />
+               Recent Activity
+             </h3>
+             
+             {transactions.length > 0 ? (
+               <div className="space-y-6 relative">
+                  {transactions.slice(0, 10).map((t: Transaction, idx: number) => (
+                     <motion.div 
+                        key={t.id} 
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.3 + (idx * 0.05) }}
+                        className="p-5 bg-gray-50 dark:bg-slate-800/50 rounded-3xl border border-gray-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-900/50 transition-colors"
+                      >
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                           <div>
+                              <p className="text-lg font-black text-gray-900 dark:text-white">{formatDate(t.date)}</p>
+                              <div className="text-sm font-bold text-gray-500 dark:text-gray-400 mt-1 flex gap-4">
+                                 <span className="flex items-center gap-1.5">
+                                   <div className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
+                                   Fee: {formatCurrency(t.lessonFee, currencySymbol)}
+                                 </span>
+                                 <span className="flex items-center gap-1.5">
+                                   <div className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
+                                   Paid: {formatCurrency(t.amountPaid, currencySymbol)}
+                                 </span>
+                              </div>
+                           </div>
+                           <div className="self-start sm:self-center scale-110 sm:scale-100 origin-left sm:origin-center">
+                              <TransactionStatusBadge status={t.status} />
+                           </div>
+                        </div>
+                        {(t.grade || t.progressRemark) && (
+                           <div className="mt-4 pt-4 border-t border-gray-200 dark:border-slate-700">
+                              <div className="flex flex-wrap items-center gap-3">
+                                {t.grade && (
+                                  <span className="px-3 py-1 bg-indigo-600 text-white font-black text-xs rounded-full shadow-lg shadow-indigo-500/30">
+                                    Grade: {t.grade}
+                                  </span>
+                                )}
+                                {t.progressRemark && (
+                                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-900/50 px-4 py-2 border border-gray-100 dark:border-slate-800 rounded-2xl flex-1">
+                                    {t.progressRemark}
+                                  </p>
+                                )}
+                              </div>
+                           </div>
+                        )}
+                     </motion.div>
+                  ))}
+                  {transactions.length > 10 && (
+                    <p className="text-center text-sm font-bold text-gray-400 dark:text-gray-500 pt-4 uppercase tracking-widest">
+                      Showing latest 10 records
+                    </p>
+                  )}
+               </div>
+             ) : (
+               <div className="text-center py-16 bg-gray-50 dark:bg-slate-800/30 rounded-3xl border-2 border-dashed border-gray-200 dark:border-slate-800">
+                 <Icon iconName="archive-box" className="w-12 h-12 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
+                 <p className="text-gray-500 dark:text-gray-400 font-bold">No activity recorded yet.</p>
+               </div>
+             )}
+          </Card>
+        </motion.div>
         
-        <div className="text-center text-xs text-gray-400 mt-8 flex items-center justify-center gap-2">
-             <img src="/logo.png" alt="Vellor" className="w-5 h-5 object-contain rounded dark:bg-white/90 dark:p-0.5" style={{ filter: 'grayscale(1) opacity(0.5)' }} />Powered by Vellor
-           </div>
-      </div>
+        {/* Footer */}
+        <motion.div 
+          variants={itemVariants}
+          className="text-center pb-8"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 rounded-full shadow-sm border border-gray-100 dark:border-slate-800 text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+            <img src="/logo.png" alt="Vellor" className="w-4 h-4 object-contain rounded opacity-50 dark:bg-white/90" />
+            Powered by Vellor
+          </div>
+        </motion.div>
+
+      </motion.div>
     </div>
   );
 };
