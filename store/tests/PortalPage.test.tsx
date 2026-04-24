@@ -86,7 +86,7 @@ describe('PortalPage', () => {
       </MemoryRouter>
     );
 
-    // These will fail initially as I haven't implemented them yet
+    // Verify summaries are calculated and displayed correctly
     expect(screen.getByText(/Attendance Rate/i)).toBeInTheDocument();
     expect(screen.getByText(/67%/i)).toBeInTheDocument(); // 2 Present out of 3 total
     expect(screen.getByText(/Total Lessons/i)).toBeInTheDocument();
