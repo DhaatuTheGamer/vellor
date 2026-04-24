@@ -7,11 +7,11 @@
 **Manage your tutoring business like a pro.**
 
 [![CI](https://github.com/dhaatrik/vellor/actions/workflows/ci.yml/badge.svg)](https://github.com/dhaatrik/vellor/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-4.0.0-8b5cf6)](https://github.com/dhaatrik/vellor)
+[![Version](https://img.shields.io/badge/version-4.2.0-8b5cf6)](https://github.com/dhaatrik/vellor)
 [![License: MIT](https://img.shields.io/badge/License-MIT-10b981.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)](https://react.dev/)
-[![Tests](https://img.shields.io/badge/Tests-28_suites-f59e0b?logo=vitest&logoColor=white)](store/tests/)
+[![Tests](https://img.shields.io/badge/Tests-33_suites-f59e0b?logo=vitest&logoColor=white)](store/tests/)
 
 Vellor is a free, open-source Progressive Web App built for private teachers and tutors. It provides a single, beautifully designed interface to manage students, track lessons and payments, generate invoices, and stay motivated through built-in gamification — all while keeping your data **100% private** on your own device.
 

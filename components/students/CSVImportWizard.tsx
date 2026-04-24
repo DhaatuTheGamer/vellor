@@ -1,28 +1,14 @@
 import React, { useState } from 'react';
 import { Button, Modal, Icon, Select } from '../ui';
 import { useStore } from '../../store';
-import { Student } from '../../types';
+import { PaymentStatus } from '../../types';
+import { parseCSV, bulkMapCSVRows, ImportMapping, ImportResult } from '../../helpers/csvParser';
+import { findConflicts, resolveConflict, ConflictStrategy } from '../../helpers/conflictResolution';
 
 interface CSVImportWizardProps {
     isOpen: boolean;
     onClose: () => void;
 }
-
-// Split safely avoiding commas inside quotes
-const parseLine = (line: string) => {
-    const result: string[] = [];
-    let cur = '';
-    let inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-        if (line[i] === '"') inQuotes = !inQuotes;
-        else if (line[i] === ',' && !inQuotes) {
-            result.push(cur.trim().replace(/^"|"$/g, ''));
-            cur = '';
-        } else cur += line[i];
-    }
-    result.push(cur.trim().replace(/^"|"$/g, ''));
-    return result;
-};
 
 interface UploadStepProps {
     handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -44,12 +30,10 @@ const UploadStep: React.FC<UploadStepProps> = ({ handleFileUpload }) => (
        <div className="mt-8 p-4 bg-gray-50 dark:bg-primary/30 rounded-2xl text-left border border-gray-100 dark:border-white/5 text-sm">
           <p className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Supported Columns (Auto-mapped):</p>
           <ul className="grid grid-cols-2 gap-2 text-gray-600 dark:text-gray-400">
-             <li className="flex items-center gap-1.5"><Icon iconName="check-circle" className="w-3.5 h-3.5 text-success" /> First Name</li>
-             <li className="flex items-center gap-1.5"><Icon iconName="check-circle" className="w-3.5 h-3.5 text-success" /> Last Name</li>
-             <li className="flex items-center gap-1.5"><Icon iconName="check-circle" className="w-3.5 h-3.5 text-success" /> Email</li>
-             <li className="flex items-center gap-1.5"><Icon iconName="check-circle" className="w-3.5 h-3.5 text-success" /> Phone</li>
-             <li className="flex items-center gap-1.5"><Icon iconName="check-circle" className="w-3.5 h-3.5 text-success" /> Default Rate</li>
-             <li className="flex items-center gap-1.5"><Icon iconName="check-circle" className="w-3.5 h-3.5 text-success" /> Subjects</li>
+             <li className="flex items-center gap-1.5"><Icon iconName="check-circle" className="w-3.5 h-3.5 text-success" /> Student Info</li>
+             <li className="flex items-center gap-1.5"><Icon iconName="check-circle" className="w-3.5 h-3.5 text-success" /> Guardian Details</li>
+             <li className="flex items-center gap-1.5"><Icon iconName="check-circle" className="w-3.5 h-3.5 text-success" /> Payments</li>
+             <li className="flex items-center gap-1.5"><Icon iconName="check-circle" className="w-3.5 h-3.5 text-success" /> Lesson History</li>
           </ul>
        </div>
     </div>
@@ -57,10 +41,10 @@ const UploadStep: React.FC<UploadStepProps> = ({ handleFileUpload }) => (
 
 interface MappingStepProps {
     csvDataLength: number;
-    mapping: { [key: string]: string };
-    setMapping: (mapping: { [key: string]: string }) => void;
+    mapping: ImportMapping;
+    setMapping: (mapping: ImportMapping) => void;
     originalHeaders: string[];
-    setStep: (step: 1 | 2) => void;
+    setStep: (step: number) => void;
     handleImport: () => void;
 }
 
@@ -71,171 +55,186 @@ const MappingStep: React.FC<MappingStepProps> = ({
     originalHeaders,
     setStep,
     handleImport
-}) => (
-    <div className="space-y-6">
-        <div className="bg-accent/10 border border-accent/20 p-4 rounded-2xl text-accent font-medium text-sm">
-            Found {csvDataLength} records. Let's map your columns to Vellor fields. We've auto-mapped the ones we recognized.
-        </div>
+}) => {
+    const [activeCategory, setActiveCategory] = useState<'student' | 'guardian' | 'financial'>('student');
 
-        <div className="bg-gray-50 dark:bg-primary/50 p-5 rounded-3xl space-y-4 border border-gray-100 dark:border-white/5 max-h-[50vh] overflow-y-auto custom-scrollbar">
-            {[
-              { field: 'firstName', label: 'First Name (Required)' },
-              { field: 'lastName', label: 'Last Name' },
-              { field: 'email', label: 'Email Address' },
-              { field: 'studentPhone', label: 'Phone Number' },
-              { field: 'defaultRate', label: 'Default Rate' },
-              { field: 'subjects', label: 'Subject' }
-            ].map(({field, label}) => (
-               <div key={field} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white dark:bg-primary-light rounded-xl border border-gray-200 dark:border-white/10">
-                   <span className="text-sm font-bold text-gray-700 dark:text-gray-300 sm:w-1/3 truncate">{label}</span>
-                   <div className="sm:w-2/3">
-                       <Select
-                         value={mapping[field] || ''}
-                         onChange={e => setMapping({...mapping, [field]: e.target.value})}
-                         options={[{label: '-- Skip Field --', value: ''}, ...originalHeaders.map(h => ({label: h, value: h}))]}
-                       />
+    const categories = [
+        { id: 'student', label: 'Student Info', icon: 'user' },
+        { id: 'guardian', label: 'Guardian', icon: 'users' },
+        { id: 'financial', label: 'Payments & Lessons', icon: 'currency-dollar' }
+    ];
+
+    const fieldsByCategory = {
+        student: [
+            { field: 'firstName', label: 'First Name (Required)' },
+            { field: 'lastName', label: 'Last Name' },
+            { field: 'email', label: 'Email Address' },
+            { field: 'studentPhone', label: 'Phone Number' },
+            { field: 'notes', label: 'Bio/Notes' },
+            { field: 'subjects', label: 'Subjects' }
+        ],
+        guardian: [
+            { field: 'guardianName', label: 'Guardian Name' },
+            { field: 'guardianEmail', label: 'Guardian Email' },
+            { field: 'guardianPhone', label: 'Guardian Phone' }
+        ],
+        financial: [
+            { field: 'defaultRate', label: 'Default Rate' },
+            { field: 'paymentAmount', label: 'Payment Amount' },
+            { field: 'paymentDate', label: 'Payment Date' },
+            { field: 'lessonDate', label: 'Lesson Date' },
+            { field: 'lessonDuration', label: 'Lesson Duration (min)' }
+        ]
+    };
+
+    return (
+        <div className="space-y-6">
+            <div className="bg-accent/10 border border-accent/20 p-4 rounded-2xl text-accent font-medium text-sm">
+                Found {csvDataLength} records. Let's map your columns to Vellor fields.
+            </div>
+
+            <div className="flex gap-2 p-1 bg-gray-100 dark:bg-primary/50 rounded-xl">
+                {categories.map(cat => (
+                    <button
+                        key={cat.id}
+                        onClick={() => setActiveCategory(cat.id as any)}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-bold transition-all ${
+                            activeCategory === cat.id 
+                                ? 'bg-white dark:bg-primary-light text-accent shadow-sm' 
+                                : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                        }`}
+                    >
+                        <Icon iconName={cat.icon as any} className="w-4 h-4" />
+                        <span className="hidden sm:inline">{cat.label}</span>
+                    </button>
+                ))}
+            </div>
+
+            <div className="bg-gray-50 dark:bg-primary/50 p-5 rounded-3xl space-y-4 border border-gray-100 dark:border-white/5 max-h-[40vh] overflow-y-auto custom-scrollbar">
+                {fieldsByCategory[activeCategory].map(({field, label}) => (
+                   <div key={field} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white dark:bg-primary-light rounded-xl border border-gray-200 dark:border-white/10">
+                       <span className="text-sm font-bold text-gray-700 dark:text-gray-300 sm:w-1/3 truncate">{label}</span>
+                       <div className="sm:w-2/3">
+                           <Select
+                             value={(mapping as any)[field] || ''}
+                             onChange={e => setMapping({...mapping, [field]: e.target.value})}
+                             options={[{label: '-- Skip Field --', value: ''}, ...originalHeaders.map(h => ({label: h, value: h}))]}
+                           />
+                       </div>
                    </div>
-               </div>
-            ))}
-        </div>
+                ))}
+            </div>
 
-        <div className="flex justify-between items-center pt-4 border-t border-gray-100 dark:border-white/10">
-            <Button variant="ghost" onClick={() => setStep(1)} className="rounded-full">Upload Different File</Button>
-            <Button variant="primary" onClick={handleImport} className="rounded-full px-6 shadow-lg shadow-accent/20 font-bold">Import {csvDataLength} Students</Button>
+            <div className="flex justify-between items-center pt-4 border-t border-gray-100 dark:border-white/10">
+                <Button variant="ghost" onClick={() => setStep(1)} className="rounded-full">Back</Button>
+                <Button variant="primary" onClick={handleImport} className="rounded-full px-6 shadow-lg shadow-accent/20 font-bold">Import Data</Button>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClose }) => {
-    const [step, setStep] = useState<1 | 2>(1);
+    const [step, setStep] = useState<number>(1);
     const [originalHeaders, setOriginalHeaders] = useState<string[]>([]);
     const [csvData, setCsvData] = useState<Record<string, string>[]>([]);
-    const [mapping, setMapping] = useState<{ [key: string]: string }>({});
+    const [mapping, setMapping] = useState<ImportMapping>({ firstName: '' });
+    const [importResult, setImportResult] = useState<ImportResult | null>(null);
+    
+    const students = useStore(s => s.students);
     const addStudent = useStore(s => s.addStudent);
+    const updateStudent = useStore(s => s.updateStudent);
+    const addTransaction = useStore(s => s.addTransaction);
     const addToast = useStore(s => s.addToast);
     
-    // Very simple CSV parser for basic needs without external dependencies
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         const reader = new FileReader();
         reader.onload = (event) => {
              const text = event.target?.result as string;
-             const rawLines = text.split('\n');
-             const lines: string[] = [];
-             for (let i = 0; i < rawLines.length; i++) {
-                 const trimmed = rawLines[i].trim();
-                 if (trimmed) lines.push(trimmed);
-             }
-             if (lines.length < 2) { 
+             const data = parseCSV(text);
+             if (data.length === 0) { 
                  addToast("Invalid CSV format or not enough data rows.", "error"); 
                  return; 
              }
              
-             const headers = parseLine(lines[0]);
+             const headers = Object.keys(data[0]);
              setOriginalHeaders(headers);
-             
-             const data = [];
-             for (let i = 1; i < lines.length; i++) {
-                 const row = parseLine(lines[i]);
-                 let obj: Record<string, string> = {};
-                 headers.forEach((h, idx) => obj[h] = row[idx] || '');
-                 data.push(obj);
-             }
              setCsvData(data);
              
-             // Basic Auto-Map logic
-             const newMap: { [key: string]: string } = {};
-             for (const h of headers) {
+             // Enhanced Auto-Map logic
+             const newMap: any = {};
+             headers.forEach(h => {
                  const hl = h.toLowerCase();
-                 if (!newMap.firstName && (hl.includes('first') || hl === 'name')) {
-                     newMap.firstName = h;
-                     continue;
-                 }
-                 if (!newMap.lastName && hl.includes('last')) {
-                     newMap.lastName = h;
-                     continue;
-                 }
-                 if (!newMap.email && hl.includes('email')) {
-                     newMap.email = h;
-                     continue;
-                 }
-                 if (!newMap.studentPhone && (hl.includes('phone') || hl.includes('mobile'))) {
-                     newMap.studentPhone = h;
-                     continue;
-                 }
-                 if (!newMap.defaultRate && (hl.includes('rate') || hl.includes('fee') || hl.includes('price'))) {
-                     newMap.defaultRate = h;
-                     continue;
-                 }
-                 if (!newMap.subjects && hl.includes('subject')) {
-                     newMap.subjects = h;
-                     continue;
-                 }
-             }
+                 if (!newMap.firstName && (hl === 'first name' || hl === 'name' || hl === 'firstname')) newMap.firstName = h;
+                 if (!newMap.lastName && (hl === 'last name' || hl === 'lastname')) newMap.lastName = h;
+                 if (!newMap.email && hl.includes('email')) newMap.email = h;
+                 if (!newMap.studentPhone && (hl.includes('phone') || hl.includes('mobile'))) newMap.studentPhone = h;
+                 if (!newMap.defaultRate && (hl.includes('rate') || hl.includes('price') || hl.includes('fee') || hl.includes('$/hr'))) newMap.defaultRate = h;
+                 if (!newMap.subjects && (hl.includes('subject') || hl.includes('topic'))) newMap.subjects = h;
+                 if (!newMap.guardianName && (hl.includes('parent') || hl.includes('guardian'))) newMap.guardianName = h;
+                 if (!newMap.paymentAmount && (hl.includes('paid') || hl.includes('amount'))) newMap.paymentAmount = h;
+             });
              setMapping(newMap);
              setStep(2);
         };
         reader.readAsText(file);
     };
 
-    const handleImport = () => {
-        let count = 0;
-        let skipped = 0;
+    const handleImport = async () => {
+        const result = bulkMapCSVRows(csvData, mapping);
         
-        csvData.forEach(row => {
-            let firstName = row[mapping.firstName || ''] || '';
-            const lastName = row[mapping.lastName || ''] || '';
+        for (const entities of result.entities) {
+            let studentId = '';
+            const conflicts = findConflicts(entities.student, students);
             
-            // If they merged name into one field
-            if (!mapping.lastName && firstName.includes(' ')) {
-                const parts = firstName.split(' ');
-                firstName = parts[0];
+            if (conflicts.length > 0) {
+                // For bulk import without a per-conflict UI yet, we default to "Overwrite" to update existing records
+                // In a future phase, we can add the "Prompt per Conflict" UI
+                const resolved = resolveConflict(entities.student, conflicts[0].existing, ConflictStrategy.Overwrite);
+                if (resolved) {
+                    updateStudent(resolved.id, resolved);
+                    studentId = resolved.id;
+                }
+            } else {
+                const newStudent = addStudent(entities.student as any);
+                studentId = newStudent.id;
             }
-            
-            if (!firstName) {
-                skipped++;
-                return; // require at least a name
+
+            if (studentId) {
+                if (entities.payment) {
+                    addTransaction({
+                        studentId,
+                        amountPaid: entities.payment.amount,
+                        lessonFee: entities.payment.amount, // Assume it covers the full fee if imported this way
+                        date: entities.payment.date,
+                        status: PaymentStatus.Paid,
+                        paymentMethod: 'Other',
+                        notes: 'Imported via CSV'
+                    } as any);
+                }
+                if (entities.lesson && !entities.payment) {
+                    addTransaction({
+                        studentId,
+                        amountPaid: 0,
+                        lessonFee: entities.student.tuition?.defaultRate || 0,
+                        date: entities.lesson.date,
+                        status: PaymentStatus.Due,
+                        paymentMethod: '',
+                        notes: 'Imported via CSV'
+                    } as any);
+                }
             }
-            
-            const newStudent: Pick<Student, 'firstName' | 'lastName' | 'contact' | 'tuition' | 'notes'> = {
-                firstName,
-                lastName: !mapping.lastName && row[mapping.firstName || ''].includes(' ') ? row[mapping.firstName || ''].substring(firstName.length).trim() : lastName,
-                contact: {
-                    email: row[mapping.email || ''] || '',
-                    studentPhone: { countryCode: '+1', number: row[mapping.studentPhone || ''] || '' },
-                    parentPhone1: { countryCode: '+1', number: '' }
-                },
-                tuition: {
-                    defaultRate: parseFloat(row[mapping.defaultRate || '']) || 0,
-                    rateType: 'hourly',
-                    typicalLessonDuration: 60,
-                    subjects: row[mapping.subjects || ''] ? [row[mapping.subjects || '']] : []
-                },
-                notes: 'Imported via CSV'
-            };
-            
-            // Note: addStudent expects the full Student including id and dates, which updateStudent/addStudent slices typically handle or we must provide
-            addStudent(newStudent as Student);
-            count++;
-        });
+        }
         
-        if (count > 0) addToast(`Successfully imported ${count} students!`, 'success');
-        if (skipped > 0) addToast(`Skipped ${skipped} rows without a first name.`, 'info');
-        
-        onClose();
-        setTimeout(() => {
-           setStep(1);
-           setCsvData([]);
-           setMapping({});
-        }, 300);
+        setImportResult(result);
+        setStep(3);
+        addToast(`Successfully processed ${result.successCount} rows.`, 'success');
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Import Students (CSV)">
-            {step === 1 && (
-                <UploadStep handleFileUpload={handleFileUpload} />
-            )}
+        <Modal isOpen={isOpen} onClose={onClose} title="Import Data (CSV)">
+            {step === 1 && <UploadStep handleFileUpload={handleFileUpload} />}
             
             {step === 2 && (
                 <MappingStep
@@ -246,6 +245,33 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
                     setStep={setStep}
                     handleImport={handleImport}
                 />
+            )}
+
+            {step === 3 && importResult && (
+                <div className="space-y-6">
+                    <div className="flex items-center justify-center py-4">
+                        <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center">
+                            <Icon iconName="check-circle" className="w-10 h-10 text-success" />
+                        </div>
+                    </div>
+                    <div className="text-center">
+                        <h3 className="text-xl font-display font-bold text-gray-900 dark:text-white">Import Complete</h3>
+                        <p className="text-gray-500 dark:text-gray-400">Successfully imported {importResult.successCount} records.</p>
+                    </div>
+                    
+                    {importResult.errorCount > 0 && (
+                        <div className="bg-danger/10 border border-danger/20 p-4 rounded-2xl">
+                            <p className="text-danger font-bold text-sm mb-2">Errors encountered in {importResult.errorCount} rows:</p>
+                            <div className="max-h-32 overflow-y-auto text-xs text-danger/80 space-y-1 custom-scrollbar">
+                                {importResult.errors.map((err, i) => (
+                                    <div key={i}>Row {err.row}: {err.error}</div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    <Button variant="primary" onClick={onClose} className="w-full rounded-full py-4 font-bold shadow-lg shadow-accent/20">Done</Button>
+                </div>
             )}
         </Modal>
     );
