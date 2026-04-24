@@ -9,6 +9,7 @@ The primary target users are **Independent Tutors and Small Tutoring Businesses*
 ## Core Value Proposition
 - **Absolute Privacy:** 100% offline, local-first data control using encrypted `localStorage`.
 - **Frictionless UX:** Zero-config, fast, mobile-ready PWA experience designed for immediate use.
+- **Interactive Client Portals:** Beautiful, animated read-only views for parents and students with attendance and financial summaries.
 - **Financial Clarity:** Powerful dashboards and one-click PDF invoicing to keep track of earnings seamlessly.
 
 ## Feature Focus & Roadmap Priorities
