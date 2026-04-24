@@ -170,8 +170,8 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
                  if (!newMap.lastName && (hl === 'last name' || hl === 'lastname')) newMap.lastName = h;
                  if (!newMap.email && hl.includes('email')) newMap.email = h;
                  if (!newMap.studentPhone && (hl.includes('phone') || hl.includes('mobile'))) newMap.studentPhone = h;
-                 if (!newMap.defaultRate && (hl.includes('rate') || hl.includes('price'))) newMap.defaultRate = h;
-                 if (!newMap.subjects && hl.includes('subject')) newMap.subjects = h;
+                 if (!newMap.defaultRate && (hl.includes('rate') || hl.includes('price') || hl.includes('fee') || hl.includes('$/hr'))) newMap.defaultRate = h;
+                 if (!newMap.subjects && (hl.includes('subject') || hl.includes('topic'))) newMap.subjects = h;
                  if (!newMap.guardianName && (hl.includes('parent') || hl.includes('guardian'))) newMap.guardianName = h;
                  if (!newMap.paymentAmount && (hl.includes('paid') || hl.includes('amount'))) newMap.paymentAmount = h;
              });

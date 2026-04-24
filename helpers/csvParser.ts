@@ -75,6 +75,17 @@ export const parseCSV = (csv: string): Record<string, string>[] => {
 };
 
 /**
+ * Safely parses a numeric string, removing currency symbols and commas.
+ */
+export const parseNumeric = (val: string): number => {
+    if (!val) return 0;
+    // Remove everything except numbers, dots, and minus signs
+    const cleaned = val.replace(/[^0-9.-]/g, '');
+    const parsed = parseFloat(cleaned);
+    return isNaN(parsed) ? 0 : parsed;
+};
+
+/**
  * Maps a single CSV row to student and related entities based on provided mapping.
  */
 export const mapCSVRowToEntities = (row: Record<string, string>, mapping: ImportMapping): ImportedEntities => {
@@ -99,7 +110,7 @@ export const mapCSVRowToEntities = (row: Record<string, string>, mapping: Import
                 }
             },
             tuition: {
-                defaultRate: mapping.defaultRate ? parseFloat(row[mapping.defaultRate]) || 0 : 0,
+                defaultRate: mapping.defaultRate ? parseNumeric(row[mapping.defaultRate]) : 0,
                 rateType: 'hourly',
                 typicalLessonDuration: 60,
                 subjects: mapping.subjects && row[mapping.subjects] ? [row[mapping.subjects]] : []
@@ -109,8 +120,8 @@ export const mapCSVRowToEntities = (row: Record<string, string>, mapping: Import
     };
 
     if (mapping.paymentAmount && row[mapping.paymentAmount]) {
-        const amount = parseFloat(row[mapping.paymentAmount]);
-        if (!isNaN(amount)) {
+        const amount = parseNumeric(row[mapping.paymentAmount]);
+        if (amount !== 0) {
             entities.payment = {
                 amount,
                 date: mapping.paymentDate ? row[mapping.paymentDate] || new Date().toISOString() : new Date().toISOString()

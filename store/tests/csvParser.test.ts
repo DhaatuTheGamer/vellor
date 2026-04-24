@@ -62,6 +62,15 @@ describe('csvParser', () => {
             });
         });
 
+        it('should map student details including default rate with currency symbols', () => {
+            const row = {
+                'First Name': 'John',
+                'Rate': '$50.00'
+            };
+            const entities = mapCSVRowToEntities(row, mapping);
+            expect(entities.student.tuition?.defaultRate).toBe(50);
+        });
+
         it('should map guardian details', () => {
             const row = {
                 'First Name': 'John',
