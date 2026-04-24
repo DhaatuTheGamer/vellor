@@ -16,11 +16,11 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Conflict Resolution Logic' (Protocol in workflow.md) b94460b
 
 ## Phase 3: Interactive Mapping UI
-- [ ] Task: Create UI components for CSV file upload and interactive column mapping
-    - [ ] Write tests for file upload component
-    - [ ] Write tests for interactive column mapping UI component
-    - [ ] Implement the file upload component
-    - [ ] Implement the interactive column mapping UI
+- [x] Task: Create UI components for CSV file upload and interactive column mapping f70ccd7
+    - [x] Write tests for file upload component
+    - [x] Write tests for interactive column mapping UI component
+    - [x] Implement the file upload component
+    - [x] Implement the interactive column mapping UI
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Interactive Mapping UI' (Protocol in workflow.md)
 
 ## Phase 4: Import Summary and Integration
