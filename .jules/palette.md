@@ -13,3 +13,6 @@
 ## 2026-04-23 - Visual Feedback for Clipboard Operations
 **Learning:** Users often copy important links or details (like Portal links or Contact cards) using navigator.clipboard.writeText, but the action happens silently without visual feedback. This leaves users unsure if the copy succeeded.
 **Action:** Always pair clipboard copy actions with temporary visual feedback, such as changing the button icon to a checkmark and displaying 'Copied!' for a few seconds.
+## 2025-04-25 - Tooltips for icon-only buttons
+**Learning:** Found some icon-only buttons missing tooltips on hover (only having `aria-label`s for screen readers).
+**Action:** Consistently ensure that all icon-only buttons have a `title` attribute so sighted users can understand the button's action without a text label.
