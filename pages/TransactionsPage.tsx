@@ -279,6 +279,7 @@ export const TransactionsPage: React.FC = () => {
                  searchInputRef.current?.focus();
                }}
                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+               title="Clear search"
                aria-label="Clear search"
              >
                <Icon iconName="x-mark" className="w-5 h-5" />
@@ -302,7 +303,7 @@ export const TransactionsPage: React.FC = () => {
               className="w-full px-4 py-2 border border-gray-200 dark:border-white/10 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent sm:text-sm bg-white dark:bg-primary-light transition-all duration-200 appearance-none"
            />
            {(dateRange.start || dateRange.end) && (
-              <Button variant="ghost" size="sm" onClick={() => setDateRange({start: '', end: ''})} className="text-gray-400 hover:text-danger rounded-full !p-2" aria-label="Clear dates">
+              <Button variant="ghost" size="sm" onClick={() => setDateRange({start: '', end: ''})} className="text-gray-400 hover:text-danger rounded-full !p-2" title="Clear dates" aria-label="Clear dates">
                  <Icon iconName="x-mark" className="w-4 h-4" />
               </Button>
            )}
