@@ -55,8 +55,20 @@ export const parseCSVLine = (line: string): string[] => {
  * Parses a CSV string into an array of objects.
  */
 export const parseCSV = (csv: string): Record<string, string>[] => {
-    const rawLines = csv.split('\n');
-    const lines = rawLines.map(l => l.trim()).filter(l => l.length > 0);
+    // ⚡ Bolt Performance: Replace .split().map().filter() with manual iteration using indexOf and slice
+    // to eliminate intermediate array allocations and reduce garbage collection overhead on large CSVs.
+    const lines: string[] = [];
+    let start = 0;
+    let end = csv.indexOf('\n');
+    while (end !== -1) {
+        const line = csv.slice(start, end).trim();
+        if (line.length > 0) lines.push(line);
+        start = end + 1;
+        end = csv.indexOf('\n', start);
+    }
+    const lastLine = csv.slice(start).trim();
+    if (lastLine.length > 0) lines.push(lastLine);
+
     if (lines.length < 2) return [];
 
     const headers = parseCSVLine(lines[0]);
