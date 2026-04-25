@@ -35,6 +35,6 @@
 ## 2026-05-20 - Lexicographical Date string comparison vs Date.parse
 **Learning:** Calling `Date.parse()` on strings repeatedly inside high frequency loops or rendering pipelines introduces significant garbage collection and parsing overhead.
 **Action:** Since ISO 8601 strings sort lexicographically perfectly with time, convert target thresholds to ISO strings once before a loop, and then compare raw array string fields directly instead of parsing each one into a unix timestamp. This provides an order-of-magnitude speedup.
-## 2026-05-20 - String allocation optimization: split().map().filter() vs slice
+## 2026-04-25 - String allocation optimization: split().map().filter() vs slice
 **Learning:** Chaining `.split('\n')` followed by `.map()` and `.filter()` to parse large multi-line strings (like CSV files) allocates massive intermediate arrays for every line and character transformation. This spikes memory usage and causes garbage collection pauses that slow down data import operations.
 **Action:** When parsing large delimited strings, replace higher-order chained methods with a single manual `while` loop that uses `indexOf()` and `slice()` to extract sub-strings directly into the final array, eliminating all intermediate array allocations.
