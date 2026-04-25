@@ -29,10 +29,10 @@
 ## 2026-04-22 - Zustand State Array Update Optimization
 **Learning:** When updating items in an array within Zustand state setters, unconditionally cloning the entire array (e.g., `const newItems = [...state.items]`) *before* iterating to find a match introduces unnecessary O(N) allocation overhead for non-matching updates.
 **Action:** When updating state arrays, iterate over the current array and only create a shallow copy *after* a match is found.
-## 2026-05-20 - Replacing chained array methods in keydown handlers
+## 2026-04-20 - Replacing chained array methods in keydown handlers
 **Learning:** Sequential `.filter().forEach()` operations inside high-frequency global event handlers (like global keyboard shortcuts) create unnecessary intermediate arrays, resulting in wasted memory allocations and garbage collection spikes which can cause input jank.
 **Action:** When performing array operations within global or document-level event listeners, replace chained higher-order functions with a single pass index-based `for` loop to eliminate intermediate allocations and maintain optimal responsiveness.
-## 2026-05-20 - Lexicographical Date string comparison vs Date.parse
+## 2026-04-20 - Lexicographical Date string comparison vs Date.parse
 **Learning:** Calling `Date.parse()` on strings repeatedly inside high frequency loops or rendering pipelines introduces significant garbage collection and parsing overhead.
 **Action:** Since ISO 8601 strings sort lexicographically perfectly with time, convert target thresholds to ISO strings once before a loop, and then compare raw array string fields directly instead of parsing each one into a unix timestamp. This provides an order-of-magnitude speedup.
 ## 2026-04-25 - String allocation optimization: split().map().filter() vs slice
