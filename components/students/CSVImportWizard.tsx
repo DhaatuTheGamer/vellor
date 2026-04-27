@@ -143,7 +143,7 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
     const students = useStore(s => s.students);
     const addStudent = useStore(s => s.addStudent);
     const updateStudent = useStore(s => s.updateStudent);
-    const addTransaction = useStore(s => s.addTransaction);
+    const bulkAddTransactions = useStore(s => s.bulkAddTransactions);
     const addToast = useStore(s => s.addToast);
     
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -183,6 +183,7 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
 
     const handleImport = async () => {
         const result = bulkMapCSVRows(csvData, mapping);
+        const transactionsToAdd: any[] = [];
         
         for (const entities of result.entities) {
             let studentId = '';
@@ -203,7 +204,7 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
 
             if (studentId) {
                 if (entities.payment) {
-                    addTransaction({
+                    transactionsToAdd.push({
                         studentId,
                         amountPaid: entities.payment.amount,
                         lessonFee: entities.payment.amount, // Assume it covers the full fee if imported this way
@@ -211,10 +212,10 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
                         status: PaymentStatus.Paid,
                         paymentMethod: 'Other',
                         notes: 'Imported via CSV'
-                    } as any);
+                    });
                 }
                 if (entities.lesson && !entities.payment) {
-                    addTransaction({
+                    transactionsToAdd.push({
                         studentId,
                         amountPaid: 0,
                         lessonFee: entities.student.tuition?.defaultRate || 0,
@@ -222,9 +223,13 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
                         status: PaymentStatus.Due,
                         paymentMethod: '',
                         notes: 'Imported via CSV'
-                    } as any);
+                    });
                 }
             }
+        }
+
+        if (transactionsToAdd.length > 0) {
+            bulkAddTransactions(transactionsToAdd);
         }
         
         setImportResult(result);
