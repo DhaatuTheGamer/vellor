@@ -89,7 +89,7 @@ export const parseCSV = (csv: string): Record<string, string>[] => {
 /**
  * Safely parses a numeric string, removing currency symbols and commas.
  */
-export const parseNumeric = (val: string): number => {
+const parseNumeric = (val: string): number => {
     if (!val) return 0;
     // Remove everything except numbers, dots, and minus signs
     const cleaned = val.replace(/[^0-9.-]/g, '');
