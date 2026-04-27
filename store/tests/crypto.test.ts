@@ -63,9 +63,11 @@ describe('exportKeyToBase64', () => {
   });
 
   it('throws an error for invalid key parameter', async () => {
-    // Pass something that isn't a CryptoKey. Cast to any to bypass TS error.
-    await expect(exportKeyToBase64({} as any)).rejects.toThrow();
-    await expect(exportKeyToBase64(null as any)).rejects.toThrow();
+    // Pass something that isn't a CryptoKey. Bypass TS error explicitly.
+    // @ts-expect-error - Testing invalid input
+    await expect(exportKeyToBase64({})).rejects.toThrow();
+    // @ts-expect-error - Testing invalid input
+    await expect(exportKeyToBase64(null)).rejects.toThrow();
   });
 });
 
@@ -174,8 +176,10 @@ describe('encryptObject', () => {
 
   it('throws an error if an invalid key is provided', async () => {
     const testObj = { message: 'hello world' };
-    await expect(encryptObject(testObj, {} as any)).rejects.toThrow();
-    await expect(encryptObject(testObj, null as any)).rejects.toThrow();
+    // @ts-expect-error - Testing invalid input
+    await expect(encryptObject(testObj, {})).rejects.toThrow();
+    // @ts-expect-error - Testing invalid input
+    await expect(encryptObject(testObj, null)).rejects.toThrow();
   });
 });
 
@@ -236,7 +240,7 @@ describe('deriveKey', () => {
     expect(key).toBeDefined();
     expect(key.type).toBe('secret');
     expect(key.algorithm.name).toBe('AES-GCM');
-    expect((key.algorithm as any).length).toBe(256);
+    expect((key.algorithm as AesKeyAlgorithm).length).toBe(256);
     expect(key.usages).toContain('encrypt');
     expect(key.usages).toContain('decrypt');
     expect(key.extractable).toBe(true);
