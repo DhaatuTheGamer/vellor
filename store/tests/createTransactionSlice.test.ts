@@ -286,4 +286,115 @@ describe('createTransactionSlice', () => {
       expect(updatedTransaction).toBeUndefined();
     });
   });
+
+  describe('exportTransactionsCSV', () => {
+    let mockCreateElement: any;
+    let mockAppendChild: any;
+    let mockRemoveChild: any;
+    let mockClick: any;
+    let mockCreateObjectURL: any;
+    let mockRevokeObjectURL: any;
+    let originalCreateObjectURL: any;
+    let originalRevokeObjectURL: any;
+
+    beforeEach(() => {
+        mockClick = vi.fn();
+        mockCreateElement = vi.spyOn(document, 'createElement').mockReturnValue({
+            href: '',
+            download: '',
+            click: mockClick,
+        } as any);
+
+        mockAppendChild = vi.spyOn(document.body, 'appendChild').mockImplementation(() => null as any);
+        mockRemoveChild = vi.spyOn(document.body, 'removeChild').mockImplementation(() => null as any);
+
+
+        mockCreateObjectURL = vi.fn().mockReturnValue('blob:test-url');
+        mockRevokeObjectURL = vi.fn();
+
+        originalCreateObjectURL = global.URL.createObjectURL;
+        originalRevokeObjectURL = global.URL.revokeObjectURL;
+
+        global.URL.createObjectURL = mockCreateObjectURL;
+        global.URL.revokeObjectURL = mockRevokeObjectURL;
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+        global.URL.createObjectURL = originalCreateObjectURL;
+        global.URL.revokeObjectURL = originalRevokeObjectURL;
+    });
+
+    it('shows toast when no transactions exist', () => {
+      useStore.getState().exportTransactionsCSV();
+
+      const toasts = useStore.getState().toasts;
+      expect(toasts.length).toBeGreaterThan(0);
+      expect(toasts[toasts.length - 1].message).toBe('No transactions to export.');
+      expect(toasts[toasts.length - 1].type).toBe('info');
+      expect(mockCreateObjectURL).not.toHaveBeenCalled();
+    });
+
+    it('exports CSV and handles special characters in fields', () => {
+      // Setup student
+      useStore.getState().addStudent({
+        firstName: 'Test "Student"', lastName: 'With, Comma\nAndNewline', contact: {}, tuition: { subjects: [], defaultRate: 50, rateType: 'hourly', typicalLessonDuration: 60 }
+      });
+      const studentId = useStore.getState().students[0].id;
+
+      // Add a transaction
+      useStore.getState().addTransaction({
+        studentId,
+        date: new Date('2023-01-01T10:00:00.000Z').toISOString(),
+        lessonDuration: 60,
+        lessonFee: 100,
+        amountPaid: 100,
+        paymentMethod: 'Bank, Transfer',
+        notes: 'Quote "test"\nnewline'
+      });
+
+      useStore.getState().exportTransactionsCSV();
+
+      expect(mockCreateObjectURL).toHaveBeenCalled();
+      expect(mockCreateElement).toHaveBeenCalledWith('a');
+      expect(mockAppendChild).toHaveBeenCalled();
+      expect(mockClick).toHaveBeenCalled();
+      expect(mockRemoveChild).toHaveBeenCalled();
+      expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:test-url');
+
+      const toasts = useStore.getState().toasts;
+      expect(toasts.length).toBeGreaterThan(0);
+      expect(toasts[toasts.length - 1].message).toBe('CSV exported successfully!');
+      expect(toasts[toasts.length - 1].type).toBe('success');
+    });
+
+    it('shows error toast if export fails', () => {
+      // Setup student and transaction to get past the early return
+      useStore.getState().addStudent({
+        firstName: 'Test', lastName: 'Student', contact: {}, tuition: { subjects: [], defaultRate: 50, rateType: 'hourly', typicalLessonDuration: 60 }
+      });
+      const studentId = useStore.getState().students[0].id;
+
+      useStore.getState().addTransaction({
+        studentId,
+        date: new Date().toISOString(),
+        lessonDuration: 60,
+        lessonFee: 100,
+        amountPaid: 100,
+        paymentMethod: 'Cash',
+      });
+
+      // Force an error
+      mockCreateObjectURL.mockImplementation(() => {
+        throw new Error('Test error');
+      });
+
+      useStore.getState().exportTransactionsCSV();
+
+      const toasts = useStore.getState().toasts;
+      expect(toasts.length).toBeGreaterThan(0);
+      expect(toasts[toasts.length - 1].message).toBe('Failed to export CSV.');
+      expect(toasts[toasts.length - 1].type).toBe('error');
+    });
+  });
 });
