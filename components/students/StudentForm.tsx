@@ -1,6 +1,6 @@
 import React from 'react';
 import { Student, PhoneNumber } from '../../types';
-import { Button, Input, Select, Textarea, PhoneInput, Icon } from '../ui';
+import { Button, Input, Select, Textarea, PhoneInput, FormSection } from '../ui';
 import { COUNTRIES, COUNTRY_CODE_MAP } from '../../constants';
 import { z } from 'zod';
 import { useForm, Controller } from 'react-hook-form';
@@ -115,11 +115,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({ student, onSave, onClo
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       <div className="space-y-6">
         {/* Basic Info */}
-        <div className="bg-gray-50 dark:bg-primary/50 p-6 rounded-3xl border border-gray-100 dark:border-white/5 space-y-4">
-          <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-            <Icon iconName="identification" className="w-4 h-4" />
-            Basic Info
-          </h4>
+        <FormSection title="Basic Info" icon="identification">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input 
               label="First Name" 
@@ -151,14 +147,10 @@ export const StudentForm: React.FC<StudentFormProps> = ({ student, onSave, onClo
             options={countryOptions} 
             error={errors.country?.message}
           />
-        </div>
+        </FormSection>
 
         {/* Parent Details */}
-        <div className="bg-gray-50 dark:bg-primary/50 p-6 rounded-3xl border border-gray-100 dark:border-white/5 space-y-4">
-          <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-            <Icon iconName="users" className="w-4 h-4" />
-            Parent/Guardian Details
-          </h4>
+        <FormSection title="Parent/Guardian Details" icon="users">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input 
               label="Parent Name" 
@@ -177,14 +169,10 @@ export const StudentForm: React.FC<StudentFormProps> = ({ student, onSave, onClo
               error={errors.parent?.relationship?.message}
             />
           </div>
-        </div>
+        </FormSection>
 
         {/* Contact Info */}
-        <div className="bg-gray-50 dark:bg-primary/50 p-6 rounded-3xl border border-gray-100 dark:border-white/5 space-y-4">
-          <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-            <Icon iconName="phone" className="w-4 h-4" />
-            Contact Information
-          </h4>
+        <FormSection title="Contact Information" icon="phone">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Controller
               name="contact.studentPhone"
@@ -231,14 +219,10 @@ export const StudentForm: React.FC<StudentFormProps> = ({ student, onSave, onClo
               placeholder="john.doe@example.com"
             />
           </div>
-        </div>
+        </FormSection>
 
         {/* Tuition Details */}
-        <div className="bg-gray-50 dark:bg-primary/50 p-6 rounded-3xl border border-gray-100 dark:border-white/5 space-y-4">
-          <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-            <Icon iconName="academic-cap" className="w-4 h-4" />
-            Tuition Details
-          </h4>
+        <FormSection title="Tuition Details" icon="academic-cap">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input 
               label="Subject(s)" 
@@ -299,21 +283,17 @@ export const StudentForm: React.FC<StudentFormProps> = ({ student, onSave, onClo
               ]} 
             />
           </div>
-        </div>
+        </FormSection>
         
         {/* Additional Notes */}
-        <div className="bg-gray-50 dark:bg-primary/50 p-6 rounded-3xl border border-gray-100 dark:border-white/5">
-          <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-            <Icon iconName="document-text" className="w-4 h-4" />
-            Additional Notes
-          </h4>
+        <FormSection title="Additional Notes" icon="document-text" className="space-y-0">
           <Textarea 
             label="Notes" 
             {...register('notes')} 
             error={errors.notes?.message}
             placeholder="Add any additional notes about the student here..."
           />
-        </div>
+        </FormSection>
       </div>
 
       <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 dark:border-white/10">

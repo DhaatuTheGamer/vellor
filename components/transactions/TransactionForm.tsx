@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useStore } from '../../store';
 import { Transaction, Student, PaymentStatus, AttendanceStatus } from '../../types';
-import { Button, Input, Select, Textarea, Icon } from '../ui';
+import { Button, Input, Select, Textarea, FormSection } from '../ui';
 import { z } from 'zod';
 import { useForm, DefaultValues } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -170,11 +170,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ transaction, s
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       <div className="space-y-6">
-        <div className="bg-gray-50 dark:bg-primary/50 p-6 rounded-3xl border border-gray-100 dark:border-white/5 space-y-4">
-          <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-            <Icon iconName="identification" className="w-4 h-4" />
-            Lesson Details
-          </h4>
+        <FormSection title="Lesson Details" icon="identification">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Select 
               label="Student" 
@@ -209,13 +205,9 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ transaction, s
             error={errors.lessonDuration?.message}
             helperText={studentRateType === 'monthly' ? 'e.g., 1 for 1 month' : 'e.g., 60 for 60 minutes'}
           />
-        </div>
+        </FormSection>
 
-        <div className="bg-gray-50 dark:bg-primary/50 p-6 rounded-3xl border border-gray-100 dark:border-white/5 space-y-4">
-          <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-            <Icon iconName="banknotes" className="w-4 h-4" />
-            Payment Information
-          </h4>
+        <FormSection title="Payment Information" icon="banknotes">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input 
               label={`Lesson Fee (${currencySymbol})`} 
@@ -241,13 +233,9 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ transaction, s
             error={errors.paymentMethod?.message}
             placeholder="e.g. Cash, Bank Transfer" 
           />
-        </div>
+        </FormSection>
 
-        <div className="bg-gray-50 dark:bg-primary/50 p-6 rounded-3xl border border-gray-100 dark:border-white/5 space-y-4">
-          <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-            <Icon iconName="star" className="w-4 h-4" />
-            Academic Progress
-          </h4>
+        <FormSection title="Academic Progress" icon="star">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
              <Select 
                label="Grade / Rating" 
@@ -271,19 +259,15 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ transaction, s
                error={errors.progressRemark?.message}
              />
           </div>
-        </div>
+        </FormSection>
 
-        <div className="bg-gray-50 dark:bg-primary/50 p-6 rounded-3xl border border-gray-100 dark:border-white/5">
-          <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-            <Icon iconName="document-text" className="w-4 h-4" />
-            Additional Notes
-          </h4>
+        <FormSection title="Additional Notes" icon="document-text" className="space-y-0">
           <Textarea 
             label="Notes" 
             {...register('notes')} 
             error={errors.notes?.message}
           />
-        </div>
+        </FormSection>
       </div>
 
       <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 dark:border-white/10">
