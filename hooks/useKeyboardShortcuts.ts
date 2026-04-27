@@ -45,19 +45,25 @@ export const useKeyboardShortcuts = (
         } 
         // Or mark all due transactions for hovered student as paid
         else if (currentHoveredStudentId) {
-          const studentDueTransactions = store.transactions.filter(
-            tx => tx.studentId === currentHoveredStudentId && 
-            (tx.status === PaymentStatus.Due || tx.status === PaymentStatus.PartiallyPaid)
-          );
-          
-          if (studentDueTransactions.length > 0) {
-            studentDueTransactions.forEach(t => {
+          // ⚡ Bolt Performance: Replace chained .filter().forEach() with a single-pass index-based
+          // for loop to avoid intermediate array allocations and garbage collection spikes.
+          let markedCount = 0;
+          for (let i = 0, len = store.transactions.length; i < len; i++) {
+            const t = store.transactions[i];
+            if (
+              t.studentId === currentHoveredStudentId &&
+              (t.status === PaymentStatus.Due || t.status === PaymentStatus.PartiallyPaid)
+            ) {
               store.updateTransaction(t.id, {
                 amountPaid: t.lessonFee,
                 status: PaymentStatus.Paid
               });
-            });
-            store.addToast(`Marked ${studentDueTransactions.length} lesson(s) as paid!`, 'success');
+              markedCount++;
+            }
+          }
+
+          if (markedCount > 0) {
+            store.addToast(`Marked ${markedCount} lesson(s) as paid!`, 'success');
           } else {
             store.addToast('No due lessons found for this student.', 'info');
           }
