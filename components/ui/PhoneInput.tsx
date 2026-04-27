@@ -40,12 +40,13 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({ label, name, value, onCh
   
   return (
     <div className={wrapperClassName}>
-      {label && <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 ml-1">{label}</label>}
+      {label && <label htmlFor={`${name}.number`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 ml-1">{label}</label>}
       <div className="flex items-center">
         <span className="inline-flex items-center px-4 py-3 rounded-l-2xl border border-r-0 border-gray-200 bg-gray-50 text-gray-500 text-sm dark:bg-primary/50 dark:border-white/10 dark:text-gray-400 font-medium">
           {value.countryCode}
         </span>
         <Input
+          id={`${name}.number`}
           name={`${name}.number`}
           type="tel"
           value={value.number}
