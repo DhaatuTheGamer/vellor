@@ -20,7 +20,7 @@ export const SetupEncryption: React.FC<{ onUnlocked: () => void }> = ({ onUnlock
   const handleUnlock = async () => {
     try {
       if (isFirstTime) {
-        if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
+        if (password.length < 12) { setError("Password must be at least 12 characters."); return; }
         const salt = generateSalt();
         localStorage.setItem('vellor-salt', btoa(String.fromCharCode(...salt)));
         const key = await deriveKey(password, salt);

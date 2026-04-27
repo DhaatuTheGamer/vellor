@@ -65,4 +65,40 @@ describe('SetupEncryption', () => {
       expect(mockOnUnlocked).not.toHaveBeenCalled();
     });
   });
+
+  it('enforces 12-character minimum password length during first-time setup', async () => {
+    // Setup for "first time"
+    localStorage.removeItem('vellor-salt');
+
+    const mockOnUnlocked = vi.fn();
+    render(<SetupEncryption onUnlocked={mockOnUnlocked} />);
+
+    // Wait for the form to appear
+    await screen.findByText('Set Master Password');
+
+    // Type a short password (6 characters)
+    const input = screen.getByPlaceholderText('Master Password');
+    await userEvent.type(input, '123456');
+
+    // Click set password
+    const button = screen.getByRole('button', { name: 'Set Password & Start' });
+    await userEvent.click(button);
+
+    // Verify error message
+    await waitFor(() => {
+      expect(screen.getByText('Password must be at least 12 characters.')).toBeInTheDocument();
+      expect(crypto.deriveKey).not.toHaveBeenCalled();
+    });
+
+    // Type a 12-character password
+    await userEvent.clear(input);
+    await userEvent.type(input, 'password1234');
+    await userEvent.click(button);
+
+    // Verify it proceeds
+    await waitFor(() => {
+      expect(screen.queryByText('Password must be at least 12 characters.')).not.toBeInTheDocument();
+      expect(crypto.deriveKey).toHaveBeenCalled();
+    });
+  });
 });
