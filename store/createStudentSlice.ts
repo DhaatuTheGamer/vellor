@@ -120,7 +120,6 @@ export const createStudentSlice: StateCreator<AppState, [], [], StudentSlice> = 
 
     set(state => {
       // ⚡ Bolt Performance: Use an optimized array removal strategy that avoids allocation
-      // if no elements match the condition, preserving existing references to prevent re-renders.
       let newStudents = state.students;
       for (let i = 0, len = state.students.length; i < len; i++) {
         if (state.students[i].id === studentId) {
