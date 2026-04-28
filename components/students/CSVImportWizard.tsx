@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Modal, Icon, Select } from '../ui';
 import { useStore } from '../../store';
-import { PaymentStatus } from '../../types';
+import { PaymentStatus, IconName, StudentFormData, TransactionFormData } from '../../types';
 import { parseCSV, bulkMapCSVRows, ImportMapping, ImportResult } from '../../helpers/csvParser';
 import { findConflicts, resolveConflict, ConflictStrategy } from '../../helpers/conflictResolution';
 
@@ -56,9 +56,10 @@ const MappingStep: React.FC<MappingStepProps> = ({
     setStep,
     handleImport
 }) => {
-    const [activeCategory, setActiveCategory] = useState<'student' | 'guardian' | 'financial'>('student');
+    type CategoryId = 'student' | 'guardian' | 'financial';
+    const [activeCategory, setActiveCategory] = useState<CategoryId>('student');
 
-    const categories = [
+    const categories: { id: CategoryId; label: string; icon: IconName }[] = [
         { id: 'student', label: 'Student Info', icon: 'user' },
         { id: 'guardian', label: 'Guardian', icon: 'users' },
         { id: 'financial', label: 'Payments & Lessons', icon: 'currency-dollar' }
@@ -97,14 +98,14 @@ const MappingStep: React.FC<MappingStepProps> = ({
                 {categories.map(cat => (
                     <button
                         key={cat.id}
-                        onClick={() => setActiveCategory(cat.id as any)}
+                        onClick={() => setActiveCategory(cat.id)}
                         className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-bold transition-all ${
                             activeCategory === cat.id 
                                 ? 'bg-white dark:bg-primary-light text-accent shadow-sm' 
                                 : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
                         }`}
                     >
-                        <Icon iconName={cat.icon as any} className="w-4 h-4" />
+                        <Icon iconName={cat.icon} className="w-4 h-4" />
                         <span className="hidden sm:inline">{cat.label}</span>
                     </button>
                 ))}
@@ -116,7 +117,7 @@ const MappingStep: React.FC<MappingStepProps> = ({
                        <span className="text-sm font-bold text-gray-700 dark:text-gray-300 sm:w-1/3 truncate">{label}</span>
                        <div className="sm:w-2/3">
                            <Select
-                             value={(mapping as any)[field] || ''}
+                             value={(mapping[field as keyof ImportMapping] as string) || ''}
                              onChange={e => setMapping({...mapping, [field]: e.target.value})}
                              options={[{label: '-- Skip Field --', value: ''}, ...originalHeaders.map(h => ({label: h, value: h}))]}
                            />
@@ -163,7 +164,7 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
              setCsvData(data);
              
              // Enhanced Auto-Map logic
-             const newMap: any = {};
+             const newMap: Partial<ImportMapping> = {};
              headers.forEach(h => {
                  const hl = h.toLowerCase();
                  if (!newMap.firstName && (hl === 'first name' || hl === 'name' || hl === 'firstname')) newMap.firstName = h;
@@ -175,7 +176,7 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
                  if (!newMap.guardianName && (hl.includes('parent') || hl.includes('guardian'))) newMap.guardianName = h;
                  if (!newMap.paymentAmount && (hl.includes('paid') || hl.includes('amount'))) newMap.paymentAmount = h;
              });
-             setMapping(newMap);
+             setMapping({ firstName: '', ...newMap } as ImportMapping);
              setStep(2);
         };
         reader.readAsText(file);
@@ -197,7 +198,7 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
                     studentId = resolved.id;
                 }
             } else {
-                const newStudent = addStudent(entities.student as any);
+                const newStudent = addStudent(entities.student as StudentFormData);
                 studentId = newStudent.id;
             }
 
@@ -211,7 +212,7 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
                         status: PaymentStatus.Paid,
                         paymentMethod: 'Other',
                         notes: 'Imported via CSV'
-                    } as any);
+                    } as TransactionFormData);
                 }
                 if (entities.lesson && !entities.payment) {
                     addTransaction({
@@ -222,7 +223,7 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
                         status: PaymentStatus.Due,
                         paymentMethod: '',
                         notes: 'Imported via CSV'
-                    } as any);
+                    } as TransactionFormData);
                 }
             }
         }
