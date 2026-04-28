@@ -18,6 +18,6 @@
 **Learning:** Found some icon-only buttons missing tooltips on hover (only having `aria-label`s for screen readers).
 **Action:** Consistently ensure that all icon-only buttons have a `title` attribute so sighted users can understand the button's action without a text label.
 
-## 2024-04-27 - Input Accessibility Attributes
+## 2026-04-27 - Input Accessibility Attributes
 **Learning:** Some custom input components and form fields in the auth flow lacked proper ARIA labels or id-htmlFor linkages, which impacts screen reader users and click-to-focus behavior.
 **Action:** When creating or modifying custom input components, ensure that labels are explicitly linked to inputs using `htmlFor` and `id`, or that inputs have `aria-label`s if visual labels are omitted.
