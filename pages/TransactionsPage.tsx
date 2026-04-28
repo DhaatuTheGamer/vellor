@@ -6,7 +6,7 @@ import { Button, Modal, Card, Icon, ConfirmationModal } from '../components/ui';
 import { TransactionForm } from '../components/transactions/TransactionForm';
 import { TransactionListItem } from '../components/transactions/TransactionListItem';
 import { QuickLogModal } from '../components/transactions/QuickLogModal';
-import { generateInvoicePDF, generateBulkInvoicePDF } from '../pdf';
+import { generateBulkInvoicePDF } from '../pdf';
 import { generateWhatsAppLink } from '../helpers';
 import { motion } from 'framer-motion';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
@@ -88,16 +88,6 @@ export const TransactionsPage: React.FC = () => {
     return map;
   }, [students]);
 
-  const handleGenerateInvoice = (transaction: Transaction) => {
-    const entry = studentsMap[transaction.studentId];
-    if (entry) {
-      generateInvoicePDF(transaction, entry.student, settings);
-      addToast('Invoice generated successfully.', 'success');
-    } else {
-      addToast('Student not found.', 'error');
-    }
-  };
-
   const handleShareWhatsApp = async (transaction: Transaction) => {
     const entry = studentsMap[transaction.studentId];
     if (!entry) return addToast('Student not found.', 'error');
@@ -105,23 +95,18 @@ export const TransactionsPage: React.FC = () => {
 
     try {
       if (navigator.share) {
-         const blob = generateInvoicePDF(transaction, student, settings, true) as Blob;
-         if (!blob) return;
-         const file = new File([blob], `Invoice_${student.firstName}_${transaction.date.split('T')[0]}.pdf`, { type: 'application/pdf' });
          await navigator.share({
            title: 'Tutoring Invoice',
-           text: `Hello ${student.firstName}, here is your latest invoice from ${settings.userName}.`,
-           files: [file]
+           text: `Hello ${student.firstName}, your invoice for ${settings.currencySymbol}${transaction.lessonFee} is ready.`,
          });
          addToast('Shared via WhatsApp!', 'success');
       } else {
-         addToast('Native file sharing is not supported on this browser/device.', 'error');
          // Fallback just text to parent's phone or student's phone
          const phoneToUse = student.contact.parentPhone1 || student.contact.studentPhone;
          const message = `Hello ${student.firstName}, your invoice for ${settings.currencySymbol}${transaction.lessonFee} is ready.`;
          window.open(generateWhatsAppLink(phoneToUse, message), '_blank');
       }
-    } catch (e) {
+    } catch {
       // user likely cancelled sharing
     }
   };
@@ -366,7 +351,6 @@ export const TransactionsPage: React.FC = () => {
                       studentName={student ? `${student.firstName} ${student.lastName}` : 'Unknown Student'}
                       onEdit={handleEditTransaction}
                       onDelete={handleDeleteRequest}
-                      onGenerateInvoice={handleGenerateInvoice}
                       onShareWhatsApp={handleShareWhatsApp}
                       currencySymbol={settings.currencySymbol}
                     />

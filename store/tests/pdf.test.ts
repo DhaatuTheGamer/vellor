@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { generateInvoicePDF, generateProgressReportPDF, generateBulkInvoicePDF } from '../../pdf';
+import { generateProgressReportPDF, generateBulkInvoicePDF } from '../../pdf';
 import { Student, Transaction, AppSettings, PaymentStatus } from '../../types';
 
 // Properly mock jsPDF as a class
@@ -65,19 +65,6 @@ describe('pdf.ts utilities', () => {
     };
   });
 
-  it('should generate an invoice PDF and return blob when returnBlob is true', () => {
-    generateInvoicePDF(mockTransaction, mockStudent, mockSettings, true);
-
-    expect(mockJsPDFInstance.output).toHaveBeenCalledWith('blob');
-  });
-
-  it('should generate an invoice PDF and save when returnBlob is false', () => {
-    generateInvoicePDF(mockTransaction, mockStudent, mockSettings, false);
-
-    expect(mockJsPDFInstance.save).toHaveBeenCalled();
-    expect(mockJsPDFInstance.save).toHaveBeenCalledWith(expect.stringContaining('Invoice_John_'));
-  });
-
   it('should generate a progress report PDF and save', () => {
     generateProgressReportPDF(mockStudent, [mockTransaction], mockSettings, 'Great job!');
 
@@ -98,30 +85,5 @@ describe('pdf.ts utilities', () => {
     expect(result).toBe(true);
     expect(mockJsPDFInstance.save).toHaveBeenCalled();
     expect(mockJsPDFInstance.save).toHaveBeenCalledWith(expect.stringContaining('Monthly_Invoices_'));
-  });
-
-  it('should handle different invoice templates properly', () => {
-     generateInvoicePDF(mockTransaction, mockStudent, { ...mockSettings, invoiceTemplate: 'classic' }, false);
-     expect(mockJsPDFInstance.setFont).toHaveBeenCalledWith('times', 'bold');
-
-     vi.clearAllMocks();
-     generateInvoicePDF(mockTransaction, mockStudent, { ...mockSettings, invoiceTemplate: 'minimal' }, false);
-     expect(mockJsPDFInstance.setFontSize).toHaveBeenCalledWith(16); // specific to minimal template
-  });
-
-  it('should ignore logo injection failure and proceed with PDF generation', () => {
-    mockJsPDFInstance.addImage.mockImplementationOnce(() => {
-      throw new Error('Failed to add image');
-    });
-
-    const settingsWithLogo = { ...mockSettings, invoiceLogoBase64: 'data:image/jpeg;base64,invalid' };
-
-    expect(() => {
-      generateInvoicePDF(mockTransaction, mockStudent, settingsWithLogo, false);
-    }).not.toThrow();
-
-    expect(mockJsPDFInstance.addImage).toHaveBeenCalled();
-    expect(mockJsPDFInstance.save).toHaveBeenCalled();
-    expect(mockJsPDFInstance.save).toHaveBeenCalledWith(expect.stringContaining('Invoice_John_'));
   });
 });

@@ -8,7 +8,7 @@ import { StudentForm } from '../components/students/StudentForm';
 import { StudentListItem } from '../components/students/StudentListItem';
 import { TransactionForm } from '../components/transactions/TransactionForm';
 import { QuickLogModal } from '../components/transactions/QuickLogModal';
-import { generateInvoicePDF } from '../pdf';
+import { generateBulkInvoicePDF } from '../pdf';
 import { CSVImportWizard } from '../components/students/CSVImportWizard';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -199,14 +199,21 @@ export const StudentsPage: React.FC = () => {
       }
 
       const unpaidStudentIds = Object.keys(firstUnpaidMap);
+      const toExportStudents = [];
+      const toExportTransactions = [];
       for (let i = 0; i < unpaidStudentIds.length; i++) {
           const studentId = unpaidStudentIds[i];
           const t = firstUnpaidMap[studentId];
           const student = selectedStudentMap[studentId];
           if (student) {
-              generateInvoicePDF(t, student, settings);
+              toExportStudents.push(student);
+              toExportTransactions.push(t);
               count++;
           }
+      }
+
+      if (count > 0) {
+          generateBulkInvoicePDF(toExportStudents, toExportTransactions, settings);
       }
 
       addToast(count > 0 ? `Exported ${count} invoices!` : 'No unpaid lessons to export for selected students.', count > 0 ? 'success' : 'info');
