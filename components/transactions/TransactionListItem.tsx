@@ -19,15 +19,13 @@ interface TransactionListItemProps {
   onDelete: (transaction: Transaction) => void;
   /** Current currency symbol. */
   currencySymbol: string;
-  /** Callback to generate an invoice. */
-  onGenerateInvoice?: (transaction: Transaction) => void;
   /** Callback to share invoice via WhatsApp. */
   onShareWhatsApp?: (transaction: Transaction) => void;
 }
 /**
  * Displays a summary of a single transaction in a list.
  */
-export const TransactionListItem: React.FC<TransactionListItemProps> = React.memo(({ transaction, studentName, onEdit, onDelete, onGenerateInvoice, onShareWhatsApp, currencySymbol }) => {
+export const TransactionListItem: React.FC<TransactionListItemProps> = React.memo(({ transaction, studentName, onEdit, onDelete, onShareWhatsApp, currencySymbol }) => {
   return (
     <Card
       className="hover:border-accent/50 transition-colors duration-300 group border border-white/20 dark:border-white/5 shadow-xl shadow-black/5 bg-white/60 dark:bg-primary-light/60 backdrop-blur-xl"
@@ -82,11 +80,6 @@ export const TransactionListItem: React.FC<TransactionListItemProps> = React.mem
             {onShareWhatsApp && (
               <Button variant="ghost" size="sm" onClick={() => onShareWhatsApp(transaction)} className="!p-2 rounded-full text-green-500 hover:text-green-600 hover:bg-green-500/10" aria-label="Share via WhatsApp" title="Share via WhatsApp">
                 <Icon iconName="share" className="w-5 h-5" />
-              </Button>
-            )}
-            {onGenerateInvoice && (
-              <Button variant="ghost" size="sm" onClick={() => onGenerateInvoice(transaction)} className="!p-2 rounded-full text-gray-400 hover:text-accent hover:bg-accent/10" aria-label="Generate invoice" title="Generate invoice">
-                <Icon iconName="document-text" className="w-5 h-5" />
               </Button>
             )}
             <Button variant="ghost" size="sm" onClick={() => onEdit(transaction)} className="!p-2 rounded-full text-gray-400 hover:text-accent hover:bg-accent/10" aria-label="Edit transaction" title="Edit transaction">
