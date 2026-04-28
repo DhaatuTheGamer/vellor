@@ -3,7 +3,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import { WelcomePage } from '../../pages/WelcomePage';
-import { DEFAULT_USER_NAME } from '../../constants';
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async (importOriginal) => {
@@ -69,24 +68,6 @@ describe('WelcomePage', () => {
         <WelcomePage />
       </MemoryRouter>
     );
-
-    const form = screen.getByRole('button', { name: /Get Started/i }).closest('form');
-    fireEvent.submit(form!);
-
-    expect(window.alert).toHaveBeenCalledWith('Please enter a valid name.');
-    expect(mockUpdateSettings).not.toHaveBeenCalled();
-    expect(mockNavigate).not.toHaveBeenCalled();
-  });
-
-  it('prevents submission with DEFAULT_USER_NAME', async () => {
-    render(
-      <MemoryRouter>
-        <WelcomePage />
-      </MemoryRouter>
-    );
-
-    const nameInput = screen.getByLabelText(/Your Name/i);
-    fireEvent.change(nameInput, { target: { value: DEFAULT_USER_NAME } });
 
     const form = screen.getByRole('button', { name: /Get Started/i }).closest('form');
     fireEvent.submit(form!);

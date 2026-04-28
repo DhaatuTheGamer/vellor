@@ -233,11 +233,6 @@ COUNTRIES.forEach(c => {
 export const DEFAULT_CURRENCY_SYMBOL = '$';
 
 /**
- * Default user name (tutor's name) used for personalization if not set.
- */
-export const DEFAULT_USER_NAME = "Teacher";
-
-/**
  * Defines the levels and names for tutor ranks based on accumulated points.
  * Used in the gamification system.
  */
