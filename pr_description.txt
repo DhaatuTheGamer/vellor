@@ -1,0 +1,13 @@
+🎯 **What:** Extracted the duplicate inline `crypto.randomUUID()` implementations across multiple component and store files into a newly created `generateId` utility in `helpers.ts`. Replaced direct usages of `crypto.randomUUID()` with imports to the new `generateId` function in:
+- `components/students/StudentForm.tsx`
+- `components/transactions/TransactionForm.tsx`
+- `store/createStudentSlice.ts`
+- `store/createTransactionSlice.ts`
+- `store/createUISlice.ts`
+- `store/tests/StudentForm.test.tsx` (updated mock)
+
+💡 **Why:** Having a single, shared source for generating unique IDs prevents duplication across the codebase. It improves maintainability because if the unique identifier generation mechanism ever needs to change (e.g., to nano id), we can simply update the single utility function in `helpers.ts` instead of tracking down every place `crypto.randomUUID()` was directly invoked.
+
+✅ **Verification:** Verified by checking that `pnpm lint` and `pnpm test` successfully completed without any errors or regressions. Tested `store/tests/StudentForm.test.tsx` with updated spies to ensure the function mocks work effectively.
+
+✨ **Result:** Cleaned up code health related to duplicate behavior and successfully centralized ID generation, improving modularity and keeping the app behavior identical to before.
