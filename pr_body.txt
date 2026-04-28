@@ -1,7 +1,0 @@
-🎯 **What:** Removed the `export` keyword from `ErrorBoundaryProps` and `ErrorBoundaryState` interfaces in `components/error/ErrorBoundary.tsx`.
-
-💡 **Why:** The issue described these types as being exported but not used elsewhere in the application. Removing the `export` keyword restricts their visibility to the file they are defined in, improving code encapsulation and reducing unnecessary global scope pollution.
-
-✅ **Verification:** Verified by checking the file contents directly with `cat` and verifying that the `pnpm lint` and `pnpm test` checks still pass successfully locally. This confirms there are no unintended imports of these types remaining elsewhere in the project.
-
-✨ **Result:** Enhanced code health through better encapsulation without altering any functional behavior of the `ErrorBoundary` component.
