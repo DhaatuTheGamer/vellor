@@ -5,6 +5,7 @@ import '@testing-library/jest-dom';
 import { StudentForm } from '../../components/students/StudentForm';
 import { Student } from '../../types';
 import { webcrypto } from 'node:crypto';
+import * as helpers from '../../helpers';
 
 // Polyfill crypto if needed
 if (!globalThis.crypto) {
@@ -18,7 +19,7 @@ describe('StudentForm', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.spyOn(globalThis.crypto, 'randomUUID').mockReturnValue('12345678-1234-1234-1234-123456789012');
+    vi.spyOn(helpers, 'generateId').mockReturnValue('12345678-1234-1234-1234-123456789012');
   });
 
   it('renders correctly for a new student', () => {

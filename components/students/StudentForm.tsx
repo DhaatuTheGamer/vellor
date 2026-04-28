@@ -1,5 +1,6 @@
 import React from 'react';
 import { Student, PhoneNumber } from '../../types';
+import { generateId } from '../../helpers';
 import { Button, Input, Select, Textarea, PhoneInput, Icon } from '../ui';
 import { COUNTRIES, COUNTRY_CODE_MAP } from '../../constants';
 import { z } from 'zod';
@@ -86,7 +87,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({ student, onSave, onClo
   const onSubmit = (data: StudentFormValues) => {
     // Merge generated fields (id, createdAt) with the validated form data.
     const studentToSave: Student = {
-      id: student?.id || crypto.randomUUID(),
+      id: student?.id || generateId(),
       createdAt: student?.createdAt || new Date().toISOString(),
       firstName: data.firstName,
       lastName: data.lastName,

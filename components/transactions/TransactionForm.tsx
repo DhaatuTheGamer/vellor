@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useStore } from '../../store';
 import { Transaction, Student, PaymentStatus, AttendanceStatus } from '../../types';
+import { generateId } from '../../helpers';
 import { Button, Input, Select, Textarea, Icon } from '../ui';
 import { z } from 'zod';
 import { useForm, DefaultValues } from 'react-hook-form';
@@ -149,7 +150,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ transaction, s
 
   const onSubmit = (data: TransactionFormValues) => {
     const transactionToSave: Transaction = {
-      id: transaction?.id || crypto.randomUUID(),
+      id: transaction?.id || generateId(),
       createdAt: transaction?.createdAt || new Date().toISOString(),
       ...data,
       status: PaymentStatus.Due, // This gets calculated accurately in store.ts upon adding/updating

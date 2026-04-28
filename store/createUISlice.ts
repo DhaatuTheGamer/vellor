@@ -1,13 +1,14 @@
 import { StateCreator } from 'zustand';
 import { AppState, UISlice } from './types';
 import { Activity } from '../types';
+import { generateId } from '../helpers';
 
 export const createUISlice: StateCreator<AppState, [], [], UISlice> = (set) => ({
   toasts: [],
   activityLog: [],
 
   addToast: (message, type = 'info') => {
-    const id = crypto.randomUUID();
+    const id = generateId();
     set(state => ({ toasts: [...state.toasts, { id, message, type }] }));
     setTimeout(() => {
       set(state => {
@@ -25,7 +26,7 @@ export const createUISlice: StateCreator<AppState, [], [], UISlice> = (set) => (
 
   logActivity: (message, icon) => {
     const newActivity: Activity = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       message,
       icon,
       timestamp: new Date().toISOString(),

@@ -1,6 +1,7 @@
 import { StateCreator } from 'zustand';
 import { AppState, StudentSlice } from './types';
 import { Student, StudentFormData } from '../types';
+import { generateId } from '../helpers';
 import { POINTS_ALLOCATION } from '../constants';
 import { sanitizeString } from '../helpers';
 
@@ -34,7 +35,7 @@ export const createStudentSlice: StateCreator<AppState, [], [], StudentSlice> = 
     const newStudent: Student = {
       ...sanitizedStudentData,
       searchName: `${sanitizedStudentData.firstName} ${sanitizedStudentData.lastName}`.toLowerCase(),
-      id: crypto.randomUUID(),
+      id: generateId(),
       createdAt: new Date().toISOString(),
     };
     

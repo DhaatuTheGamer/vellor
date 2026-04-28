@@ -1,6 +1,7 @@
 import { StateCreator } from 'zustand';
 import { AppState, TransactionSlice } from './types';
 import { Transaction, TransactionFormData, PaymentStatus } from '../types';
+import { generateId } from '../helpers';
 import { POINTS_ALLOCATION } from '../constants';
 import { sanitizeString } from '../helpers';
 
@@ -29,7 +30,7 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
 
     const newTransaction: Transaction = {
       ...sanitizedTransactionData,
-      id: crypto.randomUUID(),
+      id: generateId(),
       status,
       createdAt: new Date().toISOString(),
     };
