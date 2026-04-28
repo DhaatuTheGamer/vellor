@@ -7,6 +7,55 @@ import { sanitizeString } from '../helpers';
 export const createStudentSlice: StateCreator<AppState, [], [], StudentSlice> = (set, get) => ({
   students: [],
 
+  addStudents: (studentsData) => {
+    const newStudents: Student[] = [];
+
+    // ⚡ Bolt Performance: Process bulk additions inside a single loop to avoid N+1 state updates
+    for (let i = 0; i < studentsData.length; i++) {
+        const studentData = studentsData[i];
+        const sanitizedStudentData: StudentFormData = {
+          ...studentData,
+          firstName: sanitizeString(studentData.firstName),
+          lastName: sanitizeString(studentData.lastName),
+          country: sanitizeString(studentData.country),
+          parent: {
+            ...studentData.parent,
+            name: sanitizeString(studentData.parent?.name),
+            relationship: studentData.parent?.relationship ?? 'Parent',
+          },
+          contact: {
+            ...studentData.contact,
+            email: sanitizeString(studentData.contact?.email),
+            studentPhone: studentData.contact?.studentPhone ? { ...studentData.contact.studentPhone, number: sanitizeString(studentData.contact.studentPhone.number) } : undefined,
+            parentPhone1: studentData.contact?.parentPhone1 ? { ...studentData.contact.parentPhone1, number: sanitizeString(studentData.contact.parentPhone1.number) } : undefined,
+            parentPhone2: studentData.contact?.parentPhone2 ? { ...studentData.contact.parentPhone2, number: sanitizeString(studentData.contact.parentPhone2.number) } : undefined,
+          },
+          notes: sanitizeString(studentData.notes),
+          tuition: {
+            ...studentData.tuition,
+            subjects: studentData.tuition.subjects.map(subject => sanitizeString(subject)),
+          }
+        };
+        newStudents.push({
+          ...sanitizedStudentData,
+          searchName: `${sanitizedStudentData.firstName} ${sanitizedStudentData.lastName}`.toLowerCase(),
+          id: crypto.randomUUID(),
+          createdAt: new Date().toISOString(),
+        });
+    }
+
+    set(state => ({ students: [...state.students, ...newStudents] }));
+
+    if (newStudents.length > 0) {
+        get().addPoints(POINTS_ALLOCATION.ADD_STUDENT * newStudents.length, `Added ${newStudents.length} new students`);
+        get().addToast(`Successfully added ${newStudents.length} student${newStudents.length > 1 ? 's' : ''}.`, 'success');
+        get().logActivity(`Added ${newStudents.length} student${newStudents.length > 1 ? 's' : ''}`, 'users');
+        get().checkAndAwardAchievements();
+    }
+
+    return newStudents;
+  },
+
   addStudent: (studentData) => {
     const sanitizedStudentData: StudentFormData = {
       ...studentData,

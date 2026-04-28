@@ -141,9 +141,9 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
     const [importResult, setImportResult] = useState<ImportResult | null>(null);
     
     const students = useStore(s => s.students);
-    const addStudent = useStore(s => s.addStudent);
+    const addStudents = useStore(s => s.addStudents);
     const updateStudent = useStore(s => s.updateStudent);
-    const addTransaction = useStore(s => s.addTransaction);
+    const addTransactions = useStore(s => s.addTransactions);
     const addToast = useStore(s => s.addToast);
     
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -184,37 +184,55 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
     const handleImport = async () => {
         const result = bulkMapCSVRows(csvData, mapping);
         
-        for (const entities of result.entities) {
-            let studentId = '';
+        const newStudentsData: any[] = [];
+        const newTransactionsData: any[] = [];
+        const importedStudentMapping: { [index: number]: any } = {};
+
+        for (let i = 0; i < result.entities.length; i++) {
+            const entities = result.entities[i];
             const conflicts = findConflicts(entities.student, students);
             
             if (conflicts.length > 0) {
-                // For bulk import without a per-conflict UI yet, we default to "Overwrite" to update existing records
-                // In a future phase, we can add the "Prompt per Conflict" UI
                 const resolved = resolveConflict(entities.student, conflicts[0].existing, ConflictStrategy.Overwrite);
                 if (resolved) {
                     updateStudent(resolved.id, resolved);
-                    studentId = resolved.id;
+                    importedStudentMapping[i] = resolved.id;
                 }
             } else {
-                const newStudent = addStudent(entities.student as any);
-                studentId = newStudent.id;
+                newStudentsData.push(entities.student);
+                // We'll temporarily store the index so we know which transaction belongs to which new student
+                importedStudentMapping[i] = 'new_' + (newStudentsData.length - 1);
+            }
+        }
+
+        let createdStudents: any[] = [];
+        if (newStudentsData.length > 0) {
+            createdStudents = addStudents(newStudentsData);
+        }
+
+        for (let i = 0; i < result.entities.length; i++) {
+            const entities = result.entities[i];
+            let studentId = importedStudentMapping[i];
+
+            if (typeof studentId === 'string' && studentId.startsWith('new_')) {
+                const index = parseInt(studentId.split('_')[1], 10);
+                studentId = createdStudents[index]?.id;
             }
 
             if (studentId) {
                 if (entities.payment) {
-                    addTransaction({
+                    newTransactionsData.push({
                         studentId,
                         amountPaid: entities.payment.amount,
-                        lessonFee: entities.payment.amount, // Assume it covers the full fee if imported this way
+                        lessonFee: entities.payment.amount,
                         date: entities.payment.date,
                         status: PaymentStatus.Paid,
                         paymentMethod: 'Other',
                         notes: 'Imported via CSV'
-                    } as any);
+                    });
                 }
                 if (entities.lesson && !entities.payment) {
-                    addTransaction({
+                    newTransactionsData.push({
                         studentId,
                         amountPaid: 0,
                         lessonFee: entities.student.tuition?.defaultRate || 0,
@@ -222,9 +240,13 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
                         status: PaymentStatus.Due,
                         paymentMethod: '',
                         notes: 'Imported via CSV'
-                    } as any);
+                    });
                 }
             }
+        }
+
+        if (newTransactionsData.length > 0) {
+            addTransactions(newTransactionsData);
         }
         
         setImportResult(result);
