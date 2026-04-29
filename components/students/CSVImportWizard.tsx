@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Modal, Icon, Select } from '../ui';
 import { useStore } from '../../store';
-import { PaymentStatus, IconName, StudentFormData, TransactionFormData } from '../../types';
+import { PaymentStatus, StudentFormData, TransactionFormData } from '../../types';
 import { parseCSV, bulkMapCSVRows, ImportMapping, ImportResult } from '../../helpers/csvParser';
 import { findConflicts, resolveConflict, ConflictStrategy } from '../../helpers/conflictResolution';
 
@@ -56,10 +56,9 @@ const MappingStep: React.FC<MappingStepProps> = ({
     setStep,
     handleImport
 }) => {
-    type CategoryId = 'student' | 'guardian' | 'financial';
-    const [activeCategory, setActiveCategory] = useState<CategoryId>('student');
+    const [activeCategory, setActiveCategory] = useState<'student' | 'guardian' | 'financial'>('student');
 
-    const categories: { id: CategoryId; label: string; icon: IconName }[] = [
+    const categories = [
         { id: 'student', label: 'Student Info', icon: 'user' },
         { id: 'guardian', label: 'Guardian', icon: 'users' },
         { id: 'financial', label: 'Payments & Lessons', icon: 'currency-dollar' }
@@ -98,14 +97,14 @@ const MappingStep: React.FC<MappingStepProps> = ({
                 {categories.map(cat => (
                     <button
                         key={cat.id}
-                        onClick={() => setActiveCategory(cat.id)}
+                        onClick={() => setActiveCategory(cat.id as any)}
                         className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-bold transition-all ${
                             activeCategory === cat.id 
                                 ? 'bg-white dark:bg-primary-light text-accent shadow-sm' 
                                 : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
                         }`}
                     >
-                        <Icon iconName={cat.icon} className="w-4 h-4" />
+                        <Icon iconName={cat.icon as any} className="w-4 h-4" />
                         <span className="hidden sm:inline">{cat.label}</span>
                     </button>
                 ))}
@@ -117,7 +116,7 @@ const MappingStep: React.FC<MappingStepProps> = ({
                        <span className="text-sm font-bold text-gray-700 dark:text-gray-300 sm:w-1/3 truncate">{label}</span>
                        <div className="sm:w-2/3">
                            <Select
-                             value={(mapping[field as keyof ImportMapping] as string) || ''}
+                             value={(mapping as any)[field] || ''}
                              onChange={e => setMapping({...mapping, [field]: e.target.value})}
                              options={[{label: '-- Skip Field --', value: ''}, ...originalHeaders.map(h => ({label: h, value: h}))]}
                            />
@@ -142,9 +141,9 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
     const [importResult, setImportResult] = useState<ImportResult | null>(null);
     
     const students = useStore(s => s.students);
-    const addStudent = useStore(s => s.addStudent);
+    const addStudents = useStore(s => s.addStudents);
     const updateStudent = useStore(s => s.updateStudent);
-    const addTransaction = useStore(s => s.addTransaction);
+    const addTransactions = useStore(s => s.addTransactions);
     const addToast = useStore(s => s.addToast);
     
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -164,7 +163,7 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
              setCsvData(data);
              
              // Enhanced Auto-Map logic
-             const newMap: Partial<ImportMapping> = {};
+             const newMap: any = {};
              headers.forEach(h => {
                  const hl = h.toLowerCase();
                  if (!newMap.firstName && (hl === 'first name' || hl === 'name' || hl === 'firstname')) newMap.firstName = h;
@@ -176,7 +175,7 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
                  if (!newMap.guardianName && (hl.includes('parent') || hl.includes('guardian'))) newMap.guardianName = h;
                  if (!newMap.paymentAmount && (hl.includes('paid') || hl.includes('amount'))) newMap.paymentAmount = h;
              });
-             setMapping({ firstName: '', ...newMap } as ImportMapping);
+             setMapping(newMap);
              setStep(2);
         };
         reader.readAsText(file);
@@ -185,47 +184,71 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
     const handleImport = async () => {
         const result = bulkMapCSVRows(csvData, mapping);
         
-        for (const entities of result.entities) {
-            let studentId = '';
+        const newStudentsData: StudentFormData[] = [];
+        const newTransactionsData: TransactionFormData[] = [];
+        const importedStudentMapping: { [index: number]: any } = {};
+
+        for (let i = 0; i < result.entities.length; i++) {
+            const entities = result.entities[i];
             const conflicts = findConflicts(entities.student, students);
             
             if (conflicts.length > 0) {
-                // For bulk import without a per-conflict UI yet, we default to "Overwrite" to update existing records
-                // In a future phase, we can add the "Prompt per Conflict" UI
                 const resolved = resolveConflict(entities.student, conflicts[0].existing, ConflictStrategy.Overwrite);
                 if (resolved) {
                     updateStudent(resolved.id, resolved);
-                    studentId = resolved.id;
+                    importedStudentMapping[i] = resolved.id;
                 }
             } else {
-                const newStudent = addStudent(entities.student as StudentFormData);
-                studentId = newStudent.id;
+                newStudentsData.push(entities.student as unknown as StudentFormData);
+                // We'll temporarily store the index so we know which transaction belongs to which new student
+                importedStudentMapping[i] = 'new_' + (newStudentsData.length - 1);
+            }
+        }
+
+        let createdStudents: any[] = [];
+        if (newStudentsData.length > 0) {
+            createdStudents = addStudents(newStudentsData);
+        }
+
+        for (let i = 0; i < result.entities.length; i++) {
+            const entities = result.entities[i];
+            let studentId = importedStudentMapping[i];
+
+            if (typeof studentId === 'string' && studentId.startsWith('new_')) {
+                const index = parseInt(studentId.split('_')[1], 10);
+                studentId = createdStudents[index]?.id;
             }
 
             if (studentId) {
                 if (entities.payment) {
-                    addTransaction({
+                    newTransactionsData.push({
                         studentId,
                         amountPaid: entities.payment.amount,
-                        lessonFee: entities.payment.amount, // Assume it covers the full fee if imported this way
+                        lessonFee: entities.payment.amount,
+                        lessonDuration: 60, // Default duration if unknown
                         date: entities.payment.date,
                         status: PaymentStatus.Paid,
                         paymentMethod: 'Other',
                         notes: 'Imported via CSV'
-                    } as TransactionFormData);
+                    });
                 }
                 if (entities.lesson && !entities.payment) {
-                    addTransaction({
+                    newTransactionsData.push({
                         studentId,
                         amountPaid: 0,
                         lessonFee: entities.student.tuition?.defaultRate || 0,
+                        lessonDuration: entities.lesson.duration || 60,
                         date: entities.lesson.date,
                         status: PaymentStatus.Due,
                         paymentMethod: '',
                         notes: 'Imported via CSV'
-                    } as TransactionFormData);
+                    });
                 }
             }
+        }
+
+        if (newTransactionsData.length > 0) {
+            addTransactions(newTransactionsData);
         }
         
         setImportResult(result);

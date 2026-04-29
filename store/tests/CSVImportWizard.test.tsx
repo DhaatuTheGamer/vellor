@@ -8,8 +8,10 @@ vi.mock('../../store', () => ({
     useStore: vi.fn((selector) => {
         const mockStore = {
             addStudent: vi.fn(() => ({ id: 'new-id' })),
+            addStudents: vi.fn((students) => students.map(() => ({ id: 'new-id' }))),
             updateStudent: vi.fn(),
             addTransaction: vi.fn(),
+            addTransactions: vi.fn(),
             addToast: vi.fn(),
             students: []
         };

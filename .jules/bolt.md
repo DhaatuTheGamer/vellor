@@ -38,3 +38,6 @@
 ## 2026-04-25 - String allocation optimization: split().map().filter() vs slice
 **Learning:** Chaining `.split('\n')` followed by `.map()` and `.filter()` to parse large multi-line strings (like CSV files) allocates massive intermediate arrays for every line and character transformation. This spikes memory usage and causes garbage collection pauses that slow down data import operations.
 **Action:** When parsing large delimited strings, replace higher-order chained methods with a single manual `while` loop that uses `indexOf()` and `slice()` to extract sub-strings directly into the final array, eliminating all intermediate array allocations.
+## 2026-04-28 - Bulk Zustand Actions
+**Learning:** Calling single-item state setters (like `addStudent`) inside a loop for large imports triggers N+1 state updates, crippling React render performance. Bulk actions are essential for high-throughput imports.
+**Action:** Implement array-based bulk actions (e.g. `addStudents`) that perform a single `set()` update to the store state when handling CSV imports or batch operations.

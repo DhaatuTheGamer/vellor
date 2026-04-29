@@ -3,6 +3,7 @@ import { Student, Transaction, GamificationStats, Achievement, AppSettings, Toas
 export interface StudentSlice {
   students: Student[];
   addStudent: (studentData: StudentFormData) => Student;
+  addStudents: (studentsData: StudentFormData[]) => Student[];
   updateStudent: (studentId: string, studentData: Partial<StudentFormData>) => Student | undefined;
   deleteStudent: (studentId: string) => void;
   getStudentById: (studentId: string) => Student | undefined;
@@ -11,6 +12,7 @@ export interface StudentSlice {
 export interface TransactionSlice {
   transactions: Transaction[];
   addTransaction: (transactionData: TransactionFormData) => Transaction;
+  addTransactions: (transactionsData: TransactionFormData[]) => Transaction[];
   updateTransaction: (transactionId: string, transactionData: Partial<TransactionFormData>) => Transaction | undefined;
   deleteTransaction: (transactionId: string) => void;
   getTransactionsByStudent: (studentId: string) => Transaction[];
