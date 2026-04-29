@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { AppSettings, PhoneNumber } from '../types';
-import { CURRENCY_OPTIONS, DEFAULT_USER_NAME, COUNTRIES, COUNTRY_CODE_MAP } from '../constants';
+import { CURRENCY_OPTIONS, COUNTRIES, COUNTRY_CODE_MAP } from '../constants';
 import { Button, Input, Select, Card, PhoneInput } from '../components/ui';
 import { motion } from 'framer-motion';
 
@@ -48,7 +48,7 @@ export const WelcomePage: React.FC = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (formData.userName.trim() === '' || formData.userName.trim() === DEFAULT_USER_NAME) {
+        if (formData.userName.trim() === '') {
             alert('Please enter a valid name.');
             return;
         }

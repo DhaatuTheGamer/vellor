@@ -1,7 +1,7 @@
 import { StateCreator } from 'zustand';
 import { AppState, DataManagementSlice } from './types';
 import { Theme } from '../types';
-import { DEFAULT_CURRENCY_SYMBOL, DEFAULT_USER_NAME, INITIAL_GAMIFICATION_STATS, ACHIEVEMENTS_DEFINITIONS } from '../constants';
+import { DEFAULT_CURRENCY_SYMBOL, INITIAL_GAMIFICATION_STATS, ACHIEVEMENTS_DEFINITIONS } from '../constants';
 import { backupSchema } from './validation';
 import { jsonReviver } from '../src/crypto';
 
@@ -114,7 +114,7 @@ export const createDataManagementSlice: StateCreator<AppState, [], [], DataManag
         gamification: INITIAL_GAMIFICATION_STATS,
         achievements: ACHIEVEMENTS_DEFINITIONS.map(a => ({...a, achieved: false })),
         settings: {
-            theme: Theme.Dark, currencySymbol: DEFAULT_CURRENCY_SYMBOL, userName: DEFAULT_USER_NAME,
+            theme: Theme.Dark, currencySymbol: DEFAULT_CURRENCY_SYMBOL, userName: '',
             country: 'United States',
             phone: { countryCode: '+1', number: '' }, email: '',
             monthlyGoal: 500,
@@ -130,7 +130,7 @@ export const createDataManagementSlice: StateCreator<AppState, [], [], DataManag
     set(state => ({
         settings: {
             ...state.settings,
-            userName: DEFAULT_USER_NAME,
+            userName: '',
             email: '',
         },
         masterKey: null
