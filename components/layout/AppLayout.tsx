@@ -251,8 +251,8 @@ export const AppLayout: React.FC = () => {
                 variant="ghost"
                 size="sm"
                 aria-label="Logout"
-                className="!p-2 rounded-full text-danger hover:bg-danger/10"
                 title="Logout"
+                className="!p-2 rounded-full text-danger hover:bg-danger/10"
               >
                 <Icon iconName="arrow-right-on-rectangle" className="w-5 h-5" />
               </Button>

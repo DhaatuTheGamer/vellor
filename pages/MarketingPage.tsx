@@ -161,6 +161,7 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
                 variant="ghost"
                 className="!p-2 shadow-none border-none hover:bg-black/5 dark:hover:bg-white/5"
                 aria-label={`Switch to ${settings.theme === Theme.Dark ? 'Light' : 'Dark'} Mode`}
+                title={`Switch to ${settings.theme === Theme.Dark ? 'Light' : 'Dark'} Mode`}
             >
                 <Icon iconName={settings.theme === Theme.Dark ? 'sun' : 'moon'} className="w-5 h-5 text-gray-700 dark:text-gray-300" />
             </Button>
@@ -174,6 +175,7 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
                 onClick={() => setIsMobileMenuOpen(true)}
                 className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 aria-label="Open navigation menu"
+                title="Open navigation menu"
             >
                 <Menu className="w-6 h-6" />
             </button>
@@ -579,6 +581,7 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
                                  className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 shadow-sm hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
                                  style={{ backgroundColor: color }}
                                  aria-label={`Switch theme color to ${color}`}
+                                 title={`Switch theme color to ${color}`}
                                />
                            ))}
                         </div>
@@ -931,7 +934,7 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
             >
               <div className="bg-gray-50 dark:bg-primary-light p-6 md:p-8 border-b border-gray-100 dark:border-white/5 flex items-center justify-between shrink-0">
                 <h2 className="text-2xl md:text-3xl font-bold font-display text-gray-900 dark:text-white">The "Anti-Spying" Privacy Policy</h2>
-                <button onClick={() => setIsPrivacyOpen(false)} className="p-2 bg-gray-200 dark:bg-white/10 hover:bg-gray-300 dark:hover:bg-white/20 rounded-full transition-colors self-start" aria-label="Close Privacy Policy">
+                <button onClick={() => setIsPrivacyOpen(false)} className="p-2 bg-gray-200 dark:bg-white/10 hover:bg-gray-300 dark:hover:bg-white/20 rounded-full transition-colors self-start" aria-label="Close Privacy Policy" title="Close Privacy Policy">
                   <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                 </button>
               </div>
@@ -982,7 +985,7 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
                   <h2 className="text-2xl md:text-3xl font-bold font-display text-gray-900 dark:text-white">The Modern Educator's Playbook</h2>
                   <p className="text-accent font-semibold mt-1">15 Golden Rules from Your Friendly Neighborhood Tutor</p>
                 </div>
-                <button onClick={() => setIsAdviceOpen(false)} className="p-2 bg-gray-200 dark:bg-white/10 hover:bg-gray-300 dark:hover:bg-white/20 rounded-full transition-colors self-start" aria-label="Close Friendly Tutor Advice">
+                <button onClick={() => setIsAdviceOpen(false)} className="p-2 bg-gray-200 dark:bg-white/10 hover:bg-gray-300 dark:hover:bg-white/20 rounded-full transition-colors self-start" aria-label="Close Friendly Tutor Advice" title="Close Friendly Tutor Advice">
                   <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                 </button>
               </div>
@@ -1086,7 +1089,7 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
             >
               <div className="bg-gray-50 dark:bg-primary-light p-6 md:p-8 border-b border-gray-100 dark:border-white/5 flex items-center justify-between shrink-0">
                 <h2 className="text-2xl md:text-3xl font-bold font-display text-gray-900 dark:text-white">The "No-Nonsense" Terms of Service</h2>
-                <button onClick={() => setIsTermsOpen(false)} className="p-2 bg-gray-200 dark:bg-white/10 hover:bg-gray-300 dark:hover:bg-white/20 rounded-full transition-colors self-start" aria-label="Close Terms of Service">
+                <button onClick={() => setIsTermsOpen(false)} className="p-2 bg-gray-200 dark:bg-white/10 hover:bg-gray-300 dark:hover:bg-white/20 rounded-full transition-colors self-start" aria-label="Close Terms of Service" title="Close Terms of Service">
                   <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                 </button>
               </div>
@@ -1154,6 +1157,7 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onGetStarted }) =>
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="p-2 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 rounded-full transition-colors"
                   aria-label="Close navigation menu"
+                  title="Close navigation menu"
                 >
                   <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                 </button>
