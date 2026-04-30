@@ -76,6 +76,85 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
     return newTransaction;
   },
 
+  bulkAddTransactions: (transactionsData) => {
+    const newTransactions: Transaction[] = [];
+    let shouldClearOverdue = false;
+    let pointsToAward = 0;
+
+    for (let i = 0; i < transactionsData.length; i++) {
+      const transactionData = transactionsData[i];
+      const sanitizedTransactionData: TransactionFormData = {
+        ...transactionData,
+        paymentMethod: sanitizeString(transactionData.paymentMethod),
+        notes: sanitizeString(transactionData.notes),
+        grade: sanitizeString(transactionData.grade),
+        progressRemark: sanitizeString(transactionData.progressRemark),
+      };
+
+      let status: PaymentStatus;
+      if (sanitizedTransactionData.status) {
+        status = sanitizedTransactionData.status;
+      } else if (sanitizedTransactionData.amountPaid >= sanitizedTransactionData.lessonFee) {
+        status = sanitizedTransactionData.amountPaid > sanitizedTransactionData.lessonFee ? PaymentStatus.Overpaid : PaymentStatus.Paid;
+      } else if (sanitizedTransactionData.amountPaid > 0 && sanitizedTransactionData.amountPaid < sanitizedTransactionData.lessonFee) {
+        status = PaymentStatus.PartiallyPaid;
+      } else {
+        status = PaymentStatus.Due;
+      }
+
+      const newTransaction: Transaction = {
+        ...sanitizedTransactionData,
+        id: crypto.randomUUID(),
+        status,
+        createdAt: new Date().toISOString(),
+      };
+
+      newTransactions.push(newTransaction);
+
+      if (status === PaymentStatus.Paid || status === PaymentStatus.Overpaid) {
+        pointsToAward += POINTS_ALLOCATION.LOG_PAYMENT_ON_TIME;
+
+        // Check overdue roughly
+        const student = get().getStudentById(newTransaction.studentId);
+        if(student) {
+          const allTransactions = get().transactions;
+          let totalDueForStudent = 0;
+          for (let j = 0; j < allTransactions.length; j++) {
+            const t = allTransactions[j];
+            if (t.studentId === newTransaction.studentId) {
+              if (t.status === PaymentStatus.Due) {
+                  totalDueForStudent += t.lessonFee;
+              } else if (t.status === PaymentStatus.PartiallyPaid) {
+                  totalDueForStudent += (t.lessonFee - t.amountPaid);
+              }
+            }
+          }
+          if (totalDueForStudent > 0 && (totalDueForStudent - newTransaction.amountPaid <= 0)) {
+              shouldClearOverdue = true;
+          }
+        }
+      }
+    }
+
+    if (newTransactions.length > 0) {
+      set(state => ({ transactions: [...state.transactions, ...newTransactions] }));
+
+      get().addToast(`Successfully logged ${newTransactions.length} transactions.`, 'success');
+      get().logActivity(`Bulk imported ${newTransactions.length} transactions`, 'banknotes');
+
+      if (pointsToAward > 0) {
+        get().addPoints(pointsToAward, `Logged ${newTransactions.length} payments`);
+      }
+      if (shouldClearOverdue) {
+        get().addPoints(POINTS_ALLOCATION.CLEAR_OVERDUE, `Cleared overdue payments via bulk import`);
+      }
+
+      get().checkAndAwardAchievements();
+    }
+
+    return newTransactions;
+  },
+
   updateTransaction: (transactionId, transactionData) => {
      let updatedTransaction: Transaction | undefined;
 

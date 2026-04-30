@@ -11,6 +11,7 @@ export interface StudentSlice {
 export interface TransactionSlice {
   transactions: Transaction[];
   addTransaction: (transactionData: TransactionFormData) => Transaction;
+  bulkAddTransactions: (transactionsData: TransactionFormData[]) => Transaction[];
   updateTransaction: (transactionId: string, transactionData: Partial<TransactionFormData>) => Transaction | undefined;
   deleteTransaction: (transactionId: string) => void;
   getTransactionsByStudent: (studentId: string) => Transaction[];

@@ -10,6 +10,7 @@ vi.mock('../../store', () => ({
             addStudent: vi.fn(() => ({ id: 'new-id' })),
             updateStudent: vi.fn(),
             addTransaction: vi.fn(),
+            bulkAddTransactions: vi.fn(),
             addToast: vi.fn(),
             students: []
         };
