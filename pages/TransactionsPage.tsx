@@ -6,7 +6,7 @@ import { Button, Modal, Card, Icon, ConfirmationModal } from '../components/ui';
 import { TransactionForm } from '../components/transactions/TransactionForm';
 import { TransactionListItem } from '../components/transactions/TransactionListItem';
 import { QuickLogModal } from '../components/transactions/QuickLogModal';
-import { generateInvoicePDF, generateBulkInvoicePDF } from '../pdf';
+import { generateBulkInvoicePDF } from '../pdf';
 import { generateWhatsAppLink } from '../helpers';
 import { motion } from 'framer-motion';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
@@ -88,16 +88,6 @@ export const TransactionsPage: React.FC = () => {
     return map;
   }, [students]);
 
-  const handleGenerateInvoice = (transaction: Transaction) => {
-    const entry = studentsMap[transaction.studentId];
-    if (entry) {
-      generateInvoicePDF(transaction, entry.student, settings);
-      addToast('Invoice generated successfully.', 'success');
-    } else {
-      addToast('Student not found.', 'error');
-    }
-  };
-
   const handleShareWhatsApp = async (transaction: Transaction) => {
     const entry = studentsMap[transaction.studentId];
     if (!entry) return addToast('Student not found.', 'error');
@@ -105,23 +95,18 @@ export const TransactionsPage: React.FC = () => {
 
     try {
       if (navigator.share) {
-         const blob = generateInvoicePDF(transaction, student, settings, true) as Blob;
-         if (!blob) return;
-         const file = new File([blob], `Invoice_${student.firstName}_${transaction.date.split('T')[0]}.pdf`, { type: 'application/pdf' });
          await navigator.share({
            title: 'Tutoring Invoice',
-           text: `Hello ${student.firstName}, here is your latest invoice from ${settings.userName}.`,
-           files: [file]
+           text: `Hello ${student.firstName}, your invoice for ${settings.currencySymbol}${transaction.lessonFee} is ready.`,
          });
          addToast('Shared via WhatsApp!', 'success');
       } else {
-         addToast('Native file sharing is not supported on this browser/device.', 'error');
          // Fallback just text to parent's phone or student's phone
          const phoneToUse = student.contact.parentPhone1 || student.contact.studentPhone;
          const message = `Hello ${student.firstName}, your invoice for ${settings.currencySymbol}${transaction.lessonFee} is ready.`;
          window.open(generateWhatsAppLink(phoneToUse, message), '_blank');
       }
-    } catch (e) {
+    } catch {
       // user likely cancelled sharing
     }
   };
@@ -266,6 +251,7 @@ export const TransactionsPage: React.FC = () => {
            <input 
               type="text" 
               aria-label="Search by student name"
+              title="Search by student name"
               placeholder="Search by student name..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -279,8 +265,8 @@ export const TransactionsPage: React.FC = () => {
                  searchInputRef.current?.focus();
                }}
                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-               title="Clear search"
                aria-label="Clear search"
+               title="Clear search"
              >
                <Icon iconName="x-mark" className="w-5 h-5" />
              </button>
@@ -290,6 +276,7 @@ export const TransactionsPage: React.FC = () => {
            <input 
               type="date"
               aria-label="Start date"
+              title="Start date"
               value={dateRange.start}
               onChange={(e) => setDateRange(prev => ({...prev, start: e.target.value}))}
               className="w-full px-4 py-2 border border-gray-200 dark:border-white/10 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent sm:text-sm bg-white dark:bg-primary-light transition-all duration-200 appearance-none"
@@ -298,6 +285,7 @@ export const TransactionsPage: React.FC = () => {
            <input 
               type="date"
               aria-label="End date"
+              title="End date"
               value={dateRange.end}
               onChange={(e) => setDateRange(prev => ({...prev, end: e.target.value}))}
               className="w-full px-4 py-2 border border-gray-200 dark:border-white/10 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent sm:text-sm bg-white dark:bg-primary-light transition-all duration-200 appearance-none"
@@ -366,7 +354,6 @@ export const TransactionsPage: React.FC = () => {
                       studentName={student ? `${student.firstName} ${student.lastName}` : 'Unknown Student'}
                       onEdit={handleEditTransaction}
                       onDelete={handleDeleteRequest}
-                      onGenerateInvoice={handleGenerateInvoice}
                       onShareWhatsApp={handleShareWhatsApp}
                       currencySymbol={settings.currencySymbol}
                     />

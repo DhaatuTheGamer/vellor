@@ -1,11 +1,58 @@
 import { StateCreator } from 'zustand';
 import { AppState, TransactionSlice } from './types';
 import { Transaction, TransactionFormData, PaymentStatus } from '../types';
+import { generateId } from '../helpers';
 import { POINTS_ALLOCATION } from '../constants';
 import { sanitizeString } from '../helpers';
 
 export const createTransactionSlice: StateCreator<AppState, [], [], TransactionSlice> = (set, get) => ({
   transactions: [],
+
+  addTransactions: (transactionsData) => {
+    const newTransactions: Transaction[] = [];
+
+    // ⚡ Bolt Performance: Process bulk additions inside a single loop to avoid N+1 state updates
+    for (let i = 0; i < transactionsData.length; i++) {
+        const transactionData = transactionsData[i];
+        const sanitizedTransactionData: TransactionFormData = {
+            ...transactionData,
+            paymentMethod: sanitizeString(transactionData.paymentMethod),
+            notes: sanitizeString(transactionData.notes),
+            grade: sanitizeString(transactionData.grade),
+            progressRemark: sanitizeString(transactionData.progressRemark),
+        };
+
+        let status: PaymentStatus;
+        if (sanitizedTransactionData.status) {
+            status = sanitizedTransactionData.status;
+        } else if (sanitizedTransactionData.amountPaid >= sanitizedTransactionData.lessonFee) {
+            status = sanitizedTransactionData.amountPaid > sanitizedTransactionData.lessonFee ? PaymentStatus.Overpaid : PaymentStatus.Paid;
+        } else if (sanitizedTransactionData.amountPaid > 0 && sanitizedTransactionData.amountPaid < sanitizedTransactionData.lessonFee) {
+            status = PaymentStatus.PartiallyPaid;
+        } else {
+            status = PaymentStatus.Due;
+        }
+
+        newTransactions.push({
+            ...sanitizedTransactionData,
+            id: crypto.randomUUID(),
+            status,
+            createdAt: new Date().toISOString(),
+        });
+    }
+
+    set(state => ({ transactions: [...state.transactions, ...newTransactions] }));
+
+    if (newTransactions.length > 0) {
+        get().addToast(`Logged ${newTransactions.length} transaction${newTransactions.length > 1 ? 's' : ''} successfully.`, 'success');
+        get().logActivity(`Logged ${newTransactions.length} transaction${newTransactions.length > 1 ? 's' : ''}`, 'banknotes');
+
+        // Simplified achievement checking for bulk - check once at the end
+        get().checkAndAwardAchievements();
+    }
+
+    return newTransactions;
+  },
 
   addTransaction: (transactionData) => {
     const sanitizedTransactionData: TransactionFormData = {
@@ -29,7 +76,7 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
 
     const newTransaction: Transaction = {
       ...sanitizedTransactionData,
-      id: crypto.randomUUID(),
+      id: generateId(),
       status,
       createdAt: new Date().toISOString(),
     };
@@ -221,7 +268,6 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
   deleteTransaction: (transactionId) => {
     set(state => {
       // ⚡ Bolt Performance: Use an optimized array removal strategy that avoids allocation
-      // if no elements match the condition, preserving existing references to prevent re-renders.
       let newTransactions = state.transactions;
       for (let i = 0, len = state.transactions.length; i < len; i++) {
         if (state.transactions[i].id === transactionId) {

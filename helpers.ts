@@ -5,6 +5,9 @@
 import DOMPurify from 'dompurify';
 import { PaymentStatus, PhoneNumber, Student, Transaction, AppSettings } from './types';
 
+// Shared ID generator to avoid circular dependencies
+export const generateId = () => crypto.randomUUID();
+
 /**
  * Sanitizes a string by stripping all HTML tags using DOMPurify.
  * @param {string | undefined} str The string to sanitize.

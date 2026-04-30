@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useStore } from '../../store';
 import { Theme } from '../../types';
-import { DEFAULT_USER_NAME, POINTS_ALLOCATION } from '../../constants';
+import { POINTS_ALLOCATION } from '../../constants';
 
 describe('createSettingsSlice', () => {
   beforeEach(() => {
@@ -11,7 +11,7 @@ describe('createSettingsSlice', () => {
       settings: {
         theme: Theme.Light,
         currencySymbol: '$',
-        userName: DEFAULT_USER_NAME,
+        userName: '',
         country: 'United States',
         phone: { countryCode: '+1', number: '' },
         email: '',
@@ -55,7 +55,7 @@ describe('createSettingsSlice', () => {
       expect(useStore.getState().settings.theme).toBe(Theme.Light);
     });
 
-    it('awards points and logs activity when profile setup is completed (userName changed from default)', () => {
+    it('awards points and logs activity when profile setup is completed (userName changed from empty)', () => {
       const addPointsMock = useStore.getState().addPoints;
       const logActivityMock = useStore.getState().logActivity;
 
@@ -66,8 +66,8 @@ describe('createSettingsSlice', () => {
       expect(useStore.getState().settings.userName).toBe('New Tutor Name');
     });
 
-    it('does not award points if userName was already changed from default', () => {
-      // Set initial state to non-default userName
+    it('does not award points if userName was already changed from empty', () => {
+      // Set initial state to non-empty userName
       useStore.setState({
         settings: { ...useStore.getState().settings, userName: 'Existing Tutor Name' }
       });

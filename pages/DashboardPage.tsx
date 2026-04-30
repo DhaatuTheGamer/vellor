@@ -246,6 +246,7 @@ export const DashboardPage: React.FC = () => {
                   onClick={() => setIsConfirmingClearAll(true)}
                   className="text-xs text-gray-500 hover:text-red-500 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary rounded"
                   aria-label="Clear all activity history"
+                  title="Clear all activity history"
                 >
                   Clear All
                 </button>

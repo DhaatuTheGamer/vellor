@@ -130,6 +130,7 @@ export const SetupEncryption: React.FC<{ onUnlocked: () => void }> = ({ onUnlock
                  onChange={e => { setPassword(e.target.value); setError(''); }}
                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-primary-dark text-gray-900 dark:text-white focus:ring-2 focus:ring-accent outline-none"
                  placeholder="Master Password"
+                 aria-label="Master Password"
                  onKeyDown={e => e.key === 'Enter' && handleUnlock()}
                />
              </div>
@@ -141,6 +142,7 @@ export const SetupEncryption: React.FC<{ onUnlocked: () => void }> = ({ onUnlock
                  onChange={e => { setRecoveryInput(e.target.value); setError(''); }}
                  className="w-full px-4 py-3 rounded-xl font-mono text-sm border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-primary-dark text-gray-900 dark:text-white focus:ring-2 focus:ring-accent outline-none"
                  placeholder="Paste your Recovery Key here"
+                 aria-label="Recovery Key"
                  onKeyDown={e => e.key === 'Enter' && handleUnlock()}
                />
              </div>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Modal, Icon, Select } from '../ui';
 import { useStore } from '../../store';
-import { PaymentStatus } from '../../types';
+import { PaymentStatus, StudentFormData, TransactionFormData } from '../../types';
 import { parseCSV, bulkMapCSVRows, ImportMapping, ImportResult } from '../../helpers/csvParser';
 import { findConflicts, resolveConflict, ConflictStrategy } from '../../helpers/conflictResolution';
 
@@ -141,7 +141,7 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
     const [importResult, setImportResult] = useState<ImportResult | null>(null);
     
     const students = useStore(s => s.students);
-    const addStudent = useStore(s => s.addStudent);
+    const addStudents = useStore(s => s.addStudents);
     const updateStudent = useStore(s => s.updateStudent);
     const bulkAddTransactions = useStore(s => s.bulkAddTransactions);
     const addToast = useStore(s => s.addToast);
@@ -185,21 +185,39 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
         const result = bulkMapCSVRows(csvData, mapping);
         const transactionsToAdd: any[] = [];
         
-        for (const entities of result.entities) {
-            let studentId = '';
+        const newStudentsData: StudentFormData[] = [];
+        const newTransactionsData: TransactionFormData[] = [];
+        const importedStudentMapping: { [index: number]: any } = {};
+
+        for (let i = 0; i < result.entities.length; i++) {
+            const entities = result.entities[i];
             const conflicts = findConflicts(entities.student, students);
             
             if (conflicts.length > 0) {
-                // For bulk import without a per-conflict UI yet, we default to "Overwrite" to update existing records
-                // In a future phase, we can add the "Prompt per Conflict" UI
                 const resolved = resolveConflict(entities.student, conflicts[0].existing, ConflictStrategy.Overwrite);
                 if (resolved) {
                     updateStudent(resolved.id, resolved);
-                    studentId = resolved.id;
+                    importedStudentMapping[i] = resolved.id;
                 }
             } else {
-                const newStudent = addStudent(entities.student as any);
-                studentId = newStudent.id;
+                newStudentsData.push(entities.student as unknown as StudentFormData);
+                // We'll temporarily store the index so we know which transaction belongs to which new student
+                importedStudentMapping[i] = 'new_' + (newStudentsData.length - 1);
+            }
+        }
+
+        let createdStudents: any[] = [];
+        if (newStudentsData.length > 0) {
+            createdStudents = addStudents(newStudentsData);
+        }
+
+        for (let i = 0; i < result.entities.length; i++) {
+            const entities = result.entities[i];
+            let studentId = importedStudentMapping[i];
+
+            if (typeof studentId === 'string' && studentId.startsWith('new_')) {
+                const index = parseInt(studentId.split('_')[1], 10);
+                studentId = createdStudents[index]?.id;
             }
 
             if (studentId) {
@@ -207,7 +225,8 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
                     transactionsToAdd.push({
                         studentId,
                         amountPaid: entities.payment.amount,
-                        lessonFee: entities.payment.amount, // Assume it covers the full fee if imported this way
+                        lessonFee: entities.payment.amount,
+                        lessonDuration: 60, // Default duration if unknown
                         date: entities.payment.date,
                         status: PaymentStatus.Paid,
                         paymentMethod: 'Other',
@@ -219,6 +238,7 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
                         studentId,
                         amountPaid: 0,
                         lessonFee: entities.student.tuition?.defaultRate || 0,
+                        lessonDuration: entities.lesson.duration || 60,
                         date: entities.lesson.date,
                         status: PaymentStatus.Due,
                         paymentMethod: '',

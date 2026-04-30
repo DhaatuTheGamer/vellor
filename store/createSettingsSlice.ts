@@ -1,7 +1,7 @@
 import { StateCreator } from 'zustand';
 import { AppState, SettingsSlice } from './types';
 import { Theme } from '../types';
-import { DEFAULT_CURRENCY_SYMBOL, DEFAULT_USER_NAME, POINTS_ALLOCATION } from '../constants';
+import { DEFAULT_CURRENCY_SYMBOL, POINTS_ALLOCATION } from '../constants';
 import { sanitizeString } from '../helpers';
 
 const getInitialTheme = (): Theme => {
@@ -15,7 +15,7 @@ export const createSettingsSlice: StateCreator<AppState, [], [], SettingsSlice> 
   settings: {
     theme: getInitialTheme(),
     currencySymbol: DEFAULT_CURRENCY_SYMBOL,
-    userName: DEFAULT_USER_NAME,
+    userName: '',
     country: 'United States',
     phone: { countryCode: '+1', number: '' },
     email: '',
@@ -31,7 +31,7 @@ export const createSettingsSlice: StateCreator<AppState, [], [], SettingsSlice> 
 
   updateSettings: (newSettings) => {
     const state = get();
-    if (state.settings.userName === DEFAULT_USER_NAME && newSettings.userName && newSettings.userName !== DEFAULT_USER_NAME) {
+    if (!state.settings.userName && newSettings.userName) {
         state.addPoints(POINTS_ALLOCATION.COMPLETE_PROFILE, "Completed profile setup!");
         state.logActivity('Completed profile setup', 'check-circle');
     }

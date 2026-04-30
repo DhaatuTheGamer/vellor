@@ -28,7 +28,6 @@ vi.mock('framer-motion', () => ({
 
 // Mock PDF and Helpers
 vi.mock('../../pdf', () => ({
-  generateInvoicePDF: vi.fn(),
   generateBulkInvoicePDF: vi.fn().mockReturnValue(true),
 }));
 vi.mock('../../helpers', async (importOriginal) => {

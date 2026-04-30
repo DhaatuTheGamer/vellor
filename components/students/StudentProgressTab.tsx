@@ -5,7 +5,7 @@ import { Button, Card, Icon } from '../ui';
 import { formatDate } from '../../helpers';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
-export interface GradeChartDataPoint {
+interface GradeChartDataPoint {
   date: string;
   val: number;
   grade?: string;

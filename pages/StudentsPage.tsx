@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../store';
 import { Student, Transaction, PaymentStatus } from '../types';
@@ -8,7 +8,7 @@ import { StudentForm } from '../components/students/StudentForm';
 import { StudentListItem } from '../components/students/StudentListItem';
 import { TransactionForm } from '../components/transactions/TransactionForm';
 import { QuickLogModal } from '../components/transactions/QuickLogModal';
-import { generateInvoicePDF } from '../pdf';
+import { generateBulkInvoicePDF } from '../pdf';
 import { CSVImportWizard } from '../components/students/CSVImportWizard';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -24,6 +24,7 @@ export const StudentsPage: React.FC = () => {
   const settings = useStore(s => s.settings);
   const transactions = useStore(s => s.transactions);
   const addTransaction = useStore(s => s.addTransaction);
+  const addTransactions = useStore(s => s.addTransactions);
   const addToast = useStore(s => s.addToast);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [selectedStudent, setSelectedStudent] = useState<Student | undefined>(undefined);
@@ -78,9 +79,9 @@ export const StudentsPage: React.FC = () => {
     if (selectedStudent?.id === studentData.id) setSelectedStudent(getStudentById(studentData.id)); 
   };
   
-  const handleSelectStudent = (student: Student) => {
+  const handleSelectStudent = useCallback((student: Student) => {
     navigate(`/students/${student.id}`);
-  };
+  }, [navigate]);
   
   const handleCloseDetailView = () => {
       navigate('/students');
@@ -93,9 +94,9 @@ export const StudentsPage: React.FC = () => {
     navigate('/students');
   };
 
-  const handleDeleteRequest = (student: Student) => {
+  const handleDeleteRequest = useCallback((student: Student) => {
     setConfirmingDelete(student);
-  };
+  }, []);
   
   const confirmDeletion = () => {
     if(confirmingDelete) {
@@ -135,7 +136,7 @@ export const StudentsPage: React.FC = () => {
     }
   }
 
-  const toggleStudentSelection = (student: Student) => {
+  const toggleStudentSelection = useCallback((student: Student) => {
     setSelectedStudentIds(prev => {
       const next = new Set(prev);
       if (next.has(student.id)) {
@@ -145,7 +146,7 @@ export const StudentsPage: React.FC = () => {
       }
       return next;
     });
-  };
+  }, []);
 
   const updateTransaction = useStore(s => s.updateTransaction);
   const handleBulkMarkPaid = () => {
@@ -199,14 +200,21 @@ export const StudentsPage: React.FC = () => {
       }
 
       const unpaidStudentIds = Object.keys(firstUnpaidMap);
+      const toExportStudents = [];
+      const toExportTransactions = [];
       for (let i = 0; i < unpaidStudentIds.length; i++) {
           const studentId = unpaidStudentIds[i];
           const t = firstUnpaidMap[studentId];
           const student = selectedStudentMap[studentId];
           if (student) {
-              generateInvoicePDF(t, student, settings);
+              toExportStudents.push(student);
+              toExportTransactions.push(t);
               count++;
           }
+      }
+
+      if (count > 0) {
+          generateBulkInvoicePDF(toExportStudents, toExportTransactions, settings);
       }
 
       addToast(count > 0 ? `Exported ${count} invoices!` : 'No unpaid lessons to export for selected students.', count > 0 ? 'success' : 'info');
@@ -214,9 +222,9 @@ export const StudentsPage: React.FC = () => {
   }
 
   const submitBulkLog = () => {
-      let count = 0;
+      const transactionsData = [];
       for (const id of selectedStudentIds) {
-          addTransaction({
+          transactionsData.push({
               studentId: id,
               date: bulkLogData.date,
               lessonDuration: bulkLogData.duration,
@@ -224,9 +232,12 @@ export const StudentsPage: React.FC = () => {
               amountPaid: 0,
               notes: bulkLogData.notes
           } as Omit<Transaction, 'status'>);
-          count++;
       }
-      addToast(`Logged same lesson for ${count} students!`, 'success');
+
+      if (transactionsData.length > 0) {
+          addTransactions(transactionsData);
+      }
+
       setShowBulkLogModal(false);
       setSelectedStudentIds(new Set());
   };
@@ -333,6 +344,7 @@ export const StudentsPage: React.FC = () => {
             type="text"
             placeholder="Search students..."
             aria-label="Search students by name"
+            title="Search students by name"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-11 pr-11 py-3 rounded-full bg-white dark:bg-primary-light border-gray-200 dark:border-white/10 focus:ring-accent"
@@ -348,8 +360,8 @@ export const StudentsPage: React.FC = () => {
                 searchInputRef.current?.focus();
               }}
               className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-              title="Clear search"
               aria-label="Clear search"
+              title="Clear search"
             >
               <Icon iconName="x-mark" className="w-5 h-5" />
             </button>
@@ -445,7 +457,7 @@ export const StudentsPage: React.FC = () => {
                 <Button size="sm" variant="ghost" className="!text-white dark:!text-gray-900 hover:bg-white/10 dark:hover:bg-black/10 whitespace-nowrap" onClick={handleBulkMarkPaid}>Mark Paid</Button>
                 <Button size="sm" variant="primary" className="shadow-none rounded-full whitespace-nowrap" onClick={handleBulkExport}>Export Invoices</Button>
             </div>
-            <button onClick={() => setSelectedStudentIds(new Set())} className="ml-2 p-2 rounded-full hover:bg-white/10 dark:hover:bg-black/10 flex-shrink-0" title="Clear selected students" aria-label="Clear selected students">
+            <button onClick={() => setSelectedStudentIds(new Set())} className="ml-2 p-2 rounded-full hover:bg-white/10 dark:hover:bg-black/10 flex-shrink-0" aria-label="Clear selected students" title="Clear selected students">
                 <Icon iconName="x-mark" className="w-5 h-5"/>
             </button>
           </motion.div>
