@@ -13,6 +13,11 @@
 ## 2026-04-23 - Visual Feedback for Clipboard Operations
 **Learning:** Users often copy important links or details (like Portal links or Contact cards) using navigator.clipboard.writeText, but the action happens silently without visual feedback. This leaves users unsure if the copy succeeded.
 **Action:** Always pair clipboard copy actions with temporary visual feedback, such as changing the button icon to a checkmark and displaying 'Copied!' for a few seconds.
+
 ## 2026-04-25 - Tooltips for icon-only buttons
 **Learning:** Found some icon-only buttons missing tooltips on hover (only having `aria-label`s for screen readers).
 **Action:** Consistently ensure that all icon-only buttons have a `title` attribute so sighted users can understand the button's action without a text label.
+
+## 2026-04-27 - Input Accessibility Attributes
+**Learning:** Some custom input components and form fields in the auth flow lacked proper ARIA labels or id-htmlFor linkages, which impacts screen reader users and click-to-focus behavior.
+**Action:** When creating or modifying custom input components, ensure that labels are explicitly linked to inputs using `htmlFor` and `id`, or that inputs have `aria-label`s if visual labels are omitted.
