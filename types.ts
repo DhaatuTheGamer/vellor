@@ -45,7 +45,7 @@ export interface Parent {
  * Represents the contact information for a student and their parents.
  * @interface
  */
-export interface ContactInfo {
+interface ContactInfo {
   /** The student's personal phone number. */
   studentPhone?: PhoneNumber;
   /** The primary parent's or guardian's phone number. */
