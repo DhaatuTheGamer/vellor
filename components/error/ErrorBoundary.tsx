@@ -1,11 +1,11 @@
 import React from 'react';
 import localforage from 'localforage';
 
-export interface ErrorBoundaryProps {
+interface ErrorBoundaryProps {
   children: React.ReactNode;
 }
 
-export interface ErrorBoundaryState {
+interface ErrorBoundaryState {
   hasError: boolean;
 }
 
