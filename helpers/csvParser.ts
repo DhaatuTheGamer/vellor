@@ -17,7 +17,7 @@ export interface ImportMapping {
     lessonDuration?: string;
 }
 
-export interface ImportedEntities {
+interface ImportedEntities {
     student: Partial<Student>;
     payment?: {
         amount: number;
