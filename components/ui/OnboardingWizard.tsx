@@ -57,8 +57,8 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onCl
         <button
           onClick={skipWizard}
           className="absolute top-4 right-4 z-10 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors bg-white/50 dark:bg-black/20 backdrop-blur-md rounded-full p-2"
-          title="Skip Tutorial"
           aria-label="Skip tutorial"
+          title="Skip tutorial"
         >
           <Icon iconName="x-mark" className="w-5 h-5" />
         </button>

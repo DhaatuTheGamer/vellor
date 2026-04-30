@@ -36,6 +36,7 @@ export const FAB: React.FC = () => {
               <button
                 onClick={handleLogLesson}
                 aria-label="Quick Log Lesson"
+                title="Quick Log Lesson"
                 className="flex items-center gap-3 bg-white dark:bg-primary-light text-gray-900 dark:text-white px-4 py-2 rounded-full shadow-lg border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-primary transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary"
               >
                 <span className="font-medium text-sm">Quick Log</span>
@@ -46,6 +47,7 @@ export const FAB: React.FC = () => {
               <button
                 onClick={handleAddStudent}
                 aria-label="Add New Student"
+                title="Add New Student"
                 className="flex items-center gap-3 bg-white dark:bg-primary-light text-gray-900 dark:text-white px-4 py-2 rounded-full shadow-lg border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-primary transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary"
               >
                 <span className="font-medium text-sm">Add Student</span>
