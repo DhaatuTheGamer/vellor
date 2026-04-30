@@ -64,7 +64,7 @@ interface ContactInfo {
  * Represents the tuition and lesson details for a student.
  * @interface
  */
-export interface TuitionDetails {
+interface TuitionDetails {
   /** An array of subjects the student is being taught. */
   subjects: string[];
   /** The default monetary rate for a lesson or period. */
