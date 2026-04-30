@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../store';
 import { Student, Transaction, PaymentStatus } from '../types';
@@ -78,9 +78,9 @@ export const StudentsPage: React.FC = () => {
     if (selectedStudent?.id === studentData.id) setSelectedStudent(getStudentById(studentData.id)); 
   };
   
-  const handleSelectStudent = (student: Student) => {
+  const handleSelectStudent = useCallback((student: Student) => {
     navigate(`/students/${student.id}`);
-  };
+  }, [navigate]);
   
   const handleCloseDetailView = () => {
       navigate('/students');
@@ -93,9 +93,9 @@ export const StudentsPage: React.FC = () => {
     navigate('/students');
   };
 
-  const handleDeleteRequest = (student: Student) => {
+  const handleDeleteRequest = useCallback((student: Student) => {
     setConfirmingDelete(student);
-  };
+  }, []);
   
   const confirmDeletion = () => {
     if(confirmingDelete) {
@@ -135,7 +135,7 @@ export const StudentsPage: React.FC = () => {
     }
   }
 
-  const toggleStudentSelection = (student: Student) => {
+  const toggleStudentSelection = useCallback((student: Student) => {
     setSelectedStudentIds(prev => {
       const next = new Set(prev);
       if (next.has(student.id)) {
@@ -145,7 +145,7 @@ export const StudentsPage: React.FC = () => {
       }
       return next;
     });
-  };
+  }, []);
 
   const updateTransaction = useStore(s => s.updateTransaction);
   const handleBulkMarkPaid = () => {
