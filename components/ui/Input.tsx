@@ -8,7 +8,7 @@ import React, { forwardRef } from 'react';
 /**
  * Props for the Input component.
  */
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   /** Label text for the input field. */
   label?: string;
   /** Error message to display below the input. */
