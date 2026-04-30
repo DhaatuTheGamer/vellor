@@ -24,6 +24,7 @@ export const StudentsPage: React.FC = () => {
   const settings = useStore(s => s.settings);
   const transactions = useStore(s => s.transactions);
   const addTransaction = useStore(s => s.addTransaction);
+  const addTransactions = useStore(s => s.addTransactions);
   const addToast = useStore(s => s.addToast);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [selectedStudent, setSelectedStudent] = useState<Student | undefined>(undefined);
@@ -221,9 +222,9 @@ export const StudentsPage: React.FC = () => {
   }
 
   const submitBulkLog = () => {
-      let count = 0;
+      const transactionsData = [];
       for (const id of selectedStudentIds) {
-          addTransaction({
+          transactionsData.push({
               studentId: id,
               date: bulkLogData.date,
               lessonDuration: bulkLogData.duration,
@@ -231,9 +232,12 @@ export const StudentsPage: React.FC = () => {
               amountPaid: 0,
               notes: bulkLogData.notes
           } as Omit<Transaction, 'status'>);
-          count++;
       }
-      addToast(`Logged same lesson for ${count} students!`, 'success');
+
+      if (transactionsData.length > 0) {
+          addTransactions(transactionsData);
+      }
+
       setShowBulkLogModal(false);
       setSelectedStudentIds(new Set());
   };
