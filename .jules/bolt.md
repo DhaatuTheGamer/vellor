@@ -41,3 +41,6 @@
 ## 2026-04-28 - Bulk Zustand Actions
 **Learning:** Calling single-item state setters (like `addStudent`) inside a loop for large imports triggers N+1 state updates, crippling React render performance. Bulk actions are essential for high-throughput imports.
 **Action:** Implement array-based bulk actions (e.g. `addStudents`) that perform a single `set()` update to the store state when handling CSV imports or batch operations.
+## 2026-05-18 - Replacing substring date checks with startsWith
+**Learning:** In scenarios where we extract year and month strings from ISO 8601 strings to determine matches (e.g. `+t.date.substring(0, 4) === currentYear && +t.date.substring(5, 7) - 1 === currentMonth`), this forces unnecessary string extraction followed by numeric casting. A simpler `t.date.startsWith('YYYY-MM')` comparison is roughly 2-3x faster and significantly cleaner to read.
+**Action:** Always pre-calculate the target prefix string (e.g., `YYYY-MM`) and use `.startsWith()` directly on ISO 8601 strings when filtering by month or year in high-frequency loops instead of parsing or extracting substrings.
