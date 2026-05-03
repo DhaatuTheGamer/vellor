@@ -41,3 +41,7 @@
 ## 2026-04-28 - Bulk Zustand Actions
 **Learning:** Calling single-item state setters (like `addStudent`) inside a loop for large imports triggers N+1 state updates, crippling React render performance. Bulk actions are essential for high-throughput imports.
 **Action:** Implement array-based bulk actions (e.g. `addStudents`) that perform a single `set()` update to the store state when handling CSV imports or batch operations.
+
+## 2026-05-03 - replace_with_git_merge_diff dangers
+**Learning:** Using `replace_with_git_merge_diff` with a massive `SEARCH` block that spans multiple functions or methods is extremely dangerous. If the `REPLACE` block only contains the modified portion, it will inadvertently delete all other functions captured in the `SEARCH` block, causing catastrophic regressions.
+**Action:** When using `replace_with_git_merge_diff`, restrict the `SEARCH` block to be as small and tightly scoped as possible around the exact lines being modified to prevent accidental code deletion.
