@@ -25,7 +25,7 @@ export const deriveKey = async (password: string, salt: Uint8Array): Promise<Cry
   );
 };
 
-export const encryptObject = async (obj: any, key: CryptoKey): Promise<string> => {
+export const encryptObject = async <T>(obj: T, key: CryptoKey): Promise<string> => {
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const enc = new TextEncoder();
   const encoded = enc.encode(JSON.stringify(obj));
@@ -61,7 +61,7 @@ export const jsonReviver = (key: string, value: unknown) => {
   return value;
 };
 
-export const decryptObject = async <T = any>(
+export const decryptObject = async <T = unknown>(
   encryptedBase64: string,
   key: CryptoKey,
   schema?: import('zod').ZodSchema<T>
