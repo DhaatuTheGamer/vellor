@@ -231,6 +231,7 @@ COUNTRIES.forEach(c => {
  * Default currency symbol used if no currency is set by the user.
  */
 export const DEFAULT_CURRENCY_SYMBOL = '$';
+export const DEFAULT_USER_NAME = 'Tutor';
 
 /**
  * Default user name used in settings if none is provided.

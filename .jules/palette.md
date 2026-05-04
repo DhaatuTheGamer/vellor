@@ -21,3 +21,6 @@
 ## 2026-04-27 - Input Accessibility Attributes
 **Learning:** Some custom input components and form fields in the auth flow lacked proper ARIA labels or id-htmlFor linkages, which impacts screen reader users and click-to-focus behavior.
 **Action:** When creating or modifying custom input components, ensure that labels are explicitly linked to inputs using `htmlFor` and `id`, or that inputs have `aria-label`s if visual labels are omitted.
+## 2026-04-30 - Crypto Loading States
+**Learning:** Cryptographic operations (like deriving PBKDF2 keys) block the main thread and can take a noticeable amount of time, causing the UI to feel "frozen" to the user without visual feedback. While the sandbox hardware might be fast, real-world low-end devices will struggle.
+**Action:** When implementing authentication or cryptography features, always provide an explicit `isLoading` state (e.g., using our `<Button>` component) to reassure the user that the application is processing their request.
