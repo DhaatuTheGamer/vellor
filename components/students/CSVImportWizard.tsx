@@ -22,9 +22,9 @@ const UploadStep: React.FC<UploadStepProps> = ({ handleFileUpload }) => (
        <h3 className="text-xl font-display font-bold mb-2 text-gray-900 dark:text-white">Upload CSV File</h3>
        <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-sm mx-auto">Upload a CSV file containing your student roster to bulk import them into Vellor.</p>
 
-       <label className="bg-accent text-white px-8 py-3.5 rounded-full cursor-pointer hover:bg-accent/90 transition-all shadow-lg shadow-accent/20 font-bold inline-block">
+       <label className="bg-accent text-white px-8 py-3.5 rounded-full cursor-pointer hover:bg-accent/90 transition-all shadow-lg shadow-accent/20 font-bold inline-block focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-accent focus-within:ring-offset-white dark:focus-within:ring-offset-primary">
            Choose CSV File
-           <input type="file" accept=".csv" className="hidden" onClick={(e) => (e.target as HTMLInputElement).value = ''} onChange={handleFileUpload} />
+           <input type="file" accept=".csv" className="sr-only focus:outline-none" onClick={(e) => (e.target as HTMLInputElement).value = ''} onChange={handleFileUpload} />
        </label>
 
        <div className="mt-8 p-4 bg-gray-50 dark:bg-primary/30 rounded-2xl text-left border border-gray-100 dark:border-white/5 text-sm">

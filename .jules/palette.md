@@ -21,3 +21,7 @@
 ## 2026-04-27 - Input Accessibility Attributes
 **Learning:** Some custom input components and form fields in the auth flow lacked proper ARIA labels or id-htmlFor linkages, which impacts screen reader users and click-to-focus behavior.
 **Action:** When creating or modifying custom input components, ensure that labels are explicitly linked to inputs using `htmlFor` and `id`, or that inputs have `aria-label`s if visual labels are omitted.
+
+## 2024-05-04 - Hidden File Input Accessibility
+**Learning:** In React/Tailwind applications, applying `hidden` or `display: none` to file inputs inside labels completely removes them from keyboard focus order, preventing screen reader users and keyboard navigators from interacting with the file upload functionality.
+**Action:** Use the `sr-only` class (screen-reader only) combined with `focus:outline-none` on the input, and style the parent label with `focus-within:ring-2 focus-within:ring-accent` to visually represent the focus state while keeping the actual input accessible.
