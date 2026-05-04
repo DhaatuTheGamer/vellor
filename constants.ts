@@ -234,6 +234,11 @@ export const DEFAULT_CURRENCY_SYMBOL = '$';
 export const DEFAULT_USER_NAME = 'Tutor';
 
 /**
+ * Default user name used in settings if none is provided.
+ */
+export const DEFAULT_USER_NAME = 'Tutor';
+
+/**
  * Defines the levels and names for tutor ranks based on accumulated points.
  * Used in the gamification system.
  */
