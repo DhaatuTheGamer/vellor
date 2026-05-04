@@ -82,6 +82,7 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
     let pointsToAdd = 0;
     let studentsOverdueCleared = 0;
 
+    // ⚡ Bolt Performance: Process bulk additions inside a single loop to avoid N+1 state updates
     for (let j = 0; j < transactionsData.length; j++) {
       const transactionData = transactionsData[j];
       const sanitizedTransactionData: TransactionFormData = {
@@ -119,8 +120,10 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
 
     set(state => ({ transactions: [...state.transactions, ...newTransactions] }));
 
-    get().addToast(`Logged ${newTransactions.length} transactions successfully.`, 'success');
-    get().logActivity(`Logged bulk transactions for ${newTransactions.length} students`, 'banknotes');
+    if (newTransactions.length > 0) {
+      get().addToast(`Logged ${newTransactions.length} transaction${newTransactions.length > 1 ? 's' : ''} successfully.`, 'success');
+      get().logActivity(`Logged ${newTransactions.length} transaction${newTransactions.length > 1 ? 's' : ''}`, 'banknotes');
+    }
 
     if (pointsToAdd > 0) {
       get().addPoints(pointsToAdd, `Logged bulk payments on time`);
