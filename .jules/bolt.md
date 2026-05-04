@@ -44,3 +44,7 @@
 ## 2026-05-04 - Array mapping inside PDF Generation (jsPDF/autoTable)
 **Learning:** Utilizing `.map()` to generate massive 2D arrays directly inside configuration objects for libraries like `jspdf-autotable` creates significant intermediate array allocations during bulk report generation.
 **Action:** When preparing large tabular data (like transaction histories) for PDF reports, use a pre-allocated `new Array(len)` combined with a standard index-based `for` loop instead of `.map()` to drastically reduce garbage collection overhead and memory spikes during the render pipeline.
+
+## 2026-05-03 - replace_with_git_merge_diff dangers
+**Learning:** Using `replace_with_git_merge_diff` with a massive `SEARCH` block that spans multiple functions or methods is extremely dangerous. If the `REPLACE` block only contains the modified portion, it will inadvertently delete all other functions captured in the `SEARCH` block, causing catastrophic regressions.
+**Action:** When using `replace_with_git_merge_diff`, restrict the `SEARCH` block to be as small and tightly scoped as possible around the exact lines being modified to prevent accidental code deletion.

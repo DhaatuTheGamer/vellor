@@ -11,6 +11,7 @@ export const SetupEncryption: React.FC<{ onUnlocked: () => void }> = ({ onUnlock
   const [useRecovery, setUseRecovery] = useState(false);
   const [recoveryInput, setRecoveryInput] = useState('');
   const [isCopied, setIsCopied] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const saltString = localStorage.getItem('vellor-salt');
@@ -18,6 +19,7 @@ export const SetupEncryption: React.FC<{ onUnlocked: () => void }> = ({ onUnlock
   }, []);
 
   const handleUnlock = async () => {
+    setIsLoading(true);
     try {
       if (isFirstTime) {
         if (password.length < 12) { setError("Password must be at least 12 characters."); return; }
@@ -52,6 +54,8 @@ export const SetupEncryption: React.FC<{ onUnlocked: () => void }> = ({ onUnlock
     } catch (err) {
       setError("Incorrect password or decryption failed. If you reset your cache, you must wipe the site data.");
       useStore.getState().setMasterKey(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -148,12 +152,14 @@ export const SetupEncryption: React.FC<{ onUnlocked: () => void }> = ({ onUnlock
              </div>
            )}
            {error && <p className="text-danger text-sm">{error}</p>}
-           <button
-             className="w-full py-3 bg-accent text-primary-dark font-bold rounded-xl hover:opacity-90 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary"
+           <Button
+             variant="primary"
+             className="w-full py-3 text-lg rounded-xl shadow-lg shadow-accent/20"
              onClick={handleUnlock}
+             isLoading={isLoading}
            >
              {isFirstTime ? 'Set Password & Start' : 'Unlock'}
-           </button>
+           </Button>
 
            {!isFirstTime && (
               <div className="text-center mt-4">
