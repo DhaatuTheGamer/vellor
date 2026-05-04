@@ -24,3 +24,6 @@
 ## 2026-04-30 - Crypto Loading States
 **Learning:** Cryptographic operations (like deriving PBKDF2 keys) block the main thread and can take a noticeable amount of time, causing the UI to feel "frozen" to the user without visual feedback. While the sandbox hardware might be fast, real-world low-end devices will struggle.
 **Action:** When implementing authentication or cryptography features, always provide an explicit `isLoading` state (e.g., using our `<Button>` component) to reassure the user that the application is processing their request.
+## 2025-02-27 - Incomplete Focus Styles
+**Learning:** Some elements in the codebase use `focus-visible:ring-2` but omit the actual ring color and offset, leading to an incomplete/invisible focus state.
+**Action:** Always ensure that when `focus-visible:ring-2` is present, it is accompanied by the corresponding ring color (`focus-visible:ring-accent`) and offsets (`focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary`).
