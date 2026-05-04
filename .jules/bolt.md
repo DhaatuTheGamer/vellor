@@ -41,6 +41,6 @@
 ## 2026-04-28 - Bulk Zustand Actions
 **Learning:** Calling single-item state setters (like `addStudent`) inside a loop for large imports triggers N+1 state updates, crippling React render performance. Bulk actions are essential for high-throughput imports.
 **Action:** Implement array-based bulk actions (e.g. `addStudents`) that perform a single `set()` update to the store state when handling CSV imports or batch operations.
-## 2026-05-15 - Array mapping inside PDF Generation (jsPDF/autoTable)
+## 2026-05-04 - Array mapping inside PDF Generation (jsPDF/autoTable)
 **Learning:** Utilizing `.map()` to generate massive 2D arrays directly inside configuration objects for libraries like `jspdf-autotable` creates significant intermediate array allocations during bulk report generation.
 **Action:** When preparing large tabular data (like transaction histories) for PDF reports, use a pre-allocated `new Array(len)` combined with a standard index-based `for` loop instead of `.map()` to drastically reduce garbage collection overhead and memory spikes during the render pipeline.
