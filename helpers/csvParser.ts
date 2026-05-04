@@ -74,12 +74,13 @@ export const parseCSV = (csv: string): Record<string, string>[] => {
     const headers = parseCSVLine(lines[0]);
     const data: Record<string, string>[] = [];
 
-    for (let i = 1; i < lines.length; i++) {
+    for (let i = 1, len = lines.length; i < len; i++) {
         const row = parseCSVLine(lines[i]);
         const obj: Record<string, string> = {};
-        headers.forEach((h, idx) => {
-            if (h) obj[h] = row[idx] || '';
-        });
+        for (let j = 0, hLen = headers.length; j < hLen; j++) {
+            const h = headers[j];
+            if (h) obj[h] = row[j] || '';
+        }
         data.push(obj);
     }
 
