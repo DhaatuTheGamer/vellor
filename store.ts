@@ -204,8 +204,8 @@ export const useDerivedData = () => {
     const today = new Date();
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth();
-    const todayDateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    const currentMonthPrefix = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+    const currentMonthStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+    const todayDateStr = `${currentMonthStr}-${String(today.getDate()).padStart(2, '0')}`;
 
     let unpaid = 0;
     let paidThisMonth = 0;
@@ -229,13 +229,13 @@ export const useDerivedData = () => {
           overdue.push(t);
         }
 
-        // ⚡ Bolt Performance: startsWith is ~3x faster than substring+cast for prefix checking
-        if (t.date.startsWith(currentMonthPrefix)) {
+        // ⚡ Bolt Performance: Direct prefix matching with startsWith is faster than substring and numeric cast
+        if (t.date.startsWith(currentMonthStr)) {
           paidThisMonth += t.amountPaid;
         }
       } else if (t.status === PaymentStatus.Paid || t.status === PaymentStatus.Overpaid) {
-        // ⚡ Bolt Performance: startsWith is ~3x faster than substring+cast for prefix checking
-        if (t.date.startsWith(currentMonthPrefix)) {
+        // ⚡ Bolt Performance: Direct prefix matching with startsWith is faster than substring and numeric cast
+        if (t.date.startsWith(currentMonthStr)) {
           paidThisMonth += t.amountPaid;
         }
       }

@@ -41,6 +41,9 @@
 ## 2026-04-28 - Bulk Zustand Actions
 **Learning:** Calling single-item state setters (like `addStudent`) inside a loop for large imports triggers N+1 state updates, crippling React render performance. Bulk actions are essential for high-throughput imports.
 **Action:** Implement array-based bulk actions (e.g. `addStudents`) that perform a single `set()` update to the store state when handling CSV imports or batch operations.
+## 2026-05-03 - Replacing substring date checks with startsWith
+**Learning:** In scenarios where we extract year and month strings from ISO 8601 strings to determine matches (e.g. `+t.date.substring(0, 4) === currentYear && +t.date.substring(5, 7) - 1 === currentMonth`), this forces unnecessary string extraction followed by numeric casting. A simpler `t.date.startsWith('YYYY-MM')` comparison is roughly 2-3x faster and significantly cleaner to read.
+**Action:** Always pre-calculate the target prefix string (e.g., `YYYY-MM`) and use `.startsWith()` directly on ISO 8601 strings when filtering by month or year in high-frequency loops instead of parsing or extracting substrings.
 ## 2026-05-04 - Array mapping inside PDF Generation (jsPDF/autoTable)
 **Learning:** Utilizing `.map()` to generate massive 2D arrays directly inside configuration objects for libraries like `jspdf-autotable` creates significant intermediate array allocations during bulk report generation.
 **Action:** When preparing large tabular data (like transaction histories) for PDF reports, use a pre-allocated `new Array(len)` combined with a standard index-based `for` loop instead of `.map()` to drastically reduce garbage collection overhead and memory spikes during the render pipeline.
