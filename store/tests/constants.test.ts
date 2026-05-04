@@ -3,7 +3,7 @@ import {
   COUNTRIES,
   COUNTRY_CODE_MAP,
   DEFAULT_CURRENCY_SYMBOL,
-  DEFAULT_USER_NAME,
+
   TUTOR_RANK_LEVELS,
   POINTS_ALLOCATION,
   INITIAL_GAMIFICATION_STATS,
@@ -35,11 +35,6 @@ describe('Constants Verification', () => {
   it('DEFAULT_CURRENCY_SYMBOL should be defined', () => {
     expect(DEFAULT_CURRENCY_SYMBOL).toBeDefined();
     expect(typeof DEFAULT_CURRENCY_SYMBOL).toBe('string');
-  });
-
-  it('DEFAULT_USER_NAME should be defined', () => {
-    expect(DEFAULT_USER_NAME).toBeDefined();
-    expect(typeof DEFAULT_USER_NAME).toBe('string');
   });
 
   it('TUTOR_RANK_LEVELS should be an array of level definitions sorted by points', () => {

@@ -8,52 +8,6 @@ import { sanitizeString } from '../helpers';
 export const createTransactionSlice: StateCreator<AppState, [], [], TransactionSlice> = (set, get) => ({
   transactions: [],
 
-  addTransactions: (transactionsData) => {
-    const newTransactions: Transaction[] = [];
-
-    // ⚡ Bolt Performance: Process bulk additions inside a single loop to avoid N+1 state updates
-    for (let i = 0; i < transactionsData.length; i++) {
-        const transactionData = transactionsData[i];
-        const sanitizedTransactionData: TransactionFormData = {
-            ...transactionData,
-            paymentMethod: sanitizeString(transactionData.paymentMethod),
-            notes: sanitizeString(transactionData.notes),
-            grade: sanitizeString(transactionData.grade),
-            progressRemark: sanitizeString(transactionData.progressRemark),
-        };
-
-        let status: PaymentStatus;
-        if (sanitizedTransactionData.status) {
-            status = sanitizedTransactionData.status;
-        } else if (sanitizedTransactionData.amountPaid >= sanitizedTransactionData.lessonFee) {
-            status = sanitizedTransactionData.amountPaid > sanitizedTransactionData.lessonFee ? PaymentStatus.Overpaid : PaymentStatus.Paid;
-        } else if (sanitizedTransactionData.amountPaid > 0 && sanitizedTransactionData.amountPaid < sanitizedTransactionData.lessonFee) {
-            status = PaymentStatus.PartiallyPaid;
-        } else {
-            status = PaymentStatus.Due;
-        }
-
-        newTransactions.push({
-            ...sanitizedTransactionData,
-            id: crypto.randomUUID(),
-            status,
-            createdAt: new Date().toISOString(),
-        });
-    }
-
-    set(state => ({ transactions: [...state.transactions, ...newTransactions] }));
-
-    if (newTransactions.length > 0) {
-        get().addToast(`Logged ${newTransactions.length} transaction${newTransactions.length > 1 ? 's' : ''} successfully.`, 'success');
-        get().logActivity(`Logged ${newTransactions.length} transaction${newTransactions.length > 1 ? 's' : ''}`, 'banknotes');
-
-        // Simplified achievement checking for bulk - check once at the end
-        get().checkAndAwardAchievements();
-    }
-
-    return newTransactions;
-  },
-
   addTransaction: (transactionData) => {
     const sanitizedTransactionData: TransactionFormData = {
       ...transactionData,
@@ -128,6 +82,7 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
     let pointsToAdd = 0;
     let studentsOverdueCleared = 0;
 
+    // ⚡ Bolt Performance: Process bulk additions inside a single loop to avoid N+1 state updates
     for (let j = 0; j < transactionsData.length; j++) {
       const transactionData = transactionsData[j];
       const sanitizedTransactionData: TransactionFormData = {
@@ -165,8 +120,10 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
 
     set(state => ({ transactions: [...state.transactions, ...newTransactions] }));
 
-    get().addToast(`Logged ${newTransactions.length} transactions successfully.`, 'success');
-    get().logActivity(`Logged bulk transactions for ${newTransactions.length} students`, 'banknotes');
+    if (newTransactions.length > 0) {
+      get().addToast(`Logged ${newTransactions.length} transaction${newTransactions.length > 1 ? 's' : ''} successfully.`, 'success');
+      get().logActivity(`Logged ${newTransactions.length} transaction${newTransactions.length > 1 ? 's' : ''}`, 'banknotes');
+    }
 
     if (pointsToAdd > 0) {
       get().addPoints(pointsToAdd, `Logged bulk payments on time`);
