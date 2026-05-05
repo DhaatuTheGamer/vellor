@@ -1,0 +1,7 @@
+echo "The review tool is using the description snippet instead of the actual code in the file."
+echo "The description snippet says:"
+echo "value: string;"
+echo "onChange: (value: string) => void;"
+echo "But the actual code in components/ui/PhoneInput.tsx says:"
+echo "value: PhoneNumber;"
+echo "onChange: (name: string, value: PhoneNumber) => void;"
