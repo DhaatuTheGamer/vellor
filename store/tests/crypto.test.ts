@@ -219,6 +219,14 @@ describe('decryptObject', () => {
     // Decrypting with anotherKey should fail
     await expect(decryptObject(encrypted, anotherKey)).rejects.toThrow();
   });
+
+  it('throws an error for malformed decrypted data', async () => {
+    const iv = new Uint8Array(12);
+    const malformedData = new TextEncoder().encode('not valid json');
+    const encryptedMalformed = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, validKey, malformedData);
+    const wrapper = btoa(JSON.stringify({ iv: Array.from(iv), ct: Array.from(new Uint8Array(encryptedMalformed)) }));
+    await expect(decryptObject(wrapper, validKey)).rejects.toThrow('Failed to decrypt data');
+  });
 });
 
 describe('deriveKey', () => {

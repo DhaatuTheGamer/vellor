@@ -143,3 +143,19 @@ export const generatePortalLink = (student: Student, transactions: Transaction[]
   const baseUrl = window.location.origin + window.location.pathname;
   return `${baseUrl}#/portal?data=${base64}`;
 };
+
+/**
+ * Determines the payment status based on amount paid, lesson fee, and an optional current status.
+ */
+export const determinePaymentStatus = (amountPaid: number, lessonFee: number, currentStatus?: PaymentStatus): PaymentStatus => {
+  if (currentStatus) {
+    return currentStatus;
+  }
+  if (amountPaid >= lessonFee) {
+    return amountPaid > lessonFee ? PaymentStatus.Overpaid : PaymentStatus.Paid;
+  }
+  if (amountPaid > 0 && amountPaid < lessonFee) {
+    return PaymentStatus.PartiallyPaid;
+  }
+  return PaymentStatus.Due;
+};
