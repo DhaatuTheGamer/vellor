@@ -101,7 +101,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ transaction, s
       }
   }
 
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<TransactionFormInput, any, TransactionFormValues>({
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<TransactionFormInput, unknown, TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
     defaultValues: defaultFormValues
   });

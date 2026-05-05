@@ -54,7 +54,7 @@ interface StudentFormProps {
  * validated with react-hook-form and zod.
  */
 export const StudentForm: React.FC<StudentFormProps> = ({ student, onSave, onClose }) => {
-  const { register, handleSubmit, control, setValue, getValues, formState: { errors } } = useForm<StudentFormInput, any, StudentFormValues>({
+  const { register, handleSubmit, control, setValue, getValues, formState: { errors } } = useForm<StudentFormInput, unknown, StudentFormValues>({
     resolver: zodResolver(studentSchema),
     defaultValues: student ? {
       firstName: student.firstName,
