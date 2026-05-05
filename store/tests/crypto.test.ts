@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { importKeyFromBase64, exportKeyToBase64, generateSalt, decryptObject, encryptObject, jsonReviver, deriveKey } from '../../src/crypto';
+import { z } from "zod";
 
 // Polyfill for crypto.subtle in jsdom environment if needed, but vitest globals=true with jsdom usually provides it, or we can use Node's crypto
 import { webcrypto } from 'crypto';
@@ -111,6 +112,14 @@ describe('importKeyFromBase64', () => {
     // importKey should throw when expecting a 256-bit AES key but given different length
     await expect(importKeyFromBase64(shortBase64)).rejects.toThrow();
   });
+
+  it('successfully handles base64 keys without padding', async () => {
+    const validKey = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
+    const exportedStr = await exportKeyToBase64(validKey);
+    const base64Str = exportedStr.replace(/=+$/, "");
+    const importedKey = await importKeyFromBase64(base64Str);
+    expect(importedKey).toBeDefined();
+  });
 });
 
 describe('jsonReviver', () => {
@@ -218,6 +227,20 @@ describe('decryptObject', () => {
 
     // Decrypting with anotherKey should fail
     await expect(decryptObject(encrypted, anotherKey)).rejects.toThrow();
+  });
+  it("successfully decrypts an object and applies schema validation", async () => {
+    const data = { secret: "message" };
+    const encrypted = await encryptObject(data, validKey);
+    const schema = z.object({ secret: z.string() });
+    const decrypted = await decryptObject(encrypted, validKey, schema);
+    expect(decrypted).toEqual(data);
+  });
+
+  it("throws an error if schema validation fails on decrypted object", async () => {
+    const data = { secret: 123 as any };
+    const encrypted = await encryptObject(data, validKey);
+    const schema = z.object({ secret: z.string() });
+    await expect(decryptObject(encrypted, validKey, schema)).rejects.toThrow();
   });
 });
 
