@@ -236,6 +236,7 @@ export const DEFAULT_USER_NAME = 'Tutor';
 /**
  * Default user name used for personalization if not provided.
  */
+export const DEFAULT_USER_NAME = 'Tutor';
 
 /**
  * Defines the levels and names for tutor ranks based on accumulated points.
