@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '../../store';
 import { generateSalt, deriveKey, exportKeyToBase64, importKeyFromBase64 } from '../../src/crypto';
 import { Icon, Button } from '../ui';
+import localforage from 'localforage';
 
 export const SetupEncryption: React.FC<{ onUnlocked: () => void }> = ({ onUnlocked }) => {
   const [isFirstTime, setIsFirstTime] = useState<boolean | null>(null);
@@ -14,8 +15,18 @@ export const SetupEncryption: React.FC<{ onUnlocked: () => void }> = ({ onUnlock
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const saltString = localStorage.getItem('vellor-salt');
-    setIsFirstTime(!saltString);
+    const initializeSetup = async () => {
+      let saltString = await localforage.getItem<string>('vellor-salt');
+      if (!saltString) {
+        saltString = localStorage.getItem('vellor-salt');
+        if (saltString) {
+          await localforage.setItem('vellor-salt', saltString);
+          localStorage.removeItem('vellor-salt');
+        }
+      }
+      setIsFirstTime(!saltString);
+    };
+    initializeSetup();
   }, []);
 
   const handleUnlock = async () => {
@@ -24,7 +35,7 @@ export const SetupEncryption: React.FC<{ onUnlocked: () => void }> = ({ onUnlock
       if (isFirstTime) {
         if (password.length < 12) { setError("Password must be at least 12 characters."); return; }
         const salt = generateSalt();
-        localStorage.setItem('vellor-salt', btoa(String.fromCharCode(...salt)));
+        await localforage.setItem('vellor-salt', btoa(String.fromCharCode(...salt)));
         const key = await deriveKey(password, salt);
         const exported = await exportKeyToBase64(key);
         useStore.getState().setMasterKey(key);
@@ -37,7 +48,11 @@ export const SetupEncryption: React.FC<{ onUnlocked: () => void }> = ({ onUnlock
            await useStore.persist.rehydrate();
            onUnlocked();
         } else {
-           const saltString = localStorage.getItem('vellor-salt')!;
+           const saltString = await localforage.getItem<string>('vellor-salt');
+           if (!saltString) {
+              setError("Salt not found. Decryption failed.");
+              return;
+           }
            const saltStrDecoded = atob(saltString);
            // ⚡ Bolt Performance: Replace .split('').map() with a pre-allocated Uint8Array and a for loop
            // to eliminate intermediate array allocations during string-to-byte-array conversion.

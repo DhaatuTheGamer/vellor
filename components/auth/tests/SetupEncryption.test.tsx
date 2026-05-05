@@ -4,6 +4,16 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { SetupEncryption } from '../SetupEncryption';
 import { useStore } from '../../../store';
 import * as crypto from '../../../src/crypto';
+import localforage from 'localforage';
+
+// Mock localforage
+vi.mock('localforage', () => ({
+  default: {
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+  },
+}));
 
 // Mock store
 vi.mock('../../../store', () => ({
@@ -39,7 +49,11 @@ describe('SetupEncryption', () => {
 
   it('handles incorrect password or decryption failure', async () => {
     // Setup for "not first time"
-    localStorage.setItem('vellor-salt', btoa(String.fromCharCode(1, 2, 3)));
+    // The component calls localforage.getItem twice in the non-first-time flow:
+    // 1st time in useEffect (initializes setup)
+    // 2nd time in handleUnlock (fetches salt to decrypt)
+    (localforage.getItem as any).mockResolvedValueOnce(btoa(String.fromCharCode(1, 2, 3)));
+    (localforage.getItem as any).mockResolvedValueOnce(btoa(String.fromCharCode(1, 2, 3)));
 
     // Mock deriveKey to throw an error
     (crypto.deriveKey as any).mockRejectedValue(new Error('Decryption failed'));
@@ -68,7 +82,7 @@ describe('SetupEncryption', () => {
 
   it('enforces 12-character minimum password length during first-time setup', async () => {
     // Setup for "first time"
-    localStorage.removeItem('vellor-salt');
+    (localforage.getItem as any).mockResolvedValueOnce(null);
 
     const mockOnUnlocked = vi.fn();
     render(<SetupEncryption onUnlocked={mockOnUnlocked} />);
