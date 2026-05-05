@@ -216,7 +216,7 @@ export const CalendarPage: React.FC = () => {
             endAccessor="end"
             style={{ height: '100%' }}
             eventPropGetter={eventStyleGetter}
-            onSelectEvent={(event: any) => setSelectedEvent(event as CalendarEvent)}
+            onSelectEvent={(event: CalendarEvent) => setSelectedEvent(event)}
             views={['month', 'week', 'day']}
             onEventDrop={handleEventDrop}
             onEventResize={handleEventResize}
