@@ -1,7 +1,0 @@
-🧪 [Add error test for malformed data in decryptObject]
-
-🎯 **What:** The `decryptObject` utility had missing corresponding tests to ensure malformed decrypted data correctly triggers the error payload. Also the `try/catch` block handling missing.
-
-📊 **Coverage:** A new test scenario `throws an error for malformed decrypted data` is added in `store/tests/crypto.test.ts` to execute the `try/catch` block within `decryptObject`. Also fixing the duplicate `DEFAULT_USER_NAME` in constants.ts that was breaking the CI.
-
-✨ **Result:** Test coverage improved specifically around failure states for data decryption, providing safer error propagation when incorrect credentials or corrupted data causes invalid JSON parsing after AES-GCM decryption.
