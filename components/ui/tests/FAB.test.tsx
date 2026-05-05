@@ -14,14 +14,17 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-// We need to mock the store since QuickLogModal uses it
-vi.mock('../../store', () => ({
-  useStore: vi.fn((selector) => {
-    return selector({
-      students: [],
-      addTransaction: vi.fn(),
-    });
-  }),
+// Mock QuickLogModal
+vi.mock('../../transactions/QuickLogModal', () => ({
+  QuickLogModal: ({ isOpen, onClose }: any) => {
+    if (!isOpen) return null;
+    return (
+      <div data-testid="quick-log-modal">
+        <h2>Quick Log</h2>
+        <button onClick={onClose} aria-label="Close Quick Log">Close</button>
+      </div>
+    );
+  }
 }));
 
 vi.mock('../Icon', () => ({
@@ -96,7 +99,7 @@ describe('FAB Component', () => {
     renderWithRouter(<FAB />);
 
     // Ensure modal is closed initially - QuickLogModal content is not visible
-    expect(screen.queryByRole('heading', { name: /quick log/i })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('quick-log-modal')).not.toBeInTheDocument();
 
     // Open menu
     fireEvent.click(screen.getByRole('button', { name: /quick actions/i }));
@@ -105,7 +108,7 @@ describe('FAB Component', () => {
     fireEvent.click(screen.getByRole('button', { name: /quick log lesson/i }));
 
     // Modal should be open
-    expect(screen.getByRole('heading', { name: /quick log/i })).toBeInTheDocument();
+    expect(screen.getByTestId('quick-log-modal')).toBeInTheDocument();
 
     // Menu should close
     await waitFor(() => {
@@ -119,13 +122,13 @@ describe('FAB Component', () => {
       // Open modal
       fireEvent.click(screen.getByRole('button', { name: /quick actions/i }));
       fireEvent.click(screen.getByRole('button', { name: /quick log lesson/i }));
-      expect(screen.getByRole('heading', { name: /quick log/i })).toBeInTheDocument();
+      expect(screen.getByTestId('quick-log-modal')).toBeInTheDocument();
 
       // Close modal
       fireEvent.click(screen.getByRole('button', { name: /close quick log/i }));
 
       await waitFor(() => {
-        expect(screen.queryByRole('heading', { name: /quick log/i })).not.toBeInTheDocument();
+        expect(screen.queryByTestId('quick-log-modal')).not.toBeInTheDocument();
       });
   });
 });
