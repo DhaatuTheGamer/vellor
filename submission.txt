@@ -1,0 +1,12 @@
+title="🧪 Add tests for ErrorBoundary and fix CI blocker"
+description="🎯 **What:**
+Added comprehensive unit tests for the \`ErrorBoundary\` component to ensure it correctly handles application crashes and provides reliable recovery mechanisms. Also resolved a duplicate \`DEFAULT_USER_NAME\` export in \`constants.ts\` that was blocking CI builds.
+
+📊 **Coverage:**
+- Verified that children components render correctly when no error is present.
+- Verified that the fallback UI is rendered correctly when a child component throws an exception.
+- Verified that clicking the 'Reload App' button successfully triggers \`window.location.reload()\`.
+- Verified that clicking the 'Hard Reset' button successfully clears data via \`localforage.clear()\`, clears \`localStorage\`, and triggers a page reload.
+
+✨ **Result:**
+The \`ErrorBoundary\` component is now fully tested, ensuring that critical data corruption or unexpected errors provide a working recovery path for users. Codebase reliability and test coverage are improved."
