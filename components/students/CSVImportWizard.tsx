@@ -163,7 +163,7 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
              setCsvData(data);
              
              // Enhanced Auto-Map logic
-             const newMap: any = {};
+             const newMap: Partial<ImportMapping> = {};
              headers.forEach(h => {
                  const hl = h.toLowerCase();
                  if (!newMap.firstName && (hl === 'first name' || hl === 'name' || hl === 'firstname')) newMap.firstName = h;
@@ -175,7 +175,7 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
                  if (!newMap.guardianName && (hl.includes('parent') || hl.includes('guardian'))) newMap.guardianName = h;
                  if (!newMap.paymentAmount && (hl.includes('paid') || hl.includes('amount'))) newMap.paymentAmount = h;
              });
-             setMapping(newMap);
+             setMapping(newMap as ImportMapping);
              setStep(2);
         };
         reader.readAsText(file);
