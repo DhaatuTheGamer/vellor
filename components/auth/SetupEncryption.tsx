@@ -12,6 +12,7 @@ export const SetupEncryption: React.FC<{ onUnlocked: () => void }> = ({ onUnlock
   const [recoveryInput, setRecoveryInput] = useState('');
   const [isCopied, setIsCopied] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     const saltString = localStorage.getItem('vellor-salt');
@@ -127,16 +128,25 @@ export const SetupEncryption: React.FC<{ onUnlocked: () => void }> = ({ onUnlock
         </p>
         <div className="space-y-4">
            {!useRecovery ? (
-             <div>
+             <div className="relative">
                <input
-                 type="password"
+                 type={showPassword ? 'text' : 'password'}
                  value={password}
                  onChange={e => { setPassword(e.target.value); setError(''); }}
-                 className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-primary-dark text-gray-900 dark:text-white focus:ring-2 focus:ring-accent outline-none"
+                 className="w-full pl-4 pr-12 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-primary-dark text-gray-900 dark:text-white focus:ring-2 focus:ring-accent outline-none"
                  placeholder="Master Password"
                  aria-label="Master Password"
                  onKeyDown={e => e.key === 'Enter' && handleUnlock()}
                />
+               <button
+                 type="button"
+                 onClick={() => setShowPassword(!showPassword)}
+                 className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary-dark rounded-full"
+                 aria-label={showPassword ? "Hide password" : "Show password"}
+                 title={showPassword ? "Hide password" : "Show password"}
+               >
+                 <Icon iconName={showPassword ? "eye-slash" : "eye"} className="w-5 h-5" />
+               </button>
              </div>
            ) : (
              <div>
