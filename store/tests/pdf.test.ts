@@ -72,6 +72,21 @@ describe('pdf.ts utilities', () => {
     expect(mockJsPDFInstance.save).toHaveBeenCalledWith(expect.stringContaining('ProgressReport_John_'));
   });
 
+  it('should handle logo injection failure gracefully when generating a progress report', () => {
+    // Mock addImage to throw an error
+    mockJsPDFInstance.addImage.mockImplementationOnce(() => {
+      throw new Error('Mock injection error');
+    });
+
+    // The function should not throw, it should catch the error and continue
+    expect(() => {
+      generateProgressReportPDF(mockStudent, [mockTransaction], mockSettings, 'Great job!');
+    }).not.toThrow();
+
+    // Verify it still attempts to save the document
+    expect(mockJsPDFInstance.save).toHaveBeenCalled();
+  });
+
   it('should return false when generating bulk invoice PDF without unpaid transactions', () => {
     const result = generateBulkInvoicePDF([mockStudent], [mockTransaction], mockSettings);
     expect(result).toBe(false);

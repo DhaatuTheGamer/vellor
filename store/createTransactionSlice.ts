@@ -3,10 +3,11 @@ import { AppState, TransactionSlice } from './types';
 import { Transaction, TransactionFormData, PaymentStatus } from '../types';
 import { generateId } from '../helpers';
 import { POINTS_ALLOCATION } from '../constants';
-import { sanitizeString } from '../helpers';
+import { sanitizeString, determinePaymentStatus } from '../helpers';
 
 export const createTransactionSlice: StateCreator<AppState, [], [], TransactionSlice> = (set, get) => ({
   transactions: [],
+
 
   addTransaction: (transactionData) => {
     const sanitizedTransactionData: TransactionFormData = {
@@ -17,16 +18,7 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
       progressRemark: sanitizeString(transactionData.progressRemark),
     };
 
-    let status: PaymentStatus;
-    if (sanitizedTransactionData.status) {
-      status = sanitizedTransactionData.status;
-    } else if (sanitizedTransactionData.amountPaid >= sanitizedTransactionData.lessonFee) {
-      status = sanitizedTransactionData.amountPaid > sanitizedTransactionData.lessonFee ? PaymentStatus.Overpaid : PaymentStatus.Paid;
-    } else if (sanitizedTransactionData.amountPaid > 0 && sanitizedTransactionData.amountPaid < sanitizedTransactionData.lessonFee) {
-      status = PaymentStatus.PartiallyPaid;
-    } else {
-      status = PaymentStatus.Due;
-    }
+    const status = determinePaymentStatus(sanitizedTransactionData.amountPaid, sanitizedTransactionData.lessonFee, sanitizedTransactionData.status);
 
     const newTransaction: Transaction = {
       ...sanitizedTransactionData,
@@ -93,16 +85,7 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
         progressRemark: sanitizeString(transactionData.progressRemark),
       };
 
-      let status: PaymentStatus;
-      if (sanitizedTransactionData.status) {
-        status = sanitizedTransactionData.status;
-      } else if (sanitizedTransactionData.amountPaid >= sanitizedTransactionData.lessonFee) {
-        status = sanitizedTransactionData.amountPaid > sanitizedTransactionData.lessonFee ? PaymentStatus.Overpaid : PaymentStatus.Paid;
-      } else if (sanitizedTransactionData.amountPaid > 0 && sanitizedTransactionData.amountPaid < sanitizedTransactionData.lessonFee) {
-        status = PaymentStatus.PartiallyPaid;
-      } else {
-        status = PaymentStatus.Due;
-      }
+      const status = determinePaymentStatus(sanitizedTransactionData.amountPaid, sanitizedTransactionData.lessonFee, sanitizedTransactionData.status);
 
       const newTransaction: Transaction = {
         ...sanitizedTransactionData,
@@ -121,51 +104,52 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
     set(state => ({ transactions: [...state.transactions, ...newTransactions] }));
 
     if (newTransactions.length > 0) {
-      get().addToast(`Logged ${newTransactions.length} transaction${newTransactions.length > 1 ? 's' : ''} successfully.`, 'success');
-      get().logActivity(`Logged ${newTransactions.length} transaction${newTransactions.length > 1 ? 's' : ''}`, 'banknotes');
-    }
+        get().addToast(`Logged ${newTransactions.length} transaction${newTransactions.length > 1 ? 's' : ''} successfully.`, 'success');
+        get().logActivity(`Logged bulk transactions for ${newTransactions.length} students`, 'banknotes');
 
-    if (pointsToAdd > 0) {
-      get().addPoints(pointsToAdd, `Logged bulk payments on time`);
-    }
+        if (pointsToAdd > 0) {
+          get().addPoints(pointsToAdd, `Logged bulk payments on time`);
+        }
 
-    const allTransactions = get().transactions;
-    // Batch process overdue checks for performance instead of per student
-    for (let j = 0; j < newTransactions.length; j++) {
-      const newTransaction = newTransactions[j];
-      if (newTransaction.status === PaymentStatus.Paid || newTransaction.status === PaymentStatus.Overpaid) {
-        const student = get().getStudentById(newTransaction.studentId);
-        if (student) {
-          let wasOverdue = false;
-          let totalDueForStudent = 0;
+        const allTransactions = get().transactions;
+        // Batch process overdue checks for performance instead of per student
+        for (let j = 0; j < newTransactions.length; j++) {
+          const newTransaction = newTransactions[j];
+          if (newTransaction.status === PaymentStatus.Paid || newTransaction.status === PaymentStatus.Overpaid) {
+            const student = get().getStudentById(newTransaction.studentId);
+            if (student) {
+              let wasOverdue = false;
+              let totalDueForStudent = 0;
 
-          for (let i = 0; i < allTransactions.length; i++) {
-            const t = allTransactions[i];
-            if (t.studentId === newTransaction.studentId && t.id !== newTransaction.id) {
-              if (t.status === PaymentStatus.Due) {
-                wasOverdue = true;
-                totalDueForStudent += t.lessonFee;
-              } else if (t.status === PaymentStatus.PartiallyPaid) {
-                wasOverdue = true;
-                totalDueForStudent += (t.lessonFee - t.amountPaid);
+              for (let i = 0; i < allTransactions.length; i++) {
+                const t = allTransactions[i];
+                if (t.studentId === newTransaction.studentId && t.id !== newTransaction.id) {
+                  if (t.status === PaymentStatus.Due) {
+                    wasOverdue = true;
+                    totalDueForStudent += t.lessonFee;
+                  } else if (t.status === PaymentStatus.PartiallyPaid) {
+                    wasOverdue = true;
+                    totalDueForStudent += (t.lessonFee - t.amountPaid);
+                  }
+                }
+              }
+
+              if (wasOverdue) {
+                if (totalDueForStudent - newTransaction.amountPaid <= 0) {
+                  studentsOverdueCleared++;
+                }
               }
             }
           }
-
-          if (wasOverdue) {
-            if (totalDueForStudent - newTransaction.amountPaid <= 0) {
-              studentsOverdueCleared++;
-            }
-          }
         }
-      }
+
+        if (studentsOverdueCleared > 0) {
+          get().addPoints(POINTS_ALLOCATION.CLEAR_OVERDUE * studentsOverdueCleared, `Cleared overdue payments for ${studentsOverdueCleared} students`);
+        }
+
+        get().checkAndAwardAchievements();
     }
 
-    if (studentsOverdueCleared > 0) {
-      get().addPoints(POINTS_ALLOCATION.CLEAR_OVERDUE * studentsOverdueCleared, `Cleared overdue payments for ${studentsOverdueCleared} students`);
-    }
-
-    get().checkAndAwardAchievements();
     return newTransactions;
   },
 
@@ -196,17 +180,10 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
             const originalStatus = t.status;
             const potentiallyUpdated = { ...t, ...sanitizedTransactionData };
             let newStatus = t.status;
-
             if (sanitizedTransactionData.amountPaid !== undefined || sanitizedTransactionData.lessonFee !== undefined) {
                 const fee = sanitizedTransactionData.lessonFee !== undefined ? sanitizedTransactionData.lessonFee : t.lessonFee;
                 const paid = sanitizedTransactionData.amountPaid !== undefined ? sanitizedTransactionData.amountPaid : t.amountPaid;
-                if (paid >= fee) {
-                    newStatus = paid > fee ? PaymentStatus.Overpaid : PaymentStatus.Paid;
-                } else if (paid > 0 && paid < fee) {
-                    newStatus = PaymentStatus.PartiallyPaid;
-                } else {
-                    newStatus = PaymentStatus.Due;
-                }
+                newStatus = determinePaymentStatus(paid, fee);
             }
             updatedTransaction = { ...potentiallyUpdated, status: newStatus };
             

@@ -87,6 +87,8 @@ export const Icon: React.FC<IconProps> = ({ iconName, className = 'w-6 h-6', ...
     'code': LucideIcons.Code,
     'question-mark-circle': LucideIcons.HelpCircle,
     'archive-box': LucideIcons.Archive,
+    'eye': LucideIcons.Eye,
+    'eye-slash': LucideIcons.EyeOff,
   };
 
   const LucideIcon = iconMap[iconName] || LucideIcons.HelpCircle;

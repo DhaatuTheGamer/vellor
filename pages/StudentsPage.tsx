@@ -242,11 +242,13 @@ export const StudentsPage: React.FC = () => {
       setSelectedStudentIds(new Set());
   };
 
+  const deferredSearchTerm = React.useDeferredValue(searchTerm);
+
   const filteredStudents = useMemo(() => {
-    // ⚡ Bolt Performance: Hoist searchTerm.toLowerCase() outside the filter loop
+    // ⚡ Bolt Performance: Hoist deferredSearchTerm.toLowerCase() outside the filter loop
     // to avoid redundant O(N) recalculations on every render where search occurs.
-    if (!searchTerm) return students;
-    const lowerSearchTerm = searchTerm.toLowerCase();
+    if (!deferredSearchTerm) return students;
+    const lowerSearchTerm = deferredSearchTerm.toLowerCase();
 
     // ⚡ Bolt Performance: Use standard for loop instead of .filter() to avoid intermediate array allocations and callback overhead
     const result = [];
@@ -258,7 +260,7 @@ export const StudentsPage: React.FC = () => {
       }
     }
     return result;
-  }, [students, searchTerm]);
+  }, [students, deferredSearchTerm]);
 
   const outstandingBalances = useMemo(() => {
     const balances: Record<string, number> = {};
