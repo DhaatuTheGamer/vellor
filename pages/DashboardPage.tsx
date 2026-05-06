@@ -281,7 +281,7 @@ export const DashboardPage: React.FC = () => {
                                   </div>
                                   <button 
                                     onClick={() => setConfirmingDeleteActivityId(activity.id)}
-                                    className="opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-primary-light transition-opacity focus-visible:opacity-100 focus-visible:ring-2 focus-visible:outline-none"
+                                    className="opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-primary-light transition-opacity focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary focus-visible:outline-none"
                                     aria-label="Delete activity"
                                     title="Delete activity"
                                   >

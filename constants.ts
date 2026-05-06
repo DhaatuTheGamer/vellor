@@ -232,7 +232,6 @@ COUNTRIES.forEach(c => {
  */
 export const DEFAULT_CURRENCY_SYMBOL = '$';
 
-
 /**
  * Defines the levels and names for tutor ranks based on accumulated points.
  * Used in the gamification system.
