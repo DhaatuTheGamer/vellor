@@ -72,14 +72,19 @@ export const decryptObject = async <T = unknown>(
   }
   const ivArray = new Uint8Array(parsed.iv);
   const ctArray = new Uint8Array(parsed.ct);
-  const decrypted = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv: ivArray },
-    key,
-    ctArray
-  );
-  const dec = new TextDecoder();
-  const parsedData = JSON.parse(dec.decode(decrypted), jsonReviver);
-  return schema ? schema.parse(parsedData) : parsedData;
+  try {
+    const decrypted = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: ivArray },
+      key,
+      ctArray
+    );
+    const dec = new TextDecoder();
+    const parsedData = JSON.parse(dec.decode(decrypted), jsonReviver);
+    return schema ? schema.parse(parsedData) : parsedData;
+  } catch (error) {
+    console.error('Decryption failed:', error);
+    throw new Error('Failed to decrypt data. Invalid password or corrupted data.');
+  }
 };
 
 export const exportKeyToBase64 = async (key: CryptoKey): Promise<string> => {

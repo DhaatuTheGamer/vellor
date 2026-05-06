@@ -242,11 +242,13 @@ export const StudentsPage: React.FC = () => {
       setSelectedStudentIds(new Set());
   };
 
+  const deferredSearchTerm = React.useDeferredValue(searchTerm);
+
   const filteredStudents = useMemo(() => {
-    // ⚡ Bolt Performance: Hoist searchTerm.toLowerCase() outside the filter loop
+    // ⚡ Bolt Performance: Hoist deferredSearchTerm.toLowerCase() outside the filter loop
     // to avoid redundant O(N) recalculations on every render where search occurs.
-    if (!searchTerm) return students;
-    const lowerSearchTerm = searchTerm.toLowerCase();
+    if (!deferredSearchTerm) return students;
+    const lowerSearchTerm = deferredSearchTerm.toLowerCase();
 
     // ⚡ Bolt Performance: Use standard for loop instead of .filter() to avoid intermediate array allocations and callback overhead
     const result = [];
@@ -258,7 +260,7 @@ export const StudentsPage: React.FC = () => {
       }
     }
     return result;
-  }, [students, searchTerm]);
+  }, [students, deferredSearchTerm]);
 
   const outstandingBalances = useMemo(() => {
     const balances: Record<string, number> = {};
@@ -359,7 +361,7 @@ export const StudentsPage: React.FC = () => {
                 setSearchTerm('');
                 searchInputRef.current?.focus();
               }}
-              className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary"
               aria-label="Clear search"
               title="Clear search"
             >
@@ -457,7 +459,7 @@ export const StudentsPage: React.FC = () => {
                 <Button size="sm" variant="ghost" className="!text-white dark:!text-gray-900 hover:bg-white/10 dark:hover:bg-black/10 whitespace-nowrap" onClick={handleBulkMarkPaid}>Mark Paid</Button>
                 <Button size="sm" variant="primary" className="shadow-none rounded-full whitespace-nowrap" onClick={handleBulkExport}>Export Invoices</Button>
             </div>
-            <button onClick={() => setSelectedStudentIds(new Set())} className="ml-2 p-2 rounded-full hover:bg-white/10 dark:hover:bg-black/10 flex-shrink-0" aria-label="Clear selected students" title="Clear selected students">
+            <button onClick={() => setSelectedStudentIds(new Set())} className="ml-2 p-2 rounded-full hover:bg-white/10 dark:hover:bg-black/10 flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary" aria-label="Clear selected students" title="Clear selected students">
                 <Icon iconName="x-mark" className="w-5 h-5"/>
             </button>
           </motion.div>

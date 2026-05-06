@@ -132,8 +132,10 @@ export const TransactionsPage: React.FC = () => {
     return [...transactions].sort((a, b) => b.date < a.date ? -1 : (b.date > a.date ? 1 : 0));
   }, [transactions]);
 
+  const deferredSearchQuery = React.useDeferredValue(searchQuery);
+
   const filteredTransactions = useMemo(() => {
-    const query = searchQuery.toLowerCase();
+    const query = deferredSearchQuery.toLowerCase();
     const statusMap = {
       'paid': PaymentStatus.Paid,
       'due': PaymentStatus.Due,
@@ -175,7 +177,7 @@ export const TransactionsPage: React.FC = () => {
       }
     }
     return results;
-  }, [sortedTransactions, activeFilter, searchQuery, dateRange, studentsMap]);
+  }, [sortedTransactions, activeFilter, deferredSearchQuery, dateRange, studentsMap]);
 
   const parentRef = React.useRef<HTMLDivElement | null>(null);
 
@@ -264,7 +266,7 @@ export const TransactionsPage: React.FC = () => {
                  setSearchQuery('');
                  searchInputRef.current?.focus();
                }}
-               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary"
                aria-label="Clear search"
                title="Clear search"
              >

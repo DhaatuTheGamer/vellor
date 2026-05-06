@@ -98,7 +98,7 @@ const MappingStep: React.FC<MappingStepProps> = ({
                     <button
                         key={cat.id}
                         onClick={() => setActiveCategory(cat.id as any)}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-bold transition-all ${
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-bold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary-light ${
                             activeCategory === cat.id 
                                 ? 'bg-white dark:bg-primary-light text-accent shadow-sm' 
                                 : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
@@ -163,7 +163,7 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
              setCsvData(data);
              
              // Enhanced Auto-Map logic
-             const newMap: any = {};
+             const newMap: Partial<ImportMapping> = {};
              headers.forEach(h => {
                  const hl = h.toLowerCase();
                  if (!newMap.firstName && (hl === 'first name' || hl === 'name' || hl === 'firstname')) newMap.firstName = h;
@@ -175,7 +175,7 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
                  if (!newMap.guardianName && (hl.includes('parent') || hl.includes('guardian'))) newMap.guardianName = h;
                  if (!newMap.paymentAmount && (hl.includes('paid') || hl.includes('amount'))) newMap.paymentAmount = h;
              });
-             setMapping(newMap);
+             setMapping(newMap as ImportMapping);
              setStep(2);
         };
         reader.readAsText(file);

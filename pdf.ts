@@ -80,14 +80,22 @@ export const generateProgressReportPDF = (
   }
 
   if (reportTransactions.length > 0) {
-      autoTable(doc, {
-        startY: currentY + 5,
-        head: [['Date', 'Grade', 'Remarks']],
-        body: reportTransactions.map(t => [
+      // ⚡ Bolt Performance: Replace Array.prototype.map() with a pre-allocated for loop
+      // to eliminate intermediate array allocations and reduce garbage collection overhead on large reports.
+      const bodyArgs = new Array(reportTransactions.length);
+      for (let i = 0, len = reportTransactions.length; i < len; i++) {
+        const t = reportTransactions[i];
+        bodyArgs[i] = [
           new Date(t.date).toLocaleDateString(),
           t.grade || '-',
           t.progressRemark || '-'
-        ]),
+        ];
+      }
+
+      autoTable(doc, {
+        startY: currentY + 5,
+        head: [['Date', 'Grade', 'Remarks']],
+        body: bodyArgs,
         theme: template === 'classic' ? 'grid' : (template === 'minimal' ? 'plain' : 'striped'),
         headStyles: template === 'modern' ? { fillColor: brandAccent } : (template === 'classic' ? { fillColor: [0, 0, 0] } : { fillColor: [200, 200, 200], textColor: 0 }),
       });
@@ -195,17 +203,21 @@ export const generateBulkInvoicePDF = (
     currentY += 25;
 
     let totalDue = 0;
-    const bodyArgs = studentTransactions.map(t => {
+    // ⚡ Bolt Performance: Replace Array.prototype.map() with a pre-allocated for loop
+    // to eliminate intermediate array allocations and reduce garbage collection overhead on large reports.
+    const bodyArgs = new Array(studentTransactions.length);
+    for (let i = 0, len = studentTransactions.length; i < len; i++) {
+      const t = studentTransactions[i];
       const balance = t.lessonFee - t.amountPaid;
       totalDue += balance;
-      return [
+      bodyArgs[i] = [
         new Date(t.date).toLocaleDateString(),
         `${t.lessonDuration} mins`,
         `${settings.currencySymbol}${t.lessonFee}`,
         `${settings.currencySymbol}${t.amountPaid}`,
         `${settings.currencySymbol}${balance}`
       ];
-    });
+    }
 
     autoTable(doc, {
       startY: currentY,
