@@ -46,8 +46,8 @@ export const Badge: React.FC<BadgeProps> = ({
   iconName
 }) => {
   // Use legacy props if provided to maintain backwards compatibility
-  const finalChildren = children || text;
-  const finalIcon = icon || iconName;
+  const finalChildren = children ?? text;
+  const finalIcon = icon ?? iconName;
 
   // Style mappings for different badge colors
   const colorStyles = {

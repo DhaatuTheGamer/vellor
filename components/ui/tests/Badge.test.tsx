@@ -56,4 +56,9 @@ describe('Badge Component', () => {
     render(<Badge className="custom-class">Custom Class</Badge>);
     expect(screen.getByText('Custom Class')).toHaveClass('custom-class');
   });
+
+  it('renders falsy numeric children correctly', () => {
+    render(<Badge>{0}</Badge>);
+    expect(screen.getByText('0')).toBeInTheDocument();
+  });
 });
