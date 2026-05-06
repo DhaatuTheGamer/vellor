@@ -132,8 +132,10 @@ export const TransactionsPage: React.FC = () => {
     return [...transactions].sort((a, b) => b.date < a.date ? -1 : (b.date > a.date ? 1 : 0));
   }, [transactions]);
 
+  const deferredSearchQuery = React.useDeferredValue(searchQuery);
+
   const filteredTransactions = useMemo(() => {
-    const query = searchQuery.toLowerCase();
+    const query = deferredSearchQuery.toLowerCase();
     const statusMap = {
       'paid': PaymentStatus.Paid,
       'due': PaymentStatus.Due,
@@ -175,7 +177,7 @@ export const TransactionsPage: React.FC = () => {
       }
     }
     return results;
-  }, [sortedTransactions, activeFilter, searchQuery, dateRange, studentsMap]);
+  }, [sortedTransactions, activeFilter, deferredSearchQuery, dateRange, studentsMap]);
 
   const parentRef = React.useRef<HTMLDivElement | null>(null);
 

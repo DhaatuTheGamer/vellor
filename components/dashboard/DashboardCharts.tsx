@@ -63,13 +63,33 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({ itemVariants }
       studentTimes[j] = s.createdAt || fallbackDateStr;
     }
 
+    // ⚡ Bolt Performance: Single pass unrolled frequency map.
+    // Unrolling the inner loop avoids repeated array access to `targetMonths` and `thresholdDateStr`,
+    // and swapping the loops makes traversing the large `studentTimes` array extremely fast and cache-friendly.
+    const monthStudentCounts = new Int32Array(6);
+    const t0 = targetMonths[0].thresholdDateStr;
+    const t1 = targetMonths[1].thresholdDateStr;
+    const t2 = targetMonths[2].thresholdDateStr;
+    const t3 = targetMonths[3].thresholdDateStr;
+    const t4 = targetMonths[4].thresholdDateStr;
+    const t5 = targetMonths[5].thresholdDateStr;
+
+    for (let j = 0; j < studentTimes.length; j++) {
+      const time = studentTimes[j];
+      if (time <= t0) monthStudentCounts[0]++;
+      if (time <= t1) monthStudentCounts[1]++;
+      if (time <= t2) monthStudentCounts[2]++;
+      if (time <= t3) monthStudentCounts[3]++;
+      if (time <= t4) monthStudentCounts[4]++;
+      if (time <= t5) monthStudentCounts[5]++;
+    }
+
     for (let i = 0; i < 6; i++) {
-      const { name, thresholdDateStr } = targetMonths[i];
-      let studentsCount = 0;
-      for (let j = 0; j < studentTimes.length; j++) {
-          if (studentTimes[j] <= thresholdDateStr) studentsCount++;
-      }
-      data.push({ name, income: monthIncomes[i], students: studentsCount });
+      data.push({
+        name: targetMonths[i].name,
+        income: monthIncomes[i],
+        students: monthStudentCounts[i]
+      });
     }
     return data;
   }, [transactions, students]);

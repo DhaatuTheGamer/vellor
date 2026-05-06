@@ -3,7 +3,7 @@ import { AppState, TransactionSlice } from './types';
 import { Transaction, TransactionFormData, PaymentStatus } from '../types';
 import { generateId } from '../helpers';
 import { POINTS_ALLOCATION } from '../constants';
-import { sanitizeString } from '../helpers';
+import { sanitizeString, determinePaymentStatus } from '../helpers';
 
 export const createTransactionSlice: StateCreator<AppState, [], [], TransactionSlice> = (set, get) => ({
   transactions: [],
@@ -17,16 +17,7 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
       progressRemark: sanitizeString(transactionData.progressRemark),
     };
 
-    let status: PaymentStatus;
-    if (sanitizedTransactionData.status) {
-      status = sanitizedTransactionData.status;
-    } else if (sanitizedTransactionData.amountPaid >= sanitizedTransactionData.lessonFee) {
-      status = sanitizedTransactionData.amountPaid > sanitizedTransactionData.lessonFee ? PaymentStatus.Overpaid : PaymentStatus.Paid;
-    } else if (sanitizedTransactionData.amountPaid > 0 && sanitizedTransactionData.amountPaid < sanitizedTransactionData.lessonFee) {
-      status = PaymentStatus.PartiallyPaid;
-    } else {
-      status = PaymentStatus.Due;
-    }
+    const status = determinePaymentStatus(sanitizedTransactionData.amountPaid, sanitizedTransactionData.lessonFee, sanitizedTransactionData.status);
 
     const newTransaction: Transaction = {
       ...sanitizedTransactionData,
@@ -93,16 +84,7 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
         progressRemark: sanitizeString(transactionData.progressRemark),
       };
 
-      let status: PaymentStatus;
-      if (sanitizedTransactionData.status) {
-        status = sanitizedTransactionData.status;
-      } else if (sanitizedTransactionData.amountPaid >= sanitizedTransactionData.lessonFee) {
-        status = sanitizedTransactionData.amountPaid > sanitizedTransactionData.lessonFee ? PaymentStatus.Overpaid : PaymentStatus.Paid;
-      } else if (sanitizedTransactionData.amountPaid > 0 && sanitizedTransactionData.amountPaid < sanitizedTransactionData.lessonFee) {
-        status = PaymentStatus.PartiallyPaid;
-      } else {
-        status = PaymentStatus.Due;
-      }
+      const status = determinePaymentStatus(sanitizedTransactionData.amountPaid, sanitizedTransactionData.lessonFee, sanitizedTransactionData.status);
 
       const newTransaction: Transaction = {
         ...sanitizedTransactionData,
@@ -196,17 +178,10 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
             const originalStatus = t.status;
             const potentiallyUpdated = { ...t, ...sanitizedTransactionData };
             let newStatus = t.status;
-
             if (sanitizedTransactionData.amountPaid !== undefined || sanitizedTransactionData.lessonFee !== undefined) {
                 const fee = sanitizedTransactionData.lessonFee !== undefined ? sanitizedTransactionData.lessonFee : t.lessonFee;
                 const paid = sanitizedTransactionData.amountPaid !== undefined ? sanitizedTransactionData.amountPaid : t.amountPaid;
-                if (paid >= fee) {
-                    newStatus = paid > fee ? PaymentStatus.Overpaid : PaymentStatus.Paid;
-                } else if (paid > 0 && paid < fee) {
-                    newStatus = PaymentStatus.PartiallyPaid;
-                } else {
-                    newStatus = PaymentStatus.Due;
-                }
+                newStatus = determinePaymentStatus(paid, fee);
             }
             updatedTransaction = { ...potentiallyUpdated, status: newStatus };
             

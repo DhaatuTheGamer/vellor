@@ -28,3 +28,6 @@
 ## 2026-05-02 - Incomplete Focus Styles
 **Learning:** Some elements in the codebase use `focus-visible:ring-2` but omit the actual ring color and offset, leading to an incomplete/invisible focus state.
 **Action:** Always ensure that when `focus-visible:ring-2` is present, it is accompanied by the corresponding ring color (`focus-visible:ring-accent`) and offsets (`focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary`).
+## 2026-05-06 - Password Visibility Toggle
+**Learning:** Adding a show/hide password toggle to the SetupEncryption component was a highly effective micro-UX enhancement that prevents critical typos during master password creation without breaking the existing design system or requiring large re-writes.
+**Action:** Always check if crucial, unrecoverable inputs (like master passwords or encryption keys) provide a way for the user to visually verify their entry before submission.
