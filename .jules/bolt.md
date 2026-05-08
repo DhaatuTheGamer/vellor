@@ -61,3 +61,6 @@
 ## 2026-05-06 - React.useDeferredValue for search inputs
 **Learning:** Filtering large lists (like students or transactions) synchronously on every keystroke blocks the main thread and causes UI jank during typing.
 **Action:** Use `React.useDeferredValue(searchTerm)` to decouple the expensive filtering computation from the fast typing state updates, maintaining a responsive UI.
+## 2026-05-18 - SearchModal intermediate object allocation
+**Learning:** In `SearchModal.tsx`, mapping the entire `students` array and cloning each student (`{ ...s }`) just to inject a temporary `_searchableName` string caused a massive and unnecessary O(N) memory allocation every time the students array changed.
+**Action:** When filtering arrays, do not map/clone the entire array just to add searchable string representations. Either pre-compute these on the original objects in the global store or compute them dynamically on-the-fly during the inner `for` loop search.
