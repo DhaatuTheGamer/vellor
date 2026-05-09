@@ -36,3 +36,6 @@
 ## 2026-05-08 - Accessibility Anti-Pattern: Redundant ARIA Labels
 **Learning:** Adding an `aria-label` that exactly matches the visible text content of an element (e.g., `<button aria-label="About">About</button>`) is an accessibility anti-pattern. Redundant ARIA labels do not improve the experience and can interfere with translation tools.
 **Action:** Only add `aria-label` to interactive elements lacking descriptive text, like icon-only buttons. Purely decorative elements should instead receive `aria-hidden="true"`.
+## 2026-05-10 - Playwright Marketing Page & Profile Bypasses
+**Learning:** When using Playwright to visually verify frontend changes on internal routes, the script must account for being initially redirected to the marketing page. It must explicitly click "Get Started" to reach the auth flow, complete the Master Password setup or unlock, and then explicitly complete or skip the 'Welcome to Vellor' profile setup form before reaching the target dashboard components.
+**Action:** Always include robust conditional bypass blocks in Playwright scripts for "Get Started", Master Password setup/unlock, and the "Welcome to Vellor" profile setup.
