@@ -16,37 +16,27 @@ export const SearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = (
     }
   }, [isOpen]);
 
-  const searchableStudents = useMemo(() => {
-    const len = students.length;
-    const result = new Array(len);
-    for (let i = 0; i < len; i++) {
-      const s = students[i];
-      result[i] = {
-        ...s,
-        _searchableName: (s.firstName + ' ' + s.lastName).toLowerCase()
-      };
-    }
-    return result;
-  }, [students]);
-
   // ⚡ Bolt Performance: Hoist query.toLowerCase() outside the filter loop
   // to prevent unnecessary string operations during the O(N) array search.
   const lowerQuery = query.toLowerCase();
 
   // ⚡ Bolt Performance: Use an early-return bounded loop instead of .filter().slice()
   // to avoid scanning the entire students array once 5 matches are found.
+  // We use the pre-computed searchName to prevent intermediate object allocations.
   const filteredStudents = useMemo(() => {
     if (query === '') return [];
 
     const results = [];
-    for (let i = 0, len = searchableStudents.length; i < len; i++) {
-      if (searchableStudents[i]._searchableName.includes(lowerQuery)) {
-        results.push(searchableStudents[i]);
+    for (let i = 0, len = students.length; i < len; i++) {
+      const student = students[i];
+      const searchStr = student.searchName || (student.firstName + ' ' + student.lastName).toLowerCase();
+      if (searchStr.includes(lowerQuery)) {
+        results.push(student);
         if (results.length >= 5) break;
       }
     }
     return results;
-  }, [searchableStudents, query, lowerQuery]);
+  }, [students, query, lowerQuery]);
 
   const handleSelectStudent = (id: string) => {
     navigate(`/students/${id}`);
