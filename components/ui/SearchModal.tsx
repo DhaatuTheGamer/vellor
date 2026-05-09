@@ -51,6 +51,7 @@ export const SearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = (
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search students..."
+          aria-label="Search students"
         />
         {query && filteredStudents.length > 0 && (
           <div className="space-y-2 mt-4">
