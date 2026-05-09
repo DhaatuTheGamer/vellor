@@ -93,5 +93,5 @@ export const Icon: React.FC<IconProps> = ({ iconName, className = 'w-6 h-6', ...
 
   const LucideIcon = iconMap[iconName] || LucideIcons.HelpCircle;
 
-  return <LucideIcon className={className} {...props} />;
+  return <LucideIcon className={className} aria-hidden="true" {...props} />;
 };

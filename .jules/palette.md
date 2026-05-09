@@ -33,7 +33,6 @@
 ## 2026-05-06 - Password Visibility Toggle
 **Learning:** Adding a show/hide password toggle to the SetupEncryption component was a highly effective micro-UX enhancement that prevents critical typos during master password creation without breaking the existing design system or requiring large re-writes.
 **Action:** Always check if crucial, unrecoverable inputs (like master passwords or encryption keys) provide a way for the user to visually verify their entry before submission.
-
-## 2026-05-07 - Toggle Switch Focus Styles
-**Learning:** Custom toggle switches using visually hidden inputs (e.g. `sr-only peer`) and adjacent sibling selectors (`peer-checked`) often miss keyboard focus styles. Adding `peer-focus:outline-none` removes the default focus ring without providing a visible replacement, failing accessibility guidelines.
-**Action:** Always apply explicit focus visible states to custom toggles. Use `peer-focus-visible:ring-2 peer-focus-visible:ring-accent peer-focus-visible:ring-offset-2 dark:peer-focus-visible:ring-offset-primary` on the styled adjacent sibling `div` to ensure keyboard accessibility.
+## 2026-05-08 - Accessibility Anti-Pattern: Redundant ARIA Labels
+**Learning:** Adding an `aria-label` that exactly matches the visible text content of an element (e.g., `<button aria-label="About">About</button>`) is an accessibility anti-pattern. Redundant ARIA labels do not improve the experience and can interfere with translation tools.
+**Action:** Only add `aria-label` to interactive elements lacking descriptive text, like icon-only buttons. Purely decorative elements should instead receive `aria-hidden="true"`.
