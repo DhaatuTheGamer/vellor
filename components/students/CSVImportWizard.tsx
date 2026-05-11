@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Modal, Icon, Select } from '../ui';
 import { useStore } from '../../store';
-import { PaymentStatus, StudentFormData, TransactionFormData } from '../../types';
+import { PaymentStatus, StudentFormData, TransactionFormData, IconName, Student } from '../../types';
 import { parseCSV, bulkMapCSVRows, ImportMapping, ImportResult } from '../../helpers/csvParser';
 import { findConflicts, resolveConflict, ConflictStrategy } from '../../helpers/conflictResolution';
 
@@ -48,6 +48,14 @@ interface MappingStepProps {
     handleImport: () => void;
 }
 
+export type CategoryType = 'student' | 'guardian' | 'financial';
+
+export interface Category {
+    id: CategoryType;
+    label: string;
+    icon: IconName;
+}
+
 const MappingStep: React.FC<MappingStepProps> = ({
     csvDataLength,
     mapping,
@@ -56,15 +64,15 @@ const MappingStep: React.FC<MappingStepProps> = ({
     setStep,
     handleImport
 }) => {
-    const [activeCategory, setActiveCategory] = useState<'student' | 'guardian' | 'financial'>('student');
+    const [activeCategory, setActiveCategory] = useState<CategoryType>('student');
 
-    const categories = [
+    const categories: Category[] = [
         { id: 'student', label: 'Student Info', icon: 'user' },
         { id: 'guardian', label: 'Guardian', icon: 'users' },
         { id: 'financial', label: 'Payments & Lessons', icon: 'currency-dollar' }
     ];
 
-    const fieldsByCategory = {
+    const fieldsByCategory: Record<CategoryType, { field: keyof ImportMapping; label: string }[]> = {
         student: [
             { field: 'firstName', label: 'First Name (Required)' },
             { field: 'lastName', label: 'Last Name' },
@@ -97,14 +105,14 @@ const MappingStep: React.FC<MappingStepProps> = ({
                 {categories.map(cat => (
                     <button
                         key={cat.id}
-                        onClick={() => setActiveCategory(cat.id as any)}
+                        onClick={() => setActiveCategory(cat.id)}
                         className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-bold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary-light ${
                             activeCategory === cat.id 
                                 ? 'bg-white dark:bg-primary-light text-accent shadow-sm' 
                                 : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
                         }`}
                     >
-                        <Icon iconName={cat.icon as any} className="w-4 h-4" />
+                        <Icon iconName={cat.icon} className="w-4 h-4" />
                         <span className="hidden sm:inline">{cat.label}</span>
                     </button>
                 ))}
@@ -116,7 +124,7 @@ const MappingStep: React.FC<MappingStepProps> = ({
                        <span className="text-sm font-bold text-gray-700 dark:text-gray-300 sm:w-1/3 truncate">{label}</span>
                        <div className="sm:w-2/3">
                            <Select
-                             value={(mapping as any)[field] || ''}
+                             value={mapping[field] || ''}
                              onChange={e => setMapping({...mapping, [field]: e.target.value})}
                              options={[{label: '-- Skip Field --', value: ''}, ...originalHeaders.map(h => ({label: h, value: h}))]}
                            />
@@ -186,7 +194,7 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
         
         const newStudentsData: StudentFormData[] = [];
         const newTransactionsData: TransactionFormData[] = [];
-        const importedStudentMapping: { [index: number]: any } = {};
+        const importedStudentMapping: Record<number, string> = {};
 
         for (let i = 0; i < result.entities.length; i++) {
             const entities = result.entities[i];
@@ -205,7 +213,7 @@ export const CSVImportWizard: React.FC<CSVImportWizardProps> = ({ isOpen, onClos
             }
         }
 
-        let createdStudents: any[] = [];
+        let createdStudents: Student[] = [];
         if (newStudentsData.length > 0) {
             createdStudents = addStudents(newStudentsData);
         }
