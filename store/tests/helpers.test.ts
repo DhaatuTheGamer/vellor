@@ -60,6 +60,12 @@ describe('Helpers', () => {
         expect(formatPhoneNumber({ countryCode: '+44', number: '' })).toBe('N/A');
         expect(formatPhoneNumber({ countryCode: '', number: '1234567890' })).toBe('1234567890');
         expect(formatPhoneNumber({ countryCode: '', number: '' })).toBe('N/A');
+        // @ts-ignore
+        expect(formatPhoneNumber(null)).toBe('N/A');
+        // @ts-ignore
+        expect(formatPhoneNumber({ number: '12345' })).toBe('12345');
+        expect(formatPhoneNumber({ countryCode: '+1', number: ' ' })).toBe('+1  ');
+        expect(formatPhoneNumber({ countryCode: ' ', number: '12345' })).toBe('  12345');
     });
 
     it('gets correct payment status colors', () => {
