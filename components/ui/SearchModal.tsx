@@ -16,15 +16,17 @@ export const SearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = (
     }
   }, [isOpen]);
 
+  const deferredQuery = React.useDeferredValue(query);
+
   // ⚡ Bolt Performance: Hoist query.toLowerCase() outside the filter loop
   // to prevent unnecessary string operations during the O(N) array search.
-  const lowerQuery = query.toLowerCase();
+  const lowerQuery = deferredQuery.toLowerCase();
 
   // ⚡ Bolt Performance: Use an early-return bounded loop instead of .filter().slice()
   // to avoid scanning the entire students array once 5 matches are found.
   // We use the pre-computed searchName to prevent intermediate object allocations.
   const filteredStudents = useMemo(() => {
-    if (query === '') return [];
+    if (deferredQuery === '') return [];
 
     const results = [];
     for (let i = 0, len = students.length; i < len; i++) {
@@ -36,7 +38,7 @@ export const SearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = (
       }
     }
     return results;
-  }, [students, query, lowerQuery]);
+  }, [students, deferredQuery, lowerQuery]);
 
   const handleSelectStudent = (id: string) => {
     navigate(`/students/${id}`);
