@@ -87,9 +87,9 @@ export const generateWhatsAppLink = (phone: PhoneNumber | undefined, message: st
   }
 
   // Check for malicious schemes in inputs before processing to prevent XSS.
-  // We use a regex that handles potential whitespace or control characters before and between the scheme and colon.
+  // We use a regex that handles potential whitespace or control characters between the scheme and colon.
   const rawInput = `${phone.countryCode || ''}${phone.number}`.toLowerCase();
-  if (/^\s*(javascript|data|vbscript)\s*:/.test(rawInput)) {
+  if (/(javascript|data|vbscript)\s*:/.test(rawInput)) {
     return '#';
   }
 
