@@ -178,7 +178,7 @@ export const SettingsPage: React.FC = () => {
                    {formData.brandLogoBase64 ? (
                      <div className="relative w-16 h-16 rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden bg-white shadow-sm">
                        <img src={formData.brandLogoBase64} alt="App Logo" className="w-full h-full object-cover" />
-                       <button onClick={handleRemoveBrandLogo} className="absolute top-0 right-0 bg-danger text-white rounded-bl-xl p-1 hover:bg-danger/80" aria-label="Remove app logo" title="Remove app logo">
+                       <button onClick={handleRemoveBrandLogo} className="absolute top-0 right-0 bg-danger text-white rounded-bl-xl p-1 hover:bg-danger/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary" aria-label="Remove app logo" title="Remove app logo">
                          <Icon iconName="x-mark" className="w-3 h-3" />
                        </button>
                      </div>
@@ -207,7 +207,7 @@ export const SettingsPage: React.FC = () => {
                  {formData.invoiceLogoBase64 ? (
                    <div className="relative w-16 h-16 rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden bg-white">
                      <img src={formData.invoiceLogoBase64} alt="Invoice Logo" className="w-full h-full object-contain" />
-                     <button onClick={handleRemoveLogo} className="absolute top-0 right-0 bg-danger text-white rounded-bl-xl p-1 hover:bg-danger/80" aria-label="Remove invoice logo" title="Remove invoice logo">
+                       <button onClick={handleRemoveLogo} className="absolute top-0 right-0 bg-danger text-white rounded-bl-xl p-1 hover:bg-danger/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary" aria-label="Remove invoice logo" title="Remove invoice logo">
                        <Icon iconName="x-mark" className="w-3 h-3" />
                      </button>
                    </div>
