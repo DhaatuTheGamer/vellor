@@ -80,7 +80,12 @@ export const CalendarPage: React.FC = () => {
   }, [students]);
 
   const events = useMemo((): CalendarEvent[] => {
-    return transactions.map(t => {
+    // ⚡ Bolt Performance: Replace transactions.map() with a pre-allocated for loop
+    // to eliminate intermediate array allocations and callback overhead during bulk render.
+    const len = transactions.length;
+    const result = new Array(len);
+    for (let i = 0; i < len; i++) {
+      const t = transactions[i];
       const student = studentMap[t.studentId];
       const studentName = student ? `${student.firstName} ${student.lastName}` : 'Unknown Student';
       
@@ -93,14 +98,15 @@ export const CalendarPage: React.FC = () => {
       // Fallback duration to 60 if not specified
       const endDate = new Date(startDate.getTime() + (t.lessonDuration || 60) * 60000);
 
-      return {
+      result[i] = {
         id: t.id,
         title: studentName,
         start: startDate,
         end: endDate,
         resource: t,
       };
-    });
+    }
+    return result;
   }, [transactions, studentMap]);
 
   const eventStyleGetter = (event: CalendarEvent) => {
