@@ -36,7 +36,8 @@
 **Learning:** Calling `Date.parse()` on strings repeatedly inside high frequency loops or rendering pipelines introduces significant garbage collection and parsing overhead.
 **Action:** Since ISO 8601 strings sort lexicographically perfectly with time, convert target thresholds to ISO strings once before a loop, and then compare raw array string fields directly instead of parsing each one into a unix timestamp. This provides an order-of-magnitude speedup.
 ## 2026-04-25 - String allocation optimization: split().map().filter() vs slice
-**Learning:** Chaining `.split('\n')` followed by `.map()` and `.filter()` to parse large multi-line strings (like CSV files) allocates massive intermediate arrays for every line and character transformation. This spikes memory usage and causes garbage collection pauses that slow down data import operations.
+**Learning:** Chaining `.split('
+')` followed by `.map()` and `.filter()` to parse large multi-line strings (like CSV files) allocates massive intermediate arrays for every line and character transformation. This spikes memory usage and causes garbage collection pauses that slow down data import operations.
 **Action:** When parsing large delimited strings, replace higher-order chained methods with a single manual `while` loop that uses `indexOf()` and `slice()` to extract sub-strings directly into the final array, eliminating all intermediate array allocations.
 ## 2026-04-28 - Bulk Zustand Actions
 **Learning:** Calling single-item state setters (like `addStudent`) inside a loop for large imports triggers N+1 state updates, crippling React render performance. Bulk actions are essential for high-throughput imports.
@@ -64,3 +65,6 @@
 ## 2026-05-08 - SearchModal intermediate object allocation
 **Learning:** In `SearchModal.tsx`, mapping the entire `students` array and cloning each student (`{ ...s }`) just to inject a temporary `_searchableName` string caused a massive and unnecessary O(N) memory allocation every time the students array changed.
 **Action:** When filtering arrays, do not map/clone the entire array just to add searchable string representations. Either pre-compute these on the original objects in the global store or compute them dynamically on-the-fly during the inner `for` loop search.
+## 2026-05-12 - Array.map() overhead inside useMemo
+**Learning:** In React components, using `Array.prototype.map()` to generate large arrays of objects (like calendar events from transactions) inside a `useMemo` hook can introduce significant intermediate array allocation and garbage collection overhead during frequent re-renders or updates.
+**Action:** When working on performance-critical mapping loops inside React render cycles or `useMemo` hooks (especially for lists of hundreds or thousands of items), replace `Array.prototype.map()` with a pre-allocated array (`new Array(len)`) and a standard index-based `for` loop to minimize memory allocations and callback overhead.
