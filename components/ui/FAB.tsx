@@ -27,6 +27,8 @@ export const FAB: React.FC = () => {
         <AnimatePresence>
           {isOpen && (
             <motion.div
+              id="fab-menu"
+              role="menu"
               initial={{ opacity: 0, y: 20, scale: 0.8 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.8 }}
@@ -35,6 +37,7 @@ export const FAB: React.FC = () => {
             >
               <button
                 onClick={handleLogLesson}
+                role="menuitem"
                 aria-label="Quick Log Lesson"
                 title="Quick Log Lesson"
                 className="flex items-center gap-3 bg-white dark:bg-primary-light text-gray-900 dark:text-white px-4 py-2 rounded-full shadow-lg border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-primary transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary"
@@ -46,6 +49,7 @@ export const FAB: React.FC = () => {
               </button>
               <button
                 onClick={handleAddStudent}
+                role="menuitem"
                 aria-label="Add New Student"
                 title="Add New Student"
                 className="flex items-center gap-3 bg-white dark:bg-primary-light text-gray-900 dark:text-white px-4 py-2 rounded-full shadow-lg border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-primary transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary"
@@ -61,9 +65,12 @@ export const FAB: React.FC = () => {
 
         <button
           onClick={toggleOpen}
+          aria-expanded={isOpen}
+          aria-controls="fab-menu"
+          aria-haspopup="menu"
           className="w-14 h-14 rounded-full bg-accent text-primary-dark shadow-xl shadow-accent/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-accent/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-primary"
-          aria-label="Quick actions"
-          title="Quick actions"
+          aria-label={isOpen ? "Close quick actions" : "Quick actions"}
+          title={isOpen ? "Close quick actions" : "Quick actions"}
         >
           <motion.div
             animate={{ rotate: isOpen ? 45 : 0 }}

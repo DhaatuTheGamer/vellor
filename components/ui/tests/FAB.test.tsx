@@ -49,15 +49,15 @@ describe('FAB Component', () => {
     renderWithRouter(<FAB />);
 
     // Initially menu items shouldn't be visible
-    expect(screen.queryByRole('button', { name: /quick log lesson/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /add new student/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /quick log lesson/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /add new student/i })).not.toBeInTheDocument();
 
     // Click the main FAB
     fireEvent.click(screen.getByRole('button', { name: /quick actions/i }));
 
     // Menu items should now be visible
-    expect(screen.getByRole('button', { name: /quick log lesson/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /add new student/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /quick log lesson/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /add new student/i })).toBeInTheDocument();
   });
 
   it('toggles the menu closed when main FAB is clicked twice', async () => {
@@ -67,14 +67,14 @@ describe('FAB Component', () => {
 
     // Open menu
     fireEvent.click(mainFab);
-    expect(screen.getByRole('button', { name: /quick log lesson/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /quick log lesson/i })).toBeInTheDocument();
 
     // Close menu
-    fireEvent.click(mainFab);
+    fireEvent.click(screen.getByRole('button', { name: /close quick actions/i }));
 
     // Menu items should animate out (we wait for them to disappear)
     await waitFor(() => {
-        expect(screen.queryByRole('button', { name: /quick log lesson/i })).not.toBeInTheDocument();
+        expect(screen.queryByRole('menuitem', { name: /quick log lesson/i })).not.toBeInTheDocument();
     });
   });
 
@@ -85,13 +85,13 @@ describe('FAB Component', () => {
     fireEvent.click(screen.getByRole('button', { name: /quick actions/i }));
 
     // Click Add Student
-    fireEvent.click(screen.getByRole('button', { name: /add new student/i }));
+    fireEvent.click(screen.getByRole('menuitem', { name: /add new student/i }));
 
     expect(mockNavigate).toHaveBeenCalledWith('/students', { state: { openAddStudentModal: true } });
 
     // Menu should close
     await waitFor(() => {
-        expect(screen.queryByRole('button', { name: /add new student/i })).not.toBeInTheDocument();
+        expect(screen.queryByRole('menuitem', { name: /add new student/i })).not.toBeInTheDocument();
     });
   });
 
@@ -105,14 +105,14 @@ describe('FAB Component', () => {
     fireEvent.click(screen.getByRole('button', { name: /quick actions/i }));
 
     // Click Quick Log
-    fireEvent.click(screen.getByRole('button', { name: /quick log lesson/i }));
+    fireEvent.click(screen.getByRole('menuitem', { name: /quick log lesson/i }));
 
     // Modal should be open
     expect(screen.getByTestId('quick-log-modal')).toBeInTheDocument();
 
     // Menu should close
     await waitFor(() => {
-        expect(screen.queryByRole('button', { name: /quick log lesson/i })).not.toBeInTheDocument();
+        expect(screen.queryByRole('menuitem', { name: /quick log lesson/i })).not.toBeInTheDocument();
     });
   });
 
@@ -121,7 +121,7 @@ describe('FAB Component', () => {
 
       // Open modal
       fireEvent.click(screen.getByRole('button', { name: /quick actions/i }));
-      fireEvent.click(screen.getByRole('button', { name: /quick log lesson/i }));
+      fireEvent.click(screen.getByRole('menuitem', { name: /quick log lesson/i }));
       expect(screen.getByTestId('quick-log-modal')).toBeInTheDocument();
 
       // Close modal
