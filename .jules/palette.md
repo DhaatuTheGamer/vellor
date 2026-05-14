@@ -39,6 +39,6 @@
 ## 2026-05-10 - Playwright Marketing Page & Profile Bypasses
 **Learning:** When using Playwright to visually verify frontend changes on internal routes, the script must account for being initially redirected to the marketing page. It must explicitly click "Get Started" to reach the auth flow, complete the Master Password setup or unlock, and then explicitly complete or skip the 'Welcome to Vellor' profile setup form before reaching the target dashboard components.
 **Action:** Always include robust conditional bypass blocks in Playwright scripts for "Get Started", Master Password setup/unlock, and the "Welcome to Vellor" profile setup.
-## 2024-05-12 - ARIA Roles in Framer Motion Components Break Tests
+## 2026-05-14 - ARIA Roles in Framer Motion Components Break Tests
 **Learning:** Adding explicit ARIA roles (like `role="menuitem"`) to components inside Framer Motion's `<AnimatePresence>` can break existing React Testing Library tests that expect the default element roles (like `getByRole('button')`).
 **Action:** When modifying semantic HTML elements or ARIA roles for accessibility, always update the corresponding React Testing Library queries in the associated `.test.tsx` files to prevent test suite regressions.
