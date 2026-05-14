@@ -211,19 +211,9 @@ export const createTransactionSlice: StateCreator<AppState, [], [], TransactionS
 
   deleteTransaction: (transactionId) => {
     set(state => {
-      // ⚡ Bolt Performance: Use an optimized array removal strategy that avoids allocation
-      let newTransactions = state.transactions;
-      for (let i = 0, len = state.transactions.length; i < len; i++) {
-        if (state.transactions[i].id === transactionId) {
-          newTransactions = state.transactions.slice(0, i);
-          for (let j = i + 1; j < len; j++) {
-            if (state.transactions[j].id !== transactionId) {
-              newTransactions.push(state.transactions[j]);
-            }
-          }
-          break;
-        }
-      }
+      // ⚡ Bolt Performance: Use native .filter() which is internally optimized in modern JS engines
+      // and significantly more readable than manual slice+push loops for array removal
+      const newTransactions = state.transactions.filter(t => t.id !== transactionId);
       return { transactions: newTransactions };
     });
     get().addToast('Transaction deleted.', 'info');

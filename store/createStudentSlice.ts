@@ -169,32 +169,10 @@ export const createStudentSlice: StateCreator<AppState, [], [], StudentSlice> = 
     const studentToDelete = state.students.find(s => s.id === studentId);
 
     set(state => {
-      // ⚡ Bolt Performance: Use an optimized array removal strategy that avoids allocation
-      let newStudents = state.students;
-      for (let i = 0, len = state.students.length; i < len; i++) {
-        if (state.students[i].id === studentId) {
-          newStudents = state.students.slice(0, i);
-          for (let j = i + 1; j < len; j++) {
-            if (state.students[j].id !== studentId) {
-              newStudents.push(state.students[j]);
-            }
-          }
-          break;
-        }
-      }
-
-      let newTransactions = state.transactions;
-      for (let i = 0, len = state.transactions.length; i < len; i++) {
-        if (state.transactions[i].studentId === studentId) {
-          newTransactions = state.transactions.slice(0, i);
-          for (let j = i + 1; j < len; j++) {
-            if (state.transactions[j].studentId !== studentId) {
-              newTransactions.push(state.transactions[j]);
-            }
-          }
-          break;
-        }
-      }
+      // ⚡ Bolt Performance: Use native .filter() which is internally optimized in modern JS engines
+      // and significantly more readable than manual slice+push loops for array removal
+      const newStudents = state.students.filter(s => s.id !== studentId);
+      const newTransactions = state.transactions.filter(t => t.studentId !== studentId);
 
       return {
         students: newStudents,

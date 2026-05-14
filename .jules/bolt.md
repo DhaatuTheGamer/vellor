@@ -68,3 +68,6 @@
 ## 2026-05-12 - Array.map() overhead inside useMemo
 **Learning:** In React components, using `Array.prototype.map()` to generate large arrays of objects (like calendar events from transactions) inside a `useMemo` hook can introduce significant intermediate array allocation and garbage collection overhead during frequent re-renders or updates.
 **Action:** When working on performance-critical mapping loops inside React render cycles or `useMemo` hooks (especially for lists of hundreds or thousands of items), replace `Array.prototype.map()` with a pre-allocated array (`new Array(len)`) and a standard index-based `for` loop to minimize memory allocations and callback overhead.
+## 2026-05-13 - Avoid over-optimization of standard declarative methods
+**Learning:** Manual array slice/push operations inside `for` loops (intended as an extreme micro-optimization to avoid array allocations if a match is not found) actually hurt readability, introduce unnecessary code complexity, and provide no measurable performance gain compared to standard `.filter()` in modern JavaScript engines for single-item removal.
+**Action:** When working on item deletion or simple filtering, prefer native `.filter()` operations over manual `slice` and `push` loops unless profiling explicitly shows a massive performance bottleneck.
