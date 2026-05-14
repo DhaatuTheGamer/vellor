@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Modal, Input } from '.';
+import { Modal, Input, Icon } from '.';
 import { useStore } from '../../store';
 import { useNavigate } from 'react-router-dom';
 
@@ -81,7 +81,13 @@ export const SearchModal: React.FC<{ isOpen: boolean; onClose: () => void }> = (
           </div>
         )}
         {query && filteredStudents.length === 0 && (
-          <p className="text-sm text-gray-500 text-center py-4">No results found for "{query}"</p>
+          <div className="flex flex-col items-center justify-center text-center py-8">
+            <div className="w-12 h-12 rounded-full bg-gray-50 dark:bg-white/5 flex items-center justify-center mb-3">
+              <Icon iconName="search" className="w-6 h-6 text-gray-400" />
+            </div>
+            <p className="text-sm font-medium text-gray-900 dark:text-white">No students found</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">We couldn't find anyone matching "{query}"</p>
+          </div>
         )}
         {!query && (
           <div className="text-sm text-gray-500 space-y-2 py-2">

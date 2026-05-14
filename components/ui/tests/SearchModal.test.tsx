@@ -106,7 +106,8 @@ describe('SearchModal', () => {
     fireEvent.change(input, { target: { value: 'xyz' } });
 
     await waitFor(() => {
-      expect(screen.getByText('No results found for "xyz"')).toBeInTheDocument();
+      expect(screen.getByText('No students found')).toBeInTheDocument();
+      expect(screen.getByText('We couldn\'t find anyone matching "xyz"')).toBeInTheDocument();
     });
   });
 
