@@ -42,3 +42,6 @@
 ## 2026-05-14 - ARIA Roles in Framer Motion Components Break Tests
 **Learning:** Adding explicit ARIA roles (like `role="menuitem"`) to components inside Framer Motion's `<AnimatePresence>` can break existing React Testing Library tests that expect the default element roles (like `getByRole('button')`).
 **Action:** When modifying semantic HTML elements or ARIA roles for accessibility, always update the corresponding React Testing Library queries in the associated `.test.tsx` files to prevent test suite regressions.
+## 2026-05-14 - Empty States in Search Interfaces
+**Learning:** Providing a dead-end, text-only empty state (e.g., 'No results found') in interactive components like search palettes is a missed opportunity to guide the user. Polishing these with a standard visual hierarchy (icon, clear title, descriptive subtext) improves the user experience and aligns with the app's overall design system.
+**Action:** When implementing or refactoring search or filter components, always replace plain text empty states with polished, structured UI components to provide better visual feedback and guidance.
