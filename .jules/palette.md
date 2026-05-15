@@ -45,3 +45,6 @@
 ## 2026-05-14 - Empty States in Search Interfaces
 **Learning:** Providing a dead-end, text-only empty state (e.g., 'No results found') in interactive components like search palettes is a missed opportunity to guide the user. Polishing these with a standard visual hierarchy (icon, clear title, descriptive subtext) improves the user experience and aligns with the app's overall design system.
 **Action:** When implementing or refactoring search or filter components, always replace plain text empty states with polished, structured UI components to provide better visual feedback and guidance.
+## 2026-05-15 - Empty State Visual Polish
+**Learning:** Polishing empty states in search interfaces (like `SearchModal`) with standard visual hierarchy (icon, clear title, descriptive subtext) greatly improves the user experience compared to plain text.
+**Action:** When working on search or filter components, ensure the "no results" state is visually structured rather than plain text.
