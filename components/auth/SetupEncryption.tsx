@@ -93,12 +93,15 @@ export const SetupEncryption: React.FC<{ onUnlocked: () => void }> = ({ onUnlock
                     setIsCopied(true);
                     setTimeout(() => setIsCopied(false), 2000);
                   }}
-                  className="flex-shrink-0 !p-2"
+                  className={`flex-shrink-0 ${isCopied ? 'px-3 py-1.5' : '!p-2'}`}
                   aria-label="Copy recovery key"
                   title="Copy recovery key"
                 >
                    {isCopied ? (
-                     <Icon iconName="check-circle" className="w-5 h-5 text-success" />
+                     <span className="flex items-center gap-1.5 text-success text-xs font-semibold">
+                       <Icon iconName="check-circle" className="w-4 h-4" />
+                       Copied!
+                     </span>
                    ) : (
                      <Icon iconName="document-text" className="w-5 h-5 text-accent" />
                    )}
